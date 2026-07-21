@@ -3,7 +3,7 @@
 # Kinetic Planner - Phase 0 设计规格
 
 **日期：** 2026-07-20
-**模组：** Kinetic Planner（`kineticplanner`）
+**模组：** Kinetic Planner（`kinetic_planner`）
 **阶段：** Phase 0 - 项目骨架 + 只读世界节点树地图叠加
 **目标：** 建立数据访问层与矢量叠加渲染管线，作为后续 Phase 1-5 的地基
 
@@ -94,7 +94,7 @@ Kinetic Planner 是 Minecraft 模组，用于在全屏地图模组（Xaero's Wor
 ### 3.2 包结构
 
 ```
-com.jsmua.kineticplanner
+net.jsmua.kinetic_planner
 ├── KineticPlannerMod.java          @Mod 主类
 ├── KineticPlannerClient.java       @Mod(dist=CLIENT) 客户端入口
 ├── config/
@@ -189,7 +189,7 @@ graph TB
 - Mixin `@Inject` 到 `GuiMap.render` 末尾（Xaero 渲染时机）
 
 **Mixin 配置：**
-- 新建 `kineticplanner.mixins.json`，`compat` 子包放 Xaero accessor
+- 新建 `kinetic_planner.mixins.json`，`compat` 子包放 Xaero accessor
 - `neoforge.mods.toml` 启用 `[[mixins]]` 声明
 - Mixin plugin 守卫 `Mods.XAEROWORLDMAP.isLoaded()`（复刻 Create `CreateMixinPlugin` 模式）
 - accessor 字段名用 `kp$` 前缀，避免与 Create mixin 冲突

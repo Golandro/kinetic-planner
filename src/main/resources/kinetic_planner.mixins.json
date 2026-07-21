@@ -1,0 +1,16 @@
+{
+    "required": true,
+    "minVersion": "0.8.5",
+    "package": "net.jsmua.kinetic_planner.mixin",
+    "plugin": "net.jsmua.kinetic_planner.mixin.KineticPlannerMixinPlugin",
+    "compatibilityLevel": "JAVA_21",
+    "refmap": "kinetic_planner.refmap.json",
+    "mixins": [],
+    "client": [
+        "XaeroMapAccessor",
+        "XaeroMapRenderHook"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}

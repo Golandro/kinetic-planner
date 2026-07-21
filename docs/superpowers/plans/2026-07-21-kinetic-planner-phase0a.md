@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Minecraft 1.21.1，NeoForge 21.1.235，Java 21（toolchain）
-- mod_id: `kineticplanner`，mod_group_id: `com.jsmua.kineticplanner`
+- mod_id: `kinetic_planner`，mod_group_id: `com.jsmua.kineticplanner`
 - Create 6.0.10-280（`implementation`，可访问内部类），Ponder 1.0.82，Flywheel 1.0.6
 - Xaero's World Map + XaeroLib `compileOnly`，运行时由用户装
 - Cloth Config 15.0.140（`api`）
@@ -39,7 +39,7 @@
 | `main`（common） | `src/main/java/`（common 部分） | 纯数学、数据接口、几何描述符、主题数据 | JUnit 5 纯 JVM |
 | `client` | `src/client/java/` | Mixin、地图适配、渲染、生产数据访问实现 | Mockito mock MC 依赖 |
 
-### common 包结构（`src/main/java/com/jsmua/kineticplanner/`）
+### common 包结构（`src/main/java/com/jsmua/kinetic_planner/`）
 
 | 路径 | 职责 |
 |---|---|
@@ -75,7 +75,7 @@
 
 | 路径 | 职责 |
 |---|---|
-| `src/main/resources/kineticplanner.mixins.json` | Mixin 配置（client mixins） |
+| `../../../src/main/resources/kinetic_planner.mixins.json` | Mixin 配置（client mixins） |
 | `src/main/resources/assets/kineticplanner/lang/en_us.json` | 语言文件 |
 | `src/main/templates/META-INF/neoforge.mods.toml` | modId/依赖/mixins 声明 |
 
@@ -101,10 +101,10 @@
 - Modify: `gradle.properties`
 - Modify: `build.gradle`
 - Modify: `src/main/templates/META-INF/neoforge.mods.toml`
-- Create: `src/main/java/com/jsmua/kineticplanner/KineticPlannerMod.java`
+- Create: `src/main/java/com/jsmua/kinetic_planner/KineticPlannerMod.java`
 - Create: `src/client/java/com/jsmua/kineticplanner/KineticPlannerClient.java`
-- Create: `src/main/resources/kineticplanner.mixins.json`
-- Create: `src/main/java/com/jsmua/kineticplanner/mixin/KineticPlannerMixinPlugin.java`
+- Create: `../../../src/main/resources/kinetic_planner.mixins.json`
+- Create: `src/main/java/com/jsmua/kinetic_planner/mixin/KineticPlannerMixinPlugin.java`
 - Create: `src/main/resources/assets/kineticplanner/lang/en_us.json`
 - Delete: `src/main/java/com/example/examplemod/*`, `src/main/resources/assets/examplemod/`
 
@@ -112,7 +112,7 @@
 - Produces: `KineticPlannerMod.MODID = "kineticplanner"`，`KineticPlannerMod.LOGGER`
 - Produces: `KineticPlannerClient`（@Mod(dist=CLIENT)）
 - Produces: `KineticPlannerMixinPlugin.shouldApplyMixin(String, String)` 守卫 Xaero mixin
-- Produces: mixin config `kineticplanner.mixins.json`
+- Produces: mixin config `kinetic_planner.mixins.json`
 
 - [ ] **Step 1: 修改 gradle.properties 重命名**
 
@@ -123,7 +123,7 @@ mod_id=kineticplanner
 mod_name=Kinetic Planner
 mod_license=MIT
 mod_version=0.1.0-alpha
-mod_group_id=com.jsmua.kineticplanner
+mod_group_id=net.jsmua.kinetic_planner
 ```
 
 - [ ] **Step 2: 修改 build.gradle 添加 sourceSet 与测试依赖**
@@ -237,10 +237,10 @@ Kinetic Planner - CAD-style railway planning overlay for Create mod on Xaero's W
 
 - [ ] **Step 4: 创建主类 KineticPlannerMod（common）**
 
-创建 `src/main/java/com/jsmua/kineticplanner/KineticPlannerMod.java`：
+创建 `src/main/java/com/jsmua/kinetic_planner/KineticPlannerMod.java`：
 
 ```java
-package com.jsmua.kineticplanner;
+package net.jsmua.kinetic_planner;
 
 import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
@@ -264,10 +264,10 @@ public class KineticPlannerMod {
 创建 `src/client/java/com/jsmua/kineticplanner/KineticPlannerClient.java`：
 
 ```java
-package com.jsmua.kineticplanner;
+package net.jsmua.kinetic_planner;
 
-import com.jsmua.kineticplanner.instrument.NativeLineOverlay;
-import com.jsmua.kineticplanner.mapadapter.MapOverlayDispatcher;
+import net.jsmua.kinetic_planner.instrument.NativeLineOverlay;
+import net.jsmua.kinetic_planner.mapadapter.MapOverlayDispatcher;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -299,14 +299,14 @@ public class KineticPlannerClient {
 
 - [ ] **Step 6: 创建 Mixin 配置文件**
 
-创建 `src/main/resources/kineticplanner.mixins.json`：
+创建 `../../../src/main/resources/kinetic_planner.mixins.json`：
 
 ```json
 {
     "required": true,
     "minVersion": "0.8.5",
-    "package": "com.jsmua.kineticplanner.mixin",
-    "plugin": "com.jsmua.kineticplanner.mixin.KineticPlannerMixinPlugin",
+    "package": "net.jsmua.kinetic_planner.mixin",
+    "plugin": "net.jsmua.kinetic_planner.mixin.KineticPlannerMixinPlugin",
     "compatibilityLevel": "JAVA_21",
     "refmap": "kineticplanner.refmap.json",
     "mixins": [],
@@ -322,10 +322,10 @@ public class KineticPlannerClient {
 
 - [ ] **Step 7: 创建 MixinPlugin 守卫**
 
-创建 `src/main/java/com/jsmua/kineticplanner/mixin/KineticPlannerMixinPlugin.java`：
+创建 `src/main/java/com/jsmua/kinetic_planner/mixin/KineticPlannerMixinPlugin.java`：
 
 ```java
-package com.jsmua.kineticplanner.mixin;
+package net.jsmua.kinetic_planner.mixin;
 
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensionpoint.IMixinConfigPlugin;
@@ -336,10 +336,13 @@ import java.util.Set;
 
 public class KineticPlannerMixinPlugin implements IMixinConfigPlugin {
     @Override
-    public void onLoad(String mixinPackage) {}
+    public void onLoad(String mixinPackage) {
+    }
 
     @Override
-    public String getRefMapperConfig() { return null; }
+    public String getRefMapperConfig() {
+        return null;
+    }
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
@@ -356,22 +359,27 @@ public class KineticPlannerMixinPlugin implements IMixinConfigPlugin {
     }
 
     @Override
-    public void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {}
+    public void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {
+    }
 
     @Override
-    public List<String> getMixins() { return null; }
+    public List<String> getMixins() {
+        return null;
+    }
 
     @Override
-    public void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {}
+    public void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+    }
 
     @Override
-    public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {}
+    public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+    }
 }
 ```
 
 > **注意：** `KineticPlannerLogMixin` 是个占位引用，实际用 `com.jsmua.kineticplanner.KineticPlannerMod.LOGGER`。把 Step 7 代码里的 `KineticPlannerLogMixin.warn(...)` 改为：
 > ```java
-> com.jsmua.kineticplanner.KineticPlannerMod.LOGGER.warn("Xaero GuiMap not found, skipping Xaero mixins");
+> net.jsmua.kinetic_planner.KineticPlannerMod.LOGGER.warn("Xaero GuiMap not found, skipping Xaero mixins");
 > ```
 
 - [ ] **Step 8: 创建语言文件**
@@ -409,7 +417,7 @@ git commit -m "refactor: rename examplemod to kineticplanner with common/client 
 ## Task 2: Vec2d（common，纯 JVM 单测）
 
 **Files:**
-- Create: `src/main/java/com/jsmua/kineticplanner/projection/Vec2d.java`
+- Create: `src/main/java/com/jsmua/kinetic_planner/projection/Vec2d.java`
 - Test: `src/test/java/com/jsmua/kineticplanner/projection/Vec2dTest.java`
 
 **Interfaces:**
@@ -420,9 +428,10 @@ git commit -m "refactor: rename examplemod to kineticplanner with common/client 
 创建 `src/test/java/com/jsmua/kineticplanner/projection/Vec2dTest.java`：
 
 ```java
-package com.jsmua.kineticplanner.projection;
+package net.jsmua.kinetic_planner.projection;
 
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class Vec2dTest {
@@ -475,10 +484,10 @@ class Vec2dTest {
 
 - [ ] **Step 3: 实现 Vec2d**
 
-创建 `src/main/java/com/jsmua/kineticplanner/projection/Vec2d.java`：
+创建 `src/main/java/com/jsmua/kinetic_planner/projection/Vec2d.java`：
 
 ```java
-package com.jsmua.kineticplanner.projection;
+package net.jsmua.kinetic_planner.projection;
 
 public record Vec2d(double x, double y) {
     public Vec2d add(Vec2d other) {
@@ -518,8 +527,8 @@ git commit -m "feat: add Vec2d record with JUnit 5 tests"
 ## Task 3: CameraParams + WorldRect（common，纯 JVM 单测）
 
 **Files:**
-- Create: `src/main/java/com/jsmua/kineticplanner/projection/CameraParams.java`
-- Create: `src/main/java/com/jsmua/kineticplanner/projection/WorldRect.java`
+- Create: `src/main/java/com/jsmua/kinetic_planner/projection/CameraParams.java`
+- Create: `src/main/java/com/jsmua/kinetic_planner/projection/WorldRect.java`
 - Test: `src/test/java/com/jsmua/kineticplanner/projection/CameraParamsTest.java`
 
 **Interfaces:**
@@ -531,9 +540,10 @@ git commit -m "feat: add Vec2d record with JUnit 5 tests"
 创建 `src/test/java/com/jsmua/kineticplanner/projection/CameraParamsTest.java`：
 
 ```java
-package com.jsmua.kineticplanner.projection;
+package net.jsmua.kinetic_planner.projection;
 
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class CameraParamsTest {
@@ -584,29 +594,34 @@ class WorldRectTest {
 
 - [ ] **Step 3: 实现 CameraParams**
 
-创建 `src/main/java/com/jsmua/kineticplanner/projection/CameraParams.java`：
+创建 `src/main/java/com/jsmua/kinetic_planner/projection/CameraParams.java`：
 
 ```java
-package com.jsmua.kineticplanner.projection;
+package net.jsmua.kinetic_planner.projection;
 
 public record CameraParams(
-    double cameraBlockX,
-    double cameraBlockZ,
-    double blocksPerPixel,
-    int screenWidth,
-    int screenHeight
+        double cameraBlockX,
+        double cameraBlockZ,
+        double blocksPerPixel,
+        int screenWidth,
+        int screenHeight
 ) {
-    public int screenCenterX() { return screenWidth / 2; }
-    public int screenCenterY() { return screenHeight / 2; }
+    public int screenCenterX() {
+        return screenWidth / 2;
+    }
+
+    public int screenCenterY() {
+        return screenHeight / 2;
+    }
 }
 ```
 
 - [ ] **Step 4: 实现 WorldRect**
 
-创建 `src/main/java/com/jsmua/kineticplanner/projection/WorldRect.java`：
+创建 `src/main/java/com/jsmua/kinetic_planner/projection/WorldRect.java`：
 
 ```java
-package com.jsmua.kineticplanner.projection;
+package net.jsmua.kinetic_planner.projection;
 
 public record WorldRect(double minX, double minZ, double maxX, double maxZ) {
     public boolean contains(double x, double z) {
@@ -636,7 +651,7 @@ git commit -m "feat: add CameraParams and WorldRect records with tests"
 ## Task 4: WorldScreenTransform（common，纯 JVM 单测）
 
 **Files:**
-- Create: `src/main/java/com/jsmua/kineticplanner/projection/WorldScreenTransform.java`
+- Create: `src/main/java/com/jsmua/kinetic_planner/projection/WorldScreenTransform.java`
 - Test: `src/test/java/com/jsmua/kineticplanner/projection/WorldScreenTransformTest.java`
 
 **Interfaces:**
@@ -648,10 +663,11 @@ git commit -m "feat: add CameraParams and WorldRect records with tests"
 创建 `src/test/java/com/jsmua/kineticplanner/projection/WorldScreenTransformTest.java`：
 
 ```java
-package com.jsmua.kineticplanner.projection;
+package net.jsmua.kinetic_planner.projection;
 
 import org.joml.Vector2f;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class WorldScreenTransformTest {
@@ -732,10 +748,10 @@ class WorldScreenTransformTest {
 
 - [ ] **Step 3: 实现 WorldScreenTransform**
 
-创建 `src/main/java/com/jsmua/kineticplanner/projection/WorldScreenTransform.java`：
+创建 `src/main/java/com/jsmua/kinetic_planner/projection/WorldScreenTransform.java`：
 
 ```java
-package com.jsmua.kineticplanner.projection;
+package net.jsmua.kinetic_planner.projection;
 
 import org.joml.Vector2f;
 
@@ -801,7 +817,7 @@ git commit -m "feat: add WorldScreenTransform with inverse projection tests"
 ## Task 5: EdgeGeometry 描述符（common，无逻辑无单测）
 
 **Files:**
-- Create: `src/main/java/com/jsmua/kineticplanner/data/EdgeGeometry.java`
+- Create: `src/main/java/com/jsmua/kinetic_planner/data/EdgeGeometry.java`
 
 **Interfaces:**
 - Produces: `EdgeGeometry(Type, Vec3, Vec3, BezierSpec, ArcSpec, ExtensionSpec)` record
@@ -813,40 +829,43 @@ git commit -m "feat: add WorldScreenTransform with inverse projection tests"
 
 - [ ] **Step 1: 创建 EdgeGeometry record**
 
-创建 `src/main/java/com/jsmua/kineticplanner/data/EdgeGeometry.java`：
+创建 `src/main/java/com/jsmua/kinetic_planner/data/EdgeGeometry.java`：
 
 ```java
-package com.jsmua.kineticplanner.data;
+package net.jsmua.kinetic_planner.data;
 
 import com.simibubi.create.content.trains.track.TrackMaterial;
 import net.minecraft.world.phys.Vec3;
 
 public record EdgeGeometry(
-    Type type,
-    Vec3 p1, Vec3 p2,
-    BezierSpec bezier,
-    ArcSpec arc,
-    ExtensionSpec extension
+        Type type,
+        Vec3 p1, Vec3 p2,
+        BezierSpec bezier,
+        ArcSpec arc,
+        ExtensionSpec extension
 ) {
     public enum Type {
         STRAIGHT, ARC, BEZIER, EXTENSION, SPLINE
     }
 
     public record BezierSpec(
-        Vec3 start, Vec3 control1, Vec3 control2, Vec3 end,
-        TrackMaterial material
-    ) {}
+            Vec3 start, Vec3 control1, Vec3 control2, Vec3 end,
+            TrackMaterial material
+    ) {
+    }
 
     public record ArcSpec(
-        Vec3 center, double radius, double startRad, double endRad,
-        TrackMaterial material
-    ) {}
+            Vec3 center, double radius, double startRad, double endRad,
+            TrackMaterial material
+    ) {
+    }
 
     public record ExtensionSpec(
-        String sourceModId,
-        String geometryTypeId,
-        net.minecraft.nbt.CompoundTag data
-    ) {}
+            String sourceModId,
+            String geometryTypeId,
+            net.minecraft.nbt.CompoundTag data
+    ) {
+    }
 
     public static EdgeGeometry straight(Vec3 p1, Vec3 p2) {
         return new EdgeGeometry(Type.STRAIGHT, p1, p2, null, null, null);
@@ -875,8 +894,8 @@ git commit -m "feat: add EdgeGeometry descriptor with railx/spline extension slo
 ## Task 6: IRailwayDataAccess 接口 + StubRailwayDataAccess（common，纯 JVM 单测）
 
 **Files:**
-- Create: `src/main/java/com/jsmua/kineticplanner/data/IRailwayDataAccess.java`
-- Create: `src/main/java/com/jsmua/kineticplanner/data/StubRailwayDataAccess.java`
+- Create: `src/main/java/com/jsmua/kinetic_planner/data/IRailwayDataAccess.java`
+- Create: `src/main/java/com/jsmua/kinetic_planner/data/StubRailwayDataAccess.java`
 - Test: `src/test/java/com/jsmua/kineticplanner/data/StubRailwayDataAccessTest.java`
 
 **Interfaces:**
@@ -885,10 +904,10 @@ git commit -m "feat: add EdgeGeometry descriptor with railx/spline extension slo
 
 - [ ] **Step 1: 创建 IRailwayDataAccess 接口**
 
-创建 `src/main/java/com/jsmua/kineticplanner/data/IRailwayDataAccess.java`：
+创建 `src/main/java/com/jsmua/kinetic_planner/data/IRailwayDataAccess.java`：
 
 ```java
-package com.jsmua.kineticplanner.data;
+package net.jsmua.kinetic_planner.data;
 
 import com.simibubi.create.content.trains.graph.EdgePointType;
 import com.simibubi.create.content.trains.graph.TrackEdge;
@@ -903,21 +922,27 @@ import java.util.stream.Stream;
 
 public interface IRailwayDataAccess {
     Stream<TrackGraph> graphsInDimension(ResourceKey<Level> dim);
+
     Stream<TrackNode> nodesInDimension(TrackGraph g, ResourceKey<Level> dim);
+
     Stream<TrackEdge> edgesFrom(TrackNode node);
+
     <T extends TrackEdgePoint> Stream<T> edgePoints(TrackGraph g, EdgePointType<T> type);
+
     int clientVersion();
+
     EdgeGeometry edgeGeometry(TrackEdge edge);
+
     Vec3 nodeWorldPos(TrackNode node);
 }
 ```
 
 - [ ] **Step 2: 创建 StubRailwayDataAccess**
 
-创建 `src/main/java/com/jsmua/kineticplanner/data/StubRailwayDataAccess.java`：
+创建 `src/main/java/com/jsmua/kinetic_planner/data/StubRailwayDataAccess.java`：
 
 ```java
-package com.jsmua.kineticplanner.data;
+package net.jsmua.kinetic_planner.data;
 
 import com.simibubi.create.content.trains.graph.EdgePointType;
 import com.simibubi.create.content.trains.graph.TrackEdge;
@@ -984,9 +1009,10 @@ public class StubRailwayDataAccess implements IRailwayDataAccess {
 创建 `src/test/java/com/jsmua/kineticplanner/data/StubRailwayDataAccessTest.java`：
 
 ```java
-package com.jsmua.kineticplanner.data;
+package net.jsmua.kinetic_planner.data;
 
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class StubRailwayDataAccessTest {
@@ -1046,7 +1072,7 @@ git commit -m "feat: add IRailwayDataAccess interface and StubRailwayDataAccess"
 创建 `src/client/java/com/jsmua/kineticplanner/data/RailwayDataAccess.java`：
 
 ```java
-package com.jsmua.kineticplanner.data;
+package net.jsmua.kinetic_planner.data;
 
 import com.simibubi.create.CreateClient;
 import com.simibubi.create.content.trains.graph.*;
@@ -1062,13 +1088,13 @@ public class RailwayDataAccess implements IRailwayDataAccess {
     @Override
     public Stream<TrackGraph> graphsInDimension(ResourceKey<Level> dim) {
         return CreateClient.RAILWAYS.trackNetworks.values().stream()
-            .filter(g -> true); // 维度过滤在 nodesInDimension 内做
+                .filter(g -> true); // 维度过滤在 nodesInDimension 内做
     }
 
     @Override
     public Stream<TrackNode> nodesInDimension(TrackGraph g, ResourceKey<Level> dim) {
         return g.getNodes().stream()
-            .filter(n -> n.getLocation().dimension.equals(dim));
+                .filter(n -> n.getLocation().dimension.equals(dim));
     }
 
     @Override
@@ -1119,12 +1145,13 @@ public class RailwayDataAccess implements IRailwayDataAccess {
 创建 `src/test/java/com/jsmua/kineticplanner/data/RailwayDataAccessTest.java`：
 
 ```java
-package com.jsmua.kineticplanner.data;
+package net.jsmua.kinetic_planner.data;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -1133,8 +1160,10 @@ import com.simibubi.create.content.trains.graph.TrackNode;
 
 @ExtendWith(MockitoExtension.class)
 class RailwayDataAccessTest {
-    @Mock TrackEdge mockEdge;
-    @Mock TrackNode mockNode;
+    @Mock
+    TrackEdge mockEdge;
+    @Mock
+    TrackNode mockNode;
 
     @Test
     void edgeGeometryWithNullTurnReturnsStraight() {
@@ -1191,7 +1220,7 @@ git commit -m "feat: add RailwayDataAccess production implementation with Mockit
 创建 `src/client/java/com/jsmua/kineticplanner/mapadapter/MapOverlayProvider.java`：
 
 ```java
-package com.jsmua.kineticplanner.mapadapter;
+package net.jsmua.kinetic_planner.mapadapter;
 
 import net.minecraft.client.gui.screens.Screen;
 
@@ -1199,7 +1228,10 @@ import javax.annotation.Nullable;
 
 public interface MapOverlayProvider {
     boolean isMapOpen(Screen screen);
-    @Nullable MapOverlayContext captureContext(Screen screen);
+
+    @Nullable
+    MapOverlayContext captureContext(Screen screen);
+
     String modId();
 }
 ```
@@ -1207,20 +1239,21 @@ public interface MapOverlayProvider {
 创建 `src/client/java/com/jsmua/kineticplanner/mapadapter/MapOverlayContext.java`：
 
 ```java
-package com.jsmua.kineticplanner.mapadapter;
+package net.jsmua.kinetic_planner.mapadapter;
 
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
 public record MapOverlayContext(
-    ResourceKey<Level> dimension,
-    double cameraBlockX, double cameraBlockZ,
-    double blocksPerPixel,
-    int screenWidth, int screenHeight,
-    int mouseX, int mouseY,
-    float partialTicks,
-    float dpr
-) {}
+        ResourceKey<Level> dimension,
+        double cameraBlockX, double cameraBlockZ,
+        double blocksPerPixel,
+        int screenWidth, int screenHeight,
+        int mouseX, int mouseY,
+        float partialTicks,
+        float dpr
+) {
+}
 ```
 
 - [ ] **Step 2: 创建 MapOverlayDispatcher**
@@ -1228,9 +1261,9 @@ public record MapOverlayContext(
 创建 `src/client/java/com/jsmua/kineticplanner/mapadapter/MapOverlayDispatcher.java`：
 
 ```java
-package com.jsmua.kineticplanner.mapadapter;
+package net.jsmua.kinetic_planner.mapadapter;
 
-import com.jsmua.kineticplanner.KineticPlannerMod;
+import net.jsmua.kinetic_planner.KineticPlannerMod;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 
@@ -1278,7 +1311,7 @@ public class MapOverlayDispatcher {
 创建 `src/client/java/com/jsmua/kineticplanner/mixin/XaeroMapAccessor.java`：
 
 ```java
-package com.jsmua.kineticplanner.mixin;
+package net.jsmua.kinetic_planner.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -1289,10 +1322,13 @@ import xaero.map.misc.MapProcessor;
 public interface XaeroMapAccessor {
     @Accessor("cameraX")
     double kp$cameraX();
+
     @Accessor("cameraZ")
     double kp$cameraZ();
+
     @Accessor("scale")
     double kp$scale();
+
     @Accessor("mapProcessor")
     MapProcessor kp$mapProcessor();
 }
@@ -1303,10 +1339,10 @@ public interface XaeroMapAccessor {
 创建 `src/client/java/com/jsmua/kineticplanner/mixin/XaeroMapRenderHook.java`：
 
 ```java
-package com.jsmua.kineticplanner.mixin;
+package net.jsmua.kinetic_planner.mixin;
 
-import com.jsmua.kineticplanner.KineticPlannerMod;
-import com.jsmua.kineticplanner.instrument.NativeLineOverlay;
+import net.jsmua.kinetic_planner.KineticPlannerMod;
+import net.jsmua.kinetic_planner.instrument.NativeLineOverlay;
 import net.minecraft.client.gui.GuiGraphics;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -1332,10 +1368,10 @@ public class XaeroMapRenderHook {
 创建 `src/client/java/com/jsmua/kineticplanner/mapadapter/XaeroMapOverlayProvider.java`：
 
 ```java
-package com.jsmua.kineticplanner.mapadapter;
+package net.jsmua.kinetic_planner.mapadapter;
 
-import com.jsmua.kineticplanner.KineticPlannerMod;
-import com.jsmua.kineticplanner.mixin.XaeroMapAccessor;
+import net.jsmua.kinetic_planner.KineticPlannerMod;
+import net.jsmua.kinetic_planner.mixin.XaeroMapAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceKey;
@@ -1370,10 +1406,10 @@ public class XaeroMapOverlayProvider implements MapOverlayProvider {
 
             ResourceKey<Level> dim = Level.OVERWORLD; // TODO: 从 acc.kp$mapProcessor().getMapWorld().getCurrentDimension() 取
             return new MapOverlayContext(
-                dim, cameraX, cameraZ, blocksPerPixel,
-                mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight(),
-                (int) mc.mouseHandler.xpos(), (int) mc.mouseHandler.ypos(),
-                mc.getPartialTick(), dpr
+                    dim, cameraX, cameraZ, blocksPerPixel,
+                    mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight(),
+                    (int) mc.mouseHandler.xpos(), (int) mc.mouseHandler.ypos(),
+                    mc.getPartialTick(), dpr
             );
         } catch (Throwable t) {
             KineticPlannerMod.LOGGER.error("XaeroMapOverlayProvider.captureContext failed", t);
@@ -1382,7 +1418,9 @@ public class XaeroMapOverlayProvider implements MapOverlayProvider {
     }
 
     @Override
-    public String modId() { return "xaeroworldmap"; }
+    public String modId() {
+        return "xaeroworldmap";
+    }
 }
 ```
 
@@ -1391,21 +1429,28 @@ public class XaeroMapOverlayProvider implements MapOverlayProvider {
 创建 `src/client/java/com/jsmua/kineticplanner/mapadapter/JourneyMapOverlayProvider.java`：
 
 ```java
-package com.jsmua.kineticplanner.mapadapter;
+package net.jsmua.kinetic_planner.mapadapter;
 
 import net.minecraft.client.gui.screens.Screen;
+
 import javax.annotation.Nullable;
 
 public class JourneyMapOverlayProvider implements MapOverlayProvider {
     @Override
-    public boolean isMapOpen(Screen screen) { return false; }
+    public boolean isMapOpen(Screen screen) {
+        return false;
+    }
 
     @Override
     @Nullable
-    public MapOverlayContext captureContext(Screen screen) { return null; }
+    public MapOverlayContext captureContext(Screen screen) {
+        return null;
+    }
 
     @Override
-    public String modId() { return "journeymap"; }
+    public String modId() {
+        return "journeymap";
+    }
 }
 ```
 
@@ -1442,7 +1487,7 @@ git commit -m "feat: add MapOverlayProvider with Xaero Mixin adapter"
 创建 `src/client/java/com/jsmua/kineticplanner/instrument/EdgePointColorResolver.java`：
 
 ```java
-package com.jsmua.kineticplanner.instrument;
+package net.jsmua.kinetic_planner.instrument;
 
 import com.simibubi.create.CreateClient;
 import com.simibubi.create.content.trains.graph.TrackGraph;
@@ -1474,9 +1519,9 @@ public class EdgePointColorResolver {
 创建 `src/client/java/com/jsmua/kineticplanner/instrument/GeometryCache.java`：
 
 ```java
-package com.jsmua.kineticplanner.instrument;
+package net.jsmua.kinetic_planner.instrument;
 
-import com.jsmua.kineticplanner.data.EdgeGeometry;
+import net.jsmua.kinetic_planner.data.EdgeGeometry;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
@@ -1484,7 +1529,8 @@ import net.minecraft.world.level.Level;
 import java.util.*;
 
 public class GeometryCache {
-    public record GraphGeometry(List<Vec3> nodes, List<EdgeGeometry> edges) {}
+    public record GraphGeometry(List<Vec3> nodes, List<EdgeGeometry> edges) {
+    }
 
     private final Map<UUID, GraphGeometry> cache = new HashMap<>();
     private int lastVersion = -1;
@@ -1518,16 +1564,16 @@ public class GeometryCache {
 创建 `src/client/java/com/jsmua/kineticplanner/instrument/NativeLineOverlay.java`：
 
 ```java
-package com.jsmua.kineticplanner.instrument;
+package net.jsmua.kinetic_planner.instrument;
 
-import com.jsmua.kineticplanner.KineticPlannerMod;
-import com.jsmua.kineticplanner.data.EdgeGeometry;
-import com.jsmua.kineticplanner.data.IRailwayDataAccess;
-import com.jsmua.kineticplanner.data.RailwayDataAccess;
-import com.jsmua.kineticplanner.mapadapter.MapOverlayContext;
-import com.jsmua.kineticplanner.mapadapter.MapOverlayDispatcher;
-import com.jsmua.kineticplanner.projection.CameraParams;
-import com.jsmua.kineticplanner.projection.WorldScreenTransform;
+import net.jsmua.kinetic_planner.KineticPlannerMod;
+import net.jsmua.kinetic_planner.data.EdgeGeometry;
+import net.jsmua.kinetic_planner.data.IRailwayDataAccess;
+import net.jsmua.kinetic_planner.data.RailwayDataAccess;
+import net.jsmua.kinetic_planner.mapadapter.MapOverlayContext;
+import net.jsmua.kinetic_planner.mapadapter.MapOverlayDispatcher;
+import net.jsmua.kinetic_planner.projection.CameraParams;
+import net.jsmua.kinetic_planner.projection.WorldScreenTransform;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.content.trains.graph.TrackGraph;
 import com.simibubi.create.content.trains.graph.TrackNode;
@@ -1555,8 +1601,8 @@ public class NativeLineOverlay {
         }
         MapOverlayContext ctx = ctxOpt.get();
         CameraParams cam = new CameraParams(
-            ctx.cameraBlockX(), ctx.cameraBlockZ(), ctx.blocksPerPixel(),
-            ctx.screenWidth(), ctx.screenHeight()
+                ctx.cameraBlockX(), ctx.cameraBlockZ(), ctx.blocksPerPixel(),
+                ctx.screenWidth(), ctx.screenHeight()
         );
         lastTransform = new WorldScreenTransform(cam);
         lastContext = ctx;
