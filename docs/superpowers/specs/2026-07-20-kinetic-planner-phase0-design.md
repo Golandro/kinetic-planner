@@ -581,66 +581,116 @@ disableGlStateGuard = false  # 危险：跳过 GL 状态隔离（调试用）
 ### 7.1 内外部 DSL 分层
 
 - **内部 DSL：** Create 数据结构（`TrackGraph`/`TrackNode`/`TrackEdge`/`BezierConnection`/`EdgePoint`），Phase 0 的 `EdgeGeometry` 描述符已预留 `ExtensionSpec` 字段承载 railx 等扩展几何
-- **外部 DSL：** **RailML**（欧洲铁路交换标准，XML）。选择 RailML 而非 LandXML 的理由：拓扑模型（`netElement`/`netRelation`）与 Create 图论层同构度最高，信号/车站语义最完整，符合"业界标准格式作为外部 DSL"需求
+- **外部 DSL：** **IFC 4.3 铁路特化子集**（buildingSMART IFC 4.3, ISO 16739-1）。选型理由：
+  - IFC 4.3 是**完全开放的国际标准**（ISO 16739-1），4.3 版本正式纳入铁路域（`IfcRailway`/`IfcTrack`/`IfcAlignment`/`IfcBSplineCurve`），许可无约束
+  - 中国铁路 BIM 标准基于 IFC 体系，互操作生态更广
+  - 核心交换层用标准 IFC 实体（IFC-XML 序列化），确保被任何 IFC 兼容软件识别
+  - Create 特有的有向多重图、2 倍压缩坐标、贝塞尔控制点、railx 扩展几何、三树元数据等信息**不进入 IFC 标准实体**，而是通过 `IfcPropertySet` 自定义属性集承载（`kp_` 前缀命名空间），作为标准交换之上的 Create 特化层
+  - 双层设计替代了原方案中的 RailML（非 ISO 开放标准，RailML 词汇全面弃用，改用 IFC 实体 + PSet）
 
-### 7.2 RailML 与 Create 数据结构映射
+### 7.2 IFC 4.3 rail 子集与 Create 数据结构映射
 
-| RailML 概念 | Create 对应 | 说明 |
+| IFC 4.3 实体 | Create 对应 | 说明 |
 |---|---|---|
-| `infrastructure` 根 | `RailwaySavedData` | 顶层容器 |
-| `netElement` | `TrackEdge`（含 `TrackNode` 端点） | 网络元素，有向 |
-| `netRelation` | 节点连接关系 | 元素间关系（连接/分支） |
-| `networkResource`/`topology` | `TrackGraph` | 拓扑容器 |
-| `signal` | `SignalBoundary`（`EdgePointType.SIGNAL`） | 信号机 |
-| `stop`/`operationalStop` | `GlobalStation`（`EdgePointType.STATION`） | 车站 |
-| `trainProtectionElement` | `TrackObserver`（`EdgePointType.OBSERVER`） | 观察者/检测器 |
-| `gradientChange`/`curve` | `EdgeGeometry` 几何 | 线形几何 |
+| `IfcRailway` | `RailwaySavedData` | 顶层铁路聚合容器，通过 `Aggregates` 包含所有 `IfcTrack` |
+| `IfcTrack` 段 | `TrackEdge`（含两端 `TrackNode`） | 每条有向边映射为一个 `IfcTrack` 段实例 |
+| `IfcReferent`（PredefinedType=CONNECTIONPOINT） | `TrackNode` | 段端点标记，位于 `IfcTrack` 的 `IsNestedBy` 集合中 |
+| `IfcRelConnectsPathElements` | 节点间有向连接关系 | 表达两个 `IfcReferent` 间的有向路径连接；多重边靠多个关系实例区分；自带 `RelatingPriorities` 等方向性属性（原属结构层，语义借用） |
+| `IfcBSplineCurveWithKnots`（Degree=3） | `EdgeGeometry.type=BEZIER`（Create 三次贝塞尔） | 精确表达 4 控制点三次贝塞尔，标准层无损，无需降级采样 |
+| `IfcLineSegment` | `EdgeGeometry.type=STRAIGHT` | 直线段直接映射 |
+| `IfcPropertySet`（Name=`kp_Signal`） | `SignalBoundary`（`EdgePointType.SIGNAL`） | 信号机：`IfcReferent`（PredefinedType=SIGNAL）+ `kp_Signal` PSet（含 `kp_BoundaryType`/`kp_EdgeLocation`） |
+| `IfcPropertySet`（Name=`kp_Station`） | `GlobalStation`（`EdgePointType.STATION`） | 车站：`IfcReferent`（PredefinedType=STATION）+ `kp_Station` PSet（含 `kp_StationName`/`kp_Assembling`） |
+| `IfcPropertySet`（Name=`kp_Observer`） | `TrackObserver`（`EdgePointType.OBSERVER`） | 观察者：`IfcReferent`（PredefinedType=OBSERVATIONPOINT）+ `kp_Observer` PSet（含 `kp_Activated`/`kp_Filter`） |
+| `IfcPropertySet`（Name=`kp_CreateEdge`） | `TrackEdge` 扩展数据 | 有向性（`kp_Direction`）、`netId`、`trackMaterial`、贝塞尔原始控制点、多重边序号（`kp_MultiEdgeIndex`） |
+| `IfcPropertySet`（Name=`kp_NodeLocation`） | `TrackNodeLocation` | 2 倍压缩整数坐标（`kp_Loc`）、`dimension`（`kp_Dim`）、`yOffsetPixels` |
+| `IfcPropertySet`（Name=`kp_TreeMeta`） | 三树元数据（Phase 3） | `kp_TreeType`（world/staging/planning）、`kp_Revision`、`kp_ParentUuid`、`kp_TechSpec` |
 
-### 7.3 RailML 扩展命名空间（kp:）
+> **方向与多重边策略：** `IfcRelConnectsPathElements` 表达基本有向连接（节点 A→B），`kp_CreateEdge` PSet 中 `kp_Direction` 字段显式记录方向枚举（A_TO_B / B_TO_A）；两节点间反向边由不同 `IfcTrack` 段实例 + 独立 `IfcRelConnectsPathElements` 实例表达，`kp_MultiEdgeIndex` 区分同节点对内的多条边。
 
-RailML 原生不表达 Create 特有概念，用 `kp:` 命名空间扩展：
+### 7.3 IFC-XML 双层序列化示例
+
+核心交换层用标准 IFC-XML（`ifcXML4`，基于 IFC 4.3 规范），Create 特化层用 `IfcPropertySet` 自定义属性集（`kp_` 前缀）：
 
 ```xml
-<railml xmlns="http://www.railml.org/schemas/2013"
-        xmlns:kp="https://jsmua.com/kineticplanner/v1">
-  <infrastructure>
-    <topology>
-      <netElements>
-        <netElement id="e1" length="10.0">
-          <kp:geometry type="bezier">  <!-- Create 二次贝塞尔精确表达 -->
-            <kp:starts>...</kp:starts>
-            <kp:axes>...</kp:axes>
-            <kp:normals>...</kp:normals>
-            <kp:smoothing>0,0</kp:smoothing>
-            <kp:material>create:track</kp:material>
-          </kp:geometry>
-          <kp:geometry type="extension" sourceModId="railx"
-                       geometryTypeId="railx:free_curve">  <!-- railx 扩展几何 -->
-            <kp:data>...NBT base64...</kp:data>
-          </kp:geometry>
-        </netElement>
-      </netElements>
-    </topology>
-    <kp:dimensions>  <!-- DimensionPalette 内联 -->
-      <kp:dim index="0">minecraft:overworld</kp:dim>
-      <kp:dim index="1">minecraft:the_nether</kp:dim>
-    </kp:dimensions>
-    <kp:nodeLocations>  <!-- Create 2倍压缩整数坐标，RailML 原生用浮点 -->
-      <kp:node id="n1" loc="128,64,-256" dim="0" yOffsetPixels="0"/>
-    </kp:nodeLocations>
-    <kp:tree>  <!-- 三树元数据 -->
-      <kp:type>staging</kp:type>
-      <kp:revision>42</kp:revision>
-      <kp:parent>uuid-of-baseline</kp:parent>
-      <kp:techSpec minCurveRadius="8.0" maxGrade="0.05"/>
-    </kp:tree>
-  </infrastructure>
-</railml>
+<?xml version="1.0" encoding="UTF-8"?>
+<ifc xmlns="http://www.buildingsmart-tech.org/ifc/I.4.3"
+     xmlns:kp="https://jsmua.com/kineticplanner/v1">
+
+  <!-- 核心层：IfcRailway 聚合体，标准 IFC 实体，任何 IFC 兼容软件可读 -->
+  <IfcRailway id="rp1" Name="TrackGraph_net1" Description="Create railway network">
+    <Aggregates>
+
+      <!-- TrackEdge → IfcTrack 段，两端 IfcReferent 标记端点 -->
+      <IfcTrack id="tr1" Name="edge_0x1A2B" Description="Create track edge">
+        <IsNestedBy>
+          <IfcReferent id="rf1" Name="node_A" PredefinedType="CONNECTIONPOINT"/>
+          <IfcReferent id="rf2" Name="node_B" PredefinedType="CONNECTIONPOINT"/>
+        </IsNestedBy>
+        <Representation>
+          <!-- 三次贝塞尔：IfcBSplineCurveWithKnots，标准层精确表达 -->
+          <IfcBSplineCurveWithKnots id="bs1" Degree="3"
+            ControlPointsList="(10.5,64.0,-20.5) (15.0,64.0,-22.0) (25.0,64.0,-28.0) (30.5,64.0,-30.5)"
+            KnotMultiplicities="4 4"
+            Knots="0.0 1.0"
+            CurveForm="3"/>
+        </Representation>
+
+        <!-- Create 特化层：IfcPropertySet 承载 Create 特有数据 -->
+        <HasPropertySets>
+          <IfcPropertySet Name="kp_CreateEdge">
+            <HasProperties>
+              <IfcPropertySingleValue Name="kp_NetId" NominalValue="0x1A2B"/>
+              <IfcPropertySingleValue Name="kp_Direction" NominalValue="A_TO_B"/>
+              <IfcPropertySingleValue Name="kp_TrackMaterial" NominalValue="create:track"/>
+              <IfcPropertySingleValue Name="kp_MultiEdgeIndex" NominalValue="0"/>
+              <IfcPropertyListValue Name="kp_BezierHandles">
+                <ListValues>
+                  <IfcReal>15.0,64.0,-22.0</IfcReal>
+                  <IfcReal>25.0,64.0,-28.0</IfcReal>
+                </ListValues>
+              </IfcPropertyListValue>
+            </HasProperties>
+          </IfcPropertySet>
+        </HasPropertySets>
+      </IfcTrack>
+
+    </Aggregates>
+  </IfcRailway>
+
+  <!-- 节点坐标映射（Create 2 倍压缩整数 + DimensionPalette） -->
+  <IfcPropertySet Name="kp_NodeLocations">
+    <HasProperties>
+      <IfcPropertyListValue Name="kp_Nodes">
+        <ListValues>
+          <IfcText>{"id":"n1","loc":"128,64,-256","dim":0,"yOffsetPixels":0}</IfcText>
+          <IfcText>{"id":"n2","loc":"192,64,-320","dim":0,"yOffsetPixels":0}</IfcText>
+        </ListValues>
+      </IfcPropertyListValue>
+      <IfcPropertyListValue Name="kp_Dimensions">
+        <ListValues>
+          <IfcText>minecraft:overworld</IfcText>
+          <IfcText>minecraft:the_nether</IfcText>
+        </ListValues>
+      </IfcPropertyListValue>
+    </HasProperties>
+  </IfcPropertySet>
+
+  <!-- 有向连接关系：IfcRelConnectsPathElements -->
+  <IfcRelConnectsPathElements id="rc1" Name="connect_A_to_B"
+    RelatingElement="rf1" RelatedElement="rf2"
+    RelatedConnectionType="ATSTART" RelatingConnectionType="ATEND"/>
+
+  <!-- Signal: IfcReferent + kp_Signal PSet -->
+  <IfcReferent id="rf3" Name="sig_e1_0.5" PredefinedType="SIGNAL">
+    <!-- IfcPropertySet ... kp_Signal -->
+  </IfcReferent>
+
+</ifc>
 ```
 
-- RailML 标准部分（`netElement`/`signal`/`stop`）被主流铁路软件识别
-- `kp:` 扩展承载 Create 特有信息（2 倍压缩坐标/贝塞尔精确表达/railx 扩展几何/三树元数据/技规）
-- 第三方铁路软件忽略 `kp:` 命名空间仍能读拓扑与信号
+- **核心层**（`IfcRailway`/`IfcTrack`/`IfcReferent`/`IfcRelConnectsPathElements`/`IfcBSplineCurveWithKnots`）：标准 IFC 实体，任何 IFC 4.3 兼容铁路软件可读拓扑与几何
+- **特化层**（`IfcPropertySet` 以 `kp_` 命名）：Create 特有数据（2 倍压缩坐标、贝塞尔原始控制点、railx 扩展几何、三树元数据、技规），仅本模组读写
+- 第三方铁路软件忽略不识别的 `IfcPropertySet`，仍能读取核心拓扑与线形
 
 ### 7.4 railx 兼容性策略
 
@@ -648,29 +698,76 @@ railx（lhwdev/railx）扩展 Create 轨道几何：任意节点角度、更多�
 
 1. **数据保留优先：** `EdgeGeometry.ExtensionSpec` 存储原始 railx 几何数据（`sourceModId="railx"` + `geometryTypeId` + `CompoundTag data`），不尝试解析其内部结构
 2. **railx 加载时：** 通过反射或 railx API（若提供）将 `ExtensionSpec.data` 还原为 railx 几何对象，正常渲染与编辑
-3. **railx 未加载时：** 渲染降级为端点直线 + 标记"未知几何（railx）"，数据不丢失；LandML 导出时 `kp:geometry type="extension"` 原样输出
+3. **railx 未加载时：** 渲染降级为端点直线 + 标记"未知几何（railx）"，数据不丢失；IFC 导出时原始数据存入 `kp_ExtensionGeometry` PSet 原样保留
 4. **远程铺设（Phase 5）：** railx 几何无法直接铺设到 Create 世界（Create 不支持其曲线类型），需 discreteize 为 Create 可接受的贝塞尔段，或在 railx 存在时委托 railx 铺设
-5. **RailML 导出：** railx 扩展几何在 RailML 中用 `kp:geometry type="extension"` 表达，标准部分降级为 `IrregularLine` 采样点（保证主流软件可见线形）
+5. **IFC 导出：** railx 扩展几何在 IFC 中通过 `IfcPropertySet`（`kp_ExtensionGeometry`）表达原始数据，核心层降级为 `IfcBSplineCurveWithKnots` 采点（保证主流 IFC 软件可见线形）
 
 ### 7.5 几何类型映射表
 
-| 内部 DSL `EdgeGeometry.type` | RailML 标准 | RailML kp:扩展 | 备注 |
+| 内部 DSL `EdgeGeometry.type` | IFC 4.3 标准实体 | IFC 特化层（PSet） | 备注 |
 |---|---|---|---|
-| `STRAIGHT` | `<linear>` | - | 直接映射 |
-| `ARC` | `<curve>` | - | 圆心/半径/角度 |
-| `BEZIER` (Create 二次) | 降级 `<linear>` 采样 | `<kp:geometry type="bezier">` | 精确表达在扩展 |
-| `EXTENSION` (railx 等) | 降级 `<linear>` 采样 | `<kp:geometry type="extension">` | 原始数据在扩展 |
-| `SPLINE` (Phase 2) | 降级 `<linear>` 采样 | `<kp:geometry type="spline">` | 控制点在扩展 |
+| `STRAIGHT` | `IfcLineSegment` | - | 直接映射 |
+| `ARC` | `IfcAlignmentHorizontalSegment`（Phase 2） | - | 圆心/半径/角度，Phase 2 实现 |
+| `BEZIER`（Create 三次） | `IfcBSplineCurveWithKnots`（Degree=3, ControlPointsList=4 点, KnotMultiplicities="4 4"） | `kp_CreateEdge.kp_BezierHandles` 存原始控制点 | 标准层精确表达，无需降级采样 |
+| `EXTENSION`（railx 等） | 降级 `IfcBSplineCurveWithKnots` 采点 | `kp_ExtensionGeometry` PSet 存原始数据 | 原始数据在 PSet 保留 |
+| `SPLINE`（Phase 2） | `IfcBSplineCurveWithKnots`（Degree=3..5） | `kp_SplineControlPoints` PSet 存完整控制点 | 精确表达，标准层可读 |
+
+> 相比原 RailML 方案，`BEZIER` 不再需要"降级 `<linear>` 采样 + `kp:` 扩展"双轨——`IfcBSplineCurveWithKnots` 在标准层即提供三次贝塞尔的精确表达，大幅简化序列化逻辑。
 
 ### 7.6 与其他格式互导
 
 - **Create NBT：** 双向 1:1（内部 DSL 直接读写），世界树零损失
 - **Create 蓝图/Litematica：** 单向导入，仅提取线路几何（`BezierConnection` 相对坐标还原），丢失信号/车站 EdgePoint
-- **RailML：** 双向，标准部分主流软件可读，`kp:` 扩展部分仅本模组读写
-- **LandXML/DXF：** Phase 4 后期可选导出（从 RailML 标准部分转换），不在初版范围
+- **IFC 4.3 rail 子集：** 双向，核心层（标准 IFC 实体）被主流 IFC 软件识别，`kp_` PSet 特化层仅本模组读写
+- **LandXML/DXF：** Phase 4 后期可选导出。DXF 从 IFC 核心层几何转换；LandXML（道路/铁路交换格式）若需支持则从 IFC 核心对齐层转换。不在初版范围
 
-### 7.7 Phase 0 预留点
+### 7.7 IfcExchangeAdapter 接口与最小子集（Phase 4 实现备忘）
+
+Phase 0 不实现 IO，但定义抽象交换适配器接口，为 Phase 4 预留扩展点。接口与实现推迟到 Phase 4 动手时完成，此处仅声明最小 IFC 4.3 rail 子集：
+
+```java
+/**
+ * IFC 4.3 rail 子集交换适配器。Phase 4 实现。
+ * 负责 Create TrackGraph ↔ IFC 4.3 rail 子集（IFC-XML）的双向转换。
+ */
+@ApiStatus.Experimental
+public interface IfcExchangeAdapter {
+
+    /** 将 TrackGraph 导出为 IFC-XML 字符串（双层结构）。 */
+    String exportGraph(TrackGraph graph);
+
+    /** 从 IFC-XML 字符串导入 TrackGraph（在暂存树/规划树中重建）。 */
+    TrackGraph importGraph(String ifcXml);
+}
+```
+
+**最小子集实体清单（约 12 个 IFC 实体）：**
+
+| # | IFC 4.3 实体 | 用途 | Phase 4 必选 |
+|---|---|---|---|
+| 1 | `IfcRailway` | 铁路聚合容器 | ✅ |
+| 2 | `IfcTrack` | 轨道段（对应 TrackEdge） | ✅ |
+| 3 | `IfcReferent` | 轨道段端点标记（CONNECTIONPOINT/SIGNAL/STATION/OBSERVATIONPOINT） | ✅ |
+| 4 | `IfcRelConnectsPathElements` | 有向路径连接关系 | ✅ |
+| 5 | `IfcBSplineCurveWithKnots` | 三次贝塞尔精确表达 | ✅ |
+| 6 | `IfcLineSegment` | 直线段几何 | ✅ |
+| 7 | `IfcPropertySet` | 自定义属性集容器（`kp_` 命名） | ✅ |
+| 8 | `IfcPropertySingleValue` | 单值属性 | ✅ |
+| 9 | `IfcPropertyListValue` | 列表值属性 | ✅ |
+| 10 | `IfcPropertyEnumeratedValue` | 枚举值属性 | ✅ |
+| 11 | `IfcAlignmentHorizontalSegment` | 水平对齐段（Phase 2，ARC 类型） | 🟡 Phase 2 |
+| 12 | `IfcCompositeCurve` | 复合曲线（Phase 2+，多段拼接） | 🟡 Phase 2+ |
+
+序列化格式固定为 **IFC-XML**（`ifcXML4`），不采用 IFC-SPF（STEP p21），理由：
+- IFC-XML 易于 XML 解析器直接处理，MC 环境下无需引入 STEP 解析库
+- XML 可读性强，便于调试与手工验证
+- 体积略大于 SPF 但 MC 模组场景下 IO 量级不大（典型铁路网络 < 1000 条边），可接受
+
+> **注意：** `IfcExchangeAdapter` 接口在 Phase 0 只定义签名，不实现任何方法。Phase 4 动手时再选定具体解析策略（JAXB / 手写 SAX / 轻量 XML 库），避免过早绑定。
+
+### 7.8 Phase 0 预留点
 
 - `EdgeGeometry.ExtensionSpec` 数据结构已就位（4.2 节），Phase 0 实现时恒为 null
 - `EdgePointType.TYPES` 遍历策略（4.7 节）已保证未知 EdgePoint 类型不丢失，railx 若扩展 EdgePoint 同样兼容
-- Phase 0 不实现任何 IO，但数据结构设计已考虑 RailML 互导与 railx 兼容
+- `IfcExchangeAdapter` 接口已定义签名（本章 §7.7），Phase 0 不实现
+- Phase 0 不实现任何 IO，但数据结构设计已考虑 IFC 4.3 rail 子集互导与 railx 兼容

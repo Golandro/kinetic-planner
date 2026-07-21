@@ -38,3 +38,13 @@ run/
 **/src/generated/**/.cache/
 repo/
 !**/src/**/repo/
+
+## Agent-specific Config ##
+
+# Commit without status. so memories must be local.
+
+.claude
+.codebuddy
+.trae
+.roo
+.omo
