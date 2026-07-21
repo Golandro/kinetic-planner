@@ -1,8 +1,8 @@
 # Kinetic Planner 开发路线图与状态
 
-> **最后更新：** 2026-07-21
+> **最后更新：** 2026-07-22
 > **当前分支：** `1.21`
-> **当前状态：** Phase 0 设计完成，代码尚未实现（工作树仍为 NeoForge MDK 骨架）
+> **当前状态：** Phase 0a 代码实现完成（Task 1-9），待运行时验收（Task 10）
 
 ---
 
@@ -43,15 +43,15 @@ Kinetic Planner 是 Minecraft 模组，用于在全屏地图模组（Xaero's Wor
 
 | Task | 内容 | sourceSet | 状态 | 文档 |
 |---|---|---|---|---|
-| Task 1 | 骨架重命名 + sourceSet 拆分 + Mixin 基础设施 | both | 🔲 未开始 | plan 0a §Task 1 |
-| Task 2 | Vec2d | common | 🔲 未开始 | plan 0a §Task 2 |
-| Task 3 | CameraParams + WorldRect | common | 🔲 未开始 | plan 0a §Task 3 |
-| Task 4 | WorldScreenTransform | common | 🔲 未开始 | plan 0a §Task 4 |
-| Task 5 | EdgeGeometry 描述符 | common | 🔲 未开始 | plan 0a §Task 5 |
-| Task 6 | IRailwayDataAccess 接口 + Stub | common | 🔲 未开始 | plan 0a §Task 6 |
-| Task 7 | RailwayDataAccess 生产实现 | client | 🔲 未开始 | plan 0a §Task 7 |
-| Task 8 | MapOverlayProvider + Xaero Mixin | client | 🔲 未开始 | plan 0a §Task 8 |
-| Task 9 | NativeLineOverlay + 可视化锚点 | client | 🔲 未开始 | plan 0a §Task 9 |
+| Task 1 | 骨架重命名 + sourceSet 拆分 + Mixin 基础设施 | both | ✅ 完成 | plan 0a §Task 1 |
+| Task 2 | Vec2d | common | ✅ 完成 | plan 0a §Task 2 |
+| Task 3 | CameraParams + WorldRect | common | ✅ 完成 | plan 0a §Task 3 |
+| Task 4 | WorldScreenTransform | common | ✅ 完成 | plan 0a §Task 4 |
+| Task 5 | EdgeGeometry 描述符 | common | ✅ 完成 | plan 0a §Task 5 |
+| Task 6 | IRailwayDataAccess 接口 + Stub | common | ✅ 完成 | plan 0a §Task 6 |
+| Task 7 | RailwayDataAccess 生产实现 | client | ✅ 完成 | plan 0a §Task 7 |
+| Task 8 | MapOverlayProvider + Xaero Mixin | client | ✅ 完成 | plan 0a §Task 8 |
+| Task 9 | NativeLineOverlay + 可视化锚点 | client | ✅ 完成 | plan 0a §Task 9 |
 | Task 10 | 集成验收（Phase 0a 退场条件） | — | 🔲 未开始 | plan 0a §Task 10 |
 
 ### 2.4 Phase 0b 待规划
