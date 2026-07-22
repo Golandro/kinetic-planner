@@ -75,7 +75,8 @@ Kinetic Planner 是 Minecraft 模组，用于在全屏地图模组（Xaero's Wor
 | Cloth Config | 15.0.140 | 15.0.140 | 低 | |
 | Xaero's World Map | `[1.0,)`（未锁） | **待实测** | **高** | `GuiMap.render` Mixin 注入点依赖内部签名，跨版本易断裂 |
 | XaeroLib | compileOnly | **待实测** | **高** | accessor 字段名依赖 Xaero 内部字段 |
-| JourneyMap | `[5.0,)` | Phase 0.5 | 低 | Phase 0 仅占位 |
+| JourneyMap | `[1.21.1-6.0.0-alpha,)` | 1.21.1-6.0.1 | 低 | Phase 0 仅占位；限制 6.0+，以 alpha 作下界（beta 预发布版 < 6.0 正式版） |
+| JourneyMap API | `2.0.0-1.21.1-20260529.024614-31`（jm maven 快照） | 同左 | 低 | journeymap 6.0.1 主 jar 依赖 `journeymap.api.v2.common.CommonAPI`，旧快照 20260205 缺该类导致崩溃 |
 | Blaze3D（MC 内置渲染引擎） | 内置于 MC 1.21.1 | — | 低 | CAD 渲染将基于 Blaze3D 轻量图形封装（替代 NanoVG），增强 MC 客户端内封装性；实施细节待 Phase 0b 细化 |
 
 ### 高风险项：Xaero Mixin 注入点

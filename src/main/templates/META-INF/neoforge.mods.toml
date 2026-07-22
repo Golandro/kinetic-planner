@@ -105,7 +105,12 @@ config="${mod_id}.mixins.json"
 [[dependencies.${mod_id}]]
     modId="journeymap"
     type="optional"
-    versionRange="[5.0,)"
+    # Journeymap 的 mod 版本号带 MC 版本前缀（实测最新正式版 1.21.1-6.0.1）。
+    # 限制为 6.0+。注意：Maven 语义下预发布版小于正式版，
+    # 故 1.21.1-6.0.0-beta.xx < 1.21.1-6.0，下界不能写 6.0。
+    # 这里用最早预发布标识 alpha 作为下界（alpha<beta<正式版），
+    # 可覆盖 6.0.x（含预发布）及后续 6.x/7.x，同时排除 5.x。
+    versionRange="[1.21.1-6.0.0-alpha,)"
     ordering="NONE"
     side="CLIENT"
 
