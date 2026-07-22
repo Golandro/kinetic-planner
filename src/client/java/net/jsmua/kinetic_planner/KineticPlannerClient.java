@@ -1,6 +1,6 @@
 package net.jsmua.kinetic_planner;
 
-import net.jsmua.kinetic_planner.instrument.NativeLineOverlay;
+import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayDispatcher;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -68,6 +68,6 @@ public class KineticPlannerClient {
     @SubscribeEvent
     static void onClientTickPost(ClientTickEvent.Post event) {
         MapOverlayDispatcher.tick();
-        NativeLineOverlay.onClientTick();
+        WorldTreeReadOverlay.onClientTick();
     }
 }

@@ -31,10 +31,27 @@ public class GeometryCache {
     /**
      * 单个轨道图的几何数据快照。
      *
-     * @param nodes 节点世界坐标列表
-     * @param edges 边几何描述符列表
+     * @param graphId    TrackGraph 的 UUID
+     * @param graphColor TrackGraph.color 的 RGB 值
+     * @param nodes      节点世界坐标列表
+     * @param edges      边几何描述符列表
+     * @param edgePoints 边点数据列表（坐标 + 颜色）
      */
-    public record GraphGeometry(List<Vec3> nodes, List<EdgeGeometry> edges) {}
+    public record GraphGeometry(
+        UUID graphId,
+        int graphColor,
+        List<Vec3> nodes,
+        List<EdgeGeometry> edges,
+        List<EdgePointData> edgePoints
+    ) {}
+
+    /**
+     * 边点渲染数据。
+     *
+     * @param worldPos 世界坐标
+     * @param color    ARGB 颜色
+     */
+    public record EdgePointData(Vec3 worldPos, int color) {}
 
     /** 按 TrackGraph UUID 索引的几何缓存。 */
     private final Map<UUID, GraphGeometry> cache = new HashMap<>();

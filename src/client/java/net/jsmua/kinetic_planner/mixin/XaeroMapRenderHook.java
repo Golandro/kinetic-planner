@@ -1,7 +1,7 @@
 package net.jsmua.kinetic_planner.mixin;
 
 import net.jsmua.kinetic_planner.KineticPlannerMod;
-import net.jsmua.kinetic_planner.instrument.NativeLineOverlay;
+import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import net.minecraft.client.gui.GuiGraphics;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -37,9 +37,9 @@ public class XaeroMapRenderHook {
     private void kp$onMapRender(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
         try {
             // (GuiMap)(Object)this 是 Mixin 中获取目标实例的标准写法
-            NativeLineOverlay.onMapRender((GuiMap) (Object) this, guiGraphics, mouseX, mouseY, partialTicks);
+            WorldTreeReadOverlay.onMapRender((GuiMap) (Object) this, guiGraphics, mouseX, mouseY, partialTicks);
         } catch (Throwable t) {
-            KineticPlannerMod.LOGGER.error("NativeLineOverlay render failed", t);
+            KineticPlannerMod.LOGGER.error("WorldTreeReadOverlay render failed", t);
         }
     }
 }
