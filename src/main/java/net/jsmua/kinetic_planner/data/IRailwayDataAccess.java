@@ -53,14 +53,16 @@ public interface IRailwayDataAccess {
     Stream<TrackNode> nodesInDimension(TrackGraph g, ResourceKey<Level> dim);
 
     /**
-     * 返回给定节点的所有出边。
+     * 返回给定图中给定节点的所有出边。
      *
-     * <p>Phase 0a TODO: 当前返回空流，需从 {@code TrackGraph.connectionsByNode} 获取。
+     * <p>通过 {@code TrackGraph.connectionsByNode}（package-private）获取，
+     * 需 Mixin accessor（{@link net.jsmua.kinetic_planner.mixin.TrackGraphAccessor}）。
      *
-     * @param node 起始节点
+     * @param graph 轨道图（提供 connectionsByNode）
+     * @param node  起始节点
      * @return 出边流
      */
-    Stream<TrackEdge> edgesFrom(TrackNode node);
+    Stream<TrackEdge> edgesFrom(TrackGraph graph, TrackNode node);
 
     /**
      * 返回指定图中给定类型的边点（信号、车站、观察器等）。

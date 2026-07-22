@@ -54,9 +54,8 @@ public class RailwayDataAccess implements IRailwayDataAccess {
     }
 
     @Override
-    public Stream<TrackEdge> edgesFrom(TrackNode node) {
-        // TODO Phase 0b: 从 node 所属 graph 的 connectionsByNode 获取出边
-        // connectionsByNode 是 package-private，需要 Mixin accessor 或反射
+    public Stream<TrackEdge> edgesFrom(TrackGraph graph, TrackNode node) {
+        // TODO Phase 0b Task 2 will implement this via TrackGraphAccessor
         return Stream.empty();
     }
 

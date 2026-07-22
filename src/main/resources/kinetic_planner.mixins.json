@@ -6,6 +6,7 @@
     "refmap": "kinetic_planner.refmap.json",
     "mixins": [],
     "client": [
+        "TrackGraphAccessor",
         "XaeroMapAccessor",
         "XaeroMapRenderHook"
     ],

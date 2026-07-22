@@ -47,7 +47,7 @@ public class StubRailwayDataAccess implements IRailwayDataAccess {
     }
 
     @Override
-    public Stream<TrackEdge> edgesFrom(TrackNode node) {
+    public Stream<TrackEdge> edgesFrom(TrackGraph graph, TrackNode node) {
         return Stream.empty();
     }
 

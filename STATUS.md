@@ -52,7 +52,7 @@ Kinetic Planner 是 Minecraft 模组，用于在全屏地图模组（Xaero's Wor
 | Task 7 | RailwayDataAccess 生产实现 | client | ✅ 完成 | plan 0a §Task 7 |
 | Task 8 | MapOverlayProvider + Xaero Mixin | client | ✅ 完成 | plan 0a §Task 8 |
 | Task 9 | NativeLineOverlay + 可视化锚点 | client | ✅ 完成 | plan 0a §Task 9 |
-| Task 10 | 集成验收（Phase 0a 退场条件） | — | 🔲 未开始 | plan 0a §Task 10 |
+| Task 10 | 集成验收（Phase 0a 退场条件） | — | 🔲 未开始 | plan 0a §Task 10 | 
 
 ### 2.4 Phase 0b 待规划
 
