@@ -4,7 +4,7 @@ import net.minecraft.client.gui.screens.Screen;
 
 import javax.annotation.Nullable;
 
-/**
+    /**
  * 地图叠加适配器接口，抽象不同全屏地图模组（Xaero's World Map / JourneyMap）的差异化 API。
  *
  * <p>每个地图模组提供一个实现，由 {@link MapOverlayDispatcher} 在每 tick 轮询。
