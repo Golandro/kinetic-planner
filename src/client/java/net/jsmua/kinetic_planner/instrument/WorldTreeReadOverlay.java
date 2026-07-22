@@ -202,6 +202,9 @@ public final class WorldTreeReadOverlay {
 
             engine.restoreWorldTransform();
             engine.endFrame();
+
+            // 4. MC 文字层（屏幕坐标，不走 CADRenderEngine）
+            renderLabels(guiGraphics);
         } catch (Throwable t) {
             KineticPlannerMod.LOGGER.error("WorldTreeReadOverlay render failed", t);
             try { engine.endFrame(); } catch (Throwable ignored) {}
@@ -211,5 +214,23 @@ public final class WorldTreeReadOverlay {
     private static int applyAlpha(int color, float alpha) {
         int a = (int) (alpha * 255) & 0xFF;
         return (a << 24) | (color & 0x00FFFFFF);
+    }
+
+    /**
+     * 渲染标签（MC Font.draw，屏幕坐标）。
+     */
+    private static void renderLabels(GuiGraphics guiGraphics) {
+        if (lastContext == null || lastTransform == null) return;
+        // 仅在足够缩放时绘制标签
+        if (lastTransform.cam().blocksPerPixel() > 1.0) return;
+
+        var font = Minecraft.getInstance().font;
+        for (GeometryCache.GraphGeometry geom : geometryCache.geometries()) {
+            for (Vec3 node : geom.nodes()) {
+                var screen = lastTransform.worldToScreen(node.x, node.z);
+                guiGraphics.drawString(font, "N",
+                    (int) screen.x + 4, (int) screen.y - 4, 0xFFFFFFFF);
+            }
+        }
     }
 }
