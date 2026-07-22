@@ -9,6 +9,9 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
+import net.jsmua.kinetic_planner.mixin.TrackGraphAccessor;
+
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -55,8 +58,14 @@ public class RailwayDataAccess implements IRailwayDataAccess {
 
     @Override
     public Stream<TrackEdge> edgesFrom(TrackGraph graph, TrackNode node) {
-        // TODO Phase 0b Task 2 will implement this via TrackGraphAccessor
-        return Stream.empty();
+        try {
+            Map<TrackNode, Map<TrackNode, TrackEdge>> connections =
+                ((TrackGraphAccessor) graph).kp$getConnectionsByNode();
+            Map<TrackNode, TrackEdge> edges = connections.get(node);
+            return edges != null ? edges.values().stream() : Stream.empty();
+        } catch (Throwable t) {
+            return Stream.empty();
+        }
     }
 
     @Override

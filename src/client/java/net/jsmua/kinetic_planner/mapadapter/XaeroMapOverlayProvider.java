@@ -27,11 +27,10 @@ import javax.annotation.Nullable;
  *   <li>{@code mapScale} = Xaero 地图缩放值（acc.kp$scale()）</li>
  * </ul>
  *
- * <h2>已知限制（Phase 0a）</h2>
+ * <h2>已知限制（Phase 0b）</h2>
  * <ul>
- *   <li>维度检测硬编码为 {@code Level.OVERWORLD}，需从 Xaero mapProcessor 获取实际维度</li>
- *   <li>{@code partialTicks} 用 0f 占位，MC 1.21.1 的 {@code Minecraft.getPartialTick()} 已移除</li>
- *   <li>{@code ScreenBase} 在当前 Xaero 版本不存在，简化为直接检查 {@code instanceof GuiMap}</li>
+ *   <li>维度检测使用玩家当前维度（mc.level.dimension()），Xaero 查看其他维度时不跟随</li>
+ *   <li>{@code partialTicks} 用 0f 占位，渲染时由 onMapRender 的 partialTicks 参数提供</li>
  * </ul>
  */
 public class XaeroMapOverlayProvider implements MapOverlayProvider {
@@ -62,8 +61,9 @@ public class XaeroMapOverlayProvider implements MapOverlayProvider {
             double interfaceScale = (double) mc.getWindow().getWidth() / screenWidth;
             double blocksPerPixel = guiScale * interfaceScale / mapScale;
 
-            // TODO: 从 Xaero mapProcessor 获取当前维度（当前硬编码 OVERWORLD）
-            ResourceKey<Level> dim = Level.OVERWORLD;
+            // 使用玩家当前维度（Xaero 地图通常显示玩家所在维度）
+            // 已知限制：Xaero 支持查看其他维度，此简化在 0b MVP 中可接受
+            ResourceKey<Level> dim = mc.level != null ? mc.level.dimension() : Level.OVERWORLD;
             return new MapOverlayContext(
                 dim, cameraX, cameraZ, blocksPerPixel,
                 mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight(),
