@@ -90,7 +90,6 @@ Xaero 是 Phase 0 唯一地图适配器，其 Mixin 注入点（`GuiMap.render` 
 1. Mixin 注入成功（日志无 `[KP] Xaero GuiMap not found`）；
 2. 相机参数换算正确（地图中心十字线与实际中心对齐）；
 3. 叠加层跟随缩放/平移正确。
-
 ---
 
 ## 4. 技术假设核实状态（对照 Create 6.0.10 源码）
