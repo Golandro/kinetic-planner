@@ -71,7 +71,7 @@ repositories {
             includeGroup "mysticdrew"
         }
     }
-    maven { url "https://chocolateminecraft.com/maven" } // Xaero
+    maven { url = "https://chocolateminecraft.com/maven" } // Xaero
 }
 
 base {
@@ -222,7 +222,16 @@ dependencies {
     }
 
     compileOnly("xaero.lib:xaerolib-neoforge-1.21:1.0.42")
-    compileOnly("curse.maven:xaeros-world-map-317780:7401095")
+    // Xaero World Map：compileOnly 提供 API 编译，localImplementation 使其在开发环境运行期加载（验证叠加层）
+    localImplementation("curse.maven:xaeros-world-map-317780:7401095")
+    // Xaero Minimap：开发环境软依赖（与 World Map 配合验证）
+    localImplementation("maven.modrinth:xaeros-minimap:25.3.2_NeoForge_1.21")
+
+    // Modern UI：开发环境软依赖，验证字体/UI 兼容性
+    localImplementation("maven.modrinth:modern-ui:3.12.0.2")
+
+    // Create: Steam 'n' Rails（1.21.1 移植版）：开发环境软依赖，验证铁路拓扑叠加
+    localImplementation("maven.modrinth:create-steam-n-rails-1.21.1:0.3.0-beta+neoforge-mc1.21.1")
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
@@ -265,7 +274,7 @@ publishing {
     }
     repositories {
         maven {
-            url "file://${project.projectDir}/repo"
+            url = "file://${project.projectDir}/repo"
         }
     }
 }

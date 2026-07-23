@@ -47,4 +47,8 @@ repo/
 .codebuddy
 .trae
 .roo
+
+# Why you want to use a vendor-specific configuration?
+CLAUDE.md
+.superpowers
 .omo
