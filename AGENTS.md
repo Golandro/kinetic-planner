@@ -22,7 +22,8 @@ gradlew build
 gradlew runClient
 ```
 
-- Shell 是 `cmd.exe`，多命令用 `&` 或 `&&` 分隔
+- 请优先使用 `GRADLE_USER_HOME` 作为 Gradle 用户目录
+- 若 Shell 是 `cmd.exe`，多命令须用 `&` 或 `&&` 分隔
 - Gradle wrapper 版本 9.6.1，Java 21 (Zulu 21.0.11)
 - 测试框架：JUnit 5 + Mockito 5
 
