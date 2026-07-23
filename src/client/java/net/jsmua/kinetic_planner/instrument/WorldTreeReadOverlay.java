@@ -41,6 +41,11 @@ public final class WorldTreeReadOverlay {
     private static MapOverlayContext lastContext;
     private static WorldScreenTransform lastTransform;
 
+    /** 当前 active provider 的视觉 scale，每 tick 更新。 */
+    private static float activeLineWidthScale = 1.0f;
+    private static float activeAlphaScale = 1.0f;
+    private static boolean activeDashed = false;
+
     public static void setTheme(Theme newTheme) {
         theme = newTheme;
     }
@@ -68,6 +73,23 @@ public final class WorldTreeReadOverlay {
             Map<UUID, GeometryCache.GraphGeometry> newData = buildCacheData(ctx.dimension());
             geometryCache.update(version, ctx.dimension(), newData);
         }
+
+        // 更新 active provider 视觉 scale
+        MapOverlayDispatcher.activeProviderModId().ifPresentOrElse(
+            modId -> {
+                var pc = KPConfig.getProviderConfig(modId);
+                if (pc != null) {
+                    activeLineWidthScale = pc.lineWidthScale();
+                    activeAlphaScale = pc.alphaScale();
+                    activeDashed = pc.dashed();
+                }
+            },
+            () -> {
+                activeLineWidthScale = 1.0f;
+                activeAlphaScale = 1.0f;
+                activeDashed = false;
+            }
+        );
     }
 
     private static Map<UUID, GeometryCache.GraphGeometry> buildCacheData(ResourceKey<Level> dim) {
@@ -159,9 +181,11 @@ public final class WorldTreeReadOverlay {
 
                 // 1. 轨道层
                 if (theme.layers().tracks()) {
-                    float widthPx = theme.global().constantScreenLineWidth()
+                    float widthPx = (theme.global().constantScreenLineWidth()
                         ? theme.global().fixedScreenLineWidthPx()
-                        : theme.track().width() / (float) lastTransform.cam().blocksPerPixel();
+                        : theme.track().width() / (float) lastTransform.cam().blocksPerPixel())
+                        * activeLineWidthScale;
+                    int trackColorScaled = applyAlpha(trackColor, theme.track().alpha() * activeAlphaScale);
                     for (EdgeGeometry edge : geom.edges()) {
                         try {
                             if (edge.type() == EdgeGeometry.Type.BEZIER && edge.bezier() != null) {
@@ -171,12 +195,12 @@ public final class WorldTreeReadOverlay {
                                     (float) b.control1().x, (float) b.control1().z,
                                     (float) b.control2().x, (float) b.control2().z,
                                     (float) b.end().x, (float) b.end().z,
-                                    widthPx, trackColor, 32);
+                                    widthPx, trackColorScaled, 32);
                             } else {
                                 engine.drawLine(
                                     (float) edge.p1().x, (float) edge.p1().z,
                                     (float) edge.p2().x, (float) edge.p2().z,
-                                    widthPx, trackColor);
+                                    widthPx, trackColorScaled);
                             }
                         } catch (Throwable ignored) {}
                     }
@@ -184,7 +208,7 @@ public final class WorldTreeReadOverlay {
 
                 // 2. 节点层
                 if (theme.layers().nodes()) {
-                    int nodeColor = applyAlpha(0xFFFFFFFF, theme.node().alpha());
+                    int nodeColor = applyAlpha(0xFFFFFFFF, theme.node().alpha() * activeAlphaScale);
                     float nodeRadius = theme.node().width() / 2;
                     for (Vec3 node : geom.nodes()) {
                         engine.drawFilledCircle((float) node.x, (float) node.z, nodeRadius, nodeColor);
@@ -195,7 +219,7 @@ public final class WorldTreeReadOverlay {
                 if (theme.layers().edgePoints()) {
                     float epRadius = theme.edgePoint().width() / 2;
                     for (GeometryCache.EdgePointData ep : geom.edgePoints()) {
-                        int epColor = applyAlpha(ep.color(), theme.edgePoint().alpha());
+                        int epColor = applyAlpha(ep.color(), theme.edgePoint().alpha() * activeAlphaScale);
                         engine.drawFilledCircle(
                             (float) ep.worldPos().x, (float) ep.worldPos().z,
                             epRadius, epColor);
