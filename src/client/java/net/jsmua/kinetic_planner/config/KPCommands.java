@@ -9,11 +9,11 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.network.chat.Component;
 
 /**
- * /kp 命令体系注册（P0 完整版，14 个命令节点）。
+ * /kp 命令体系注册（P0 + P1.0 Phase A 完整版）。
  *
  * <p>通过 {@link net.neoforged.neoforge.client.event.RegisterClientCommandsEvent}
  * 注册为客户端命令。命令逻辑委托 {@link OverlayControl} / {@link ThemeManager} /
- * {@link WorldTreeReadOverlay}，此类仅负责命令分发。
+ * {@link ProviderConfigControl} / {@link WorldTreeReadOverlay}，此类仅负责命令分发。
  *
  * <h2>命令树</h2>
  * <pre>
@@ -23,6 +23,13 @@ import net.minecraft.network.chat.Component;
  * /kp overlay disable         -- 显式关闭
  * /kp overlay reload          -- 从配置值重建 Theme 并应用
  * /kp overlay status          -- 查看状态（开关/图数/节点数/边数）
+ * /kp overlay hide-create [true|false] -- 切换/设置隐藏 Create 信号边组叠加层
+ * /kp provider list           -- 列出所有 provider 及状态
+ * /kp provider enable &lt;modId&gt; -- 启用某 provider
+ * /kp provider disable &lt;modId&gt;-- 禁用某 provider
+ * /kp provider set &lt;modId&gt; &lt;param&gt; &lt;value&gt; -- 设置 provider 参数
+ * /kp provider get &lt;modId&gt; [param] -- 查询 provider 配置
+ * /kp provider reset &lt;modId&gt;  -- 重置 provider 为默认
  * /kp theme list              -- 扫描目录列出可用主题
  * /kp theme set &lt;name&gt;        -- 切换到指定主题（从 JSON 文件加载）
  * /kp theme reload            -- 从磁盘重载当前主题 JSON
@@ -62,7 +69,33 @@ public final class KPCommands {
                 .then(Commands.literal("reload")
                     .executes(KPCommands::overlayReload))
                 .then(Commands.literal("status")
-                    .executes(KPCommands::overlayStatus)))
+                    .executes(KPCommands::overlayStatus))
+                .then(Commands.literal("hide-create")
+                    .executes(KPCommands::overlayHideCreateToggle)
+                    .then(Commands.argument("value", StringArgumentType.word())
+                        .executes(KPCommands::overlayHideCreateSet))))
+            .then(Commands.literal("provider")
+                .then(Commands.literal("list")
+                    .executes(KPCommands::providerList))
+                .then(Commands.literal("enable")
+                    .then(Commands.argument("modId", StringArgumentType.word())
+                        .executes(KPCommands::providerEnable)))
+                .then(Commands.literal("disable")
+                    .then(Commands.argument("modId", StringArgumentType.word())
+                        .executes(KPCommands::providerDisable)))
+                .then(Commands.literal("set")
+                    .then(Commands.argument("modId", StringArgumentType.word())
+                        .then(Commands.argument("param", StringArgumentType.word())
+                            .then(Commands.argument("value", StringArgumentType.word())
+                                .executes(KPCommands::providerSet)))))
+                .then(Commands.literal("get")
+                    .then(Commands.argument("modId", StringArgumentType.word())
+                        .executes(KPCommands::providerGetAll)
+                        .then(Commands.argument("param", StringArgumentType.word())
+                            .executes(KPCommands::providerGetParam))))
+                .then(Commands.literal("reset")
+                    .then(Commands.argument("modId", StringArgumentType.word())
+                        .executes(KPCommands::providerReset))))
             .then(Commands.literal("theme")
                 .then(Commands.literal("list")
                     .executes(KPCommands::themeList))
@@ -252,5 +285,141 @@ public final class KPCommands {
         ctx.getSource().sendSuccess(() ->
             Component.literal(WorldTreeReadOverlay.getOverlayAnchors()), false);
         return 1;
+    }
+
+    // === /kp overlay hide-create -- 隐藏 Create 信号边组叠加层 ===
+
+    /**
+     * {@code /kp overlay hide-create}：切换隐藏 Create 信号边组叠加层。
+     *
+     * <p>当 KP overlay 启用且此开关为 true 时，CreateTrackVisualizerHiderMixin
+     * 会 cancel Create 的 {@code visualiseSignalEdgeGroups}，完全跳过 Create
+     * 在 3D 世界中绘制信号边组彩色线条。
+     */
+    private static int overlayHideCreateToggle(CommandContext<CommandSourceStack> ctx) {
+        boolean newVal = !OverlayControl.isHideCreateTrackMap();
+        OverlayControl.setHideCreateTrackMap(newVal);
+        ctx.getSource().sendSuccess(() ->
+            Component.literal("[KP] Hide Create Track Map: " + (newVal ? "ON" : "OFF")), false);
+        return 1;
+    }
+
+    /**
+     * {@code /kp overlay hide-create <value>}：显式设置隐藏 Create 信号边组叠加层。
+     *
+     * <p>{@code value} 接受 {@code true}/{@code false}（{@link Boolean#parseBoolean} 解析）。
+     */
+    private static int overlayHideCreateSet(CommandContext<CommandSourceStack> ctx) {
+        String value = StringArgumentType.getString(ctx, "value");
+        boolean hide = Boolean.parseBoolean(value);
+        OverlayControl.setHideCreateTrackMap(hide);
+        ctx.getSource().sendSuccess(() ->
+            Component.literal("[KP] Hide Create Track Map: " + (hide ? "ON" : "OFF")), false);
+        return 1;
+    }
+
+    // === /kp provider -- 地图模组 provider 配置 ===
+
+    /**
+     * {@code /kp provider list}：列出所有已注册 provider 及其状态、参数。
+     *
+     * <p>当前激活的 provider 以 {@code *} 标记。
+     */
+    private static int providerList(CommandContext<CommandSourceStack> ctx) {
+        String output = ProviderConfigControl.listProviders();
+        ctx.getSource().sendSuccess(() ->
+            Component.literal(output), false);
+        return 1;
+    }
+
+    /**
+     * {@code /kp provider enable <modId>}：启用指定 provider。
+     */
+    private static int providerEnable(CommandContext<CommandSourceStack> ctx) {
+        String modId = StringArgumentType.getString(ctx, "modId");
+        if (ProviderConfigControl.enable(modId)) {
+            ctx.getSource().sendSuccess(() ->
+                Component.literal("[KP] Provider " + modId + " enabled"), false);
+            return 1;
+        } else {
+            ctx.getSource().sendFailure(
+                Component.literal("[KP] Unknown provider: " + modId +
+                    ". Use /kp provider list to see available providers."));
+            return 0;
+        }
+    }
+
+    /**
+     * {@code /kp provider disable <modId>}：禁用指定 provider。
+     */
+    private static int providerDisable(CommandContext<CommandSourceStack> ctx) {
+        String modId = StringArgumentType.getString(ctx, "modId");
+        if (ProviderConfigControl.disable(modId)) {
+            ctx.getSource().sendSuccess(() ->
+                Component.literal("[KP] Provider " + modId + " disabled"), false);
+            return 1;
+        } else {
+            ctx.getSource().sendFailure(
+                Component.literal("[KP] Unknown provider: " + modId));
+            return 0;
+        }
+    }
+
+    /**
+     * {@code /kp provider set <modId> <param> <value>}：设置 provider 视觉参数。
+     *
+     * <p>{@code param} 支持 {@code lineWidthScale}/{@code alphaScale}/{@code dashed}/{@code priority}。
+     */
+    private static int providerSet(CommandContext<CommandSourceStack> ctx) {
+        String modId = StringArgumentType.getString(ctx, "modId");
+        String param = StringArgumentType.getString(ctx, "param");
+        String value = StringArgumentType.getString(ctx, "value");
+        if (ProviderConfigControl.setParam(modId, param, value)) {
+            ctx.getSource().sendSuccess(() ->
+                Component.literal("[KP] " + modId + "." + param + " = " + value), false);
+            return 1;
+        } else {
+            ctx.getSource().sendFailure(
+                Component.literal("[KP] Failed to set " + modId + "." + param +
+                    " = " + value + " (unknown provider/param or invalid value)"));
+            return 0;
+        }
+    }
+
+    /**
+     * {@code /kp provider get <modId>}：查询 provider 的全部配置。
+     */
+    private static int providerGetAll(CommandContext<CommandSourceStack> ctx) {
+        String modId = StringArgumentType.getString(ctx, "modId");
+        String output = ProviderConfigControl.get(modId, null);
+        ctx.getSource().sendSuccess(() -> Component.literal(output), false);
+        return 1;
+    }
+
+    /**
+     * {@code /kp provider get <modId> <param>}：查询单个参数值。
+     */
+    private static int providerGetParam(CommandContext<CommandSourceStack> ctx) {
+        String modId = StringArgumentType.getString(ctx, "modId");
+        String param = StringArgumentType.getString(ctx, "param");
+        String output = ProviderConfigControl.get(modId, param);
+        ctx.getSource().sendSuccess(() -> Component.literal(output), false);
+        return 1;
+    }
+
+    /**
+     * {@code /kp provider reset <modId>}：重置 provider 配置为默认值。
+     */
+    private static int providerReset(CommandContext<CommandSourceStack> ctx) {
+        String modId = StringArgumentType.getString(ctx, "modId");
+        if (ProviderConfigControl.reset(modId)) {
+            ctx.getSource().sendSuccess(() ->
+                Component.literal("[KP] Provider " + modId + " reset to default"), false);
+            return 1;
+        } else {
+            ctx.getSource().sendFailure(
+                Component.literal("[KP] Unknown provider: " + modId));
+            return 0;
+        }
     }
 }

@@ -65,6 +65,24 @@ public final class OverlayControl {
     }
 
     /**
+     * 查询是否隐藏 Create 的信号边组叠加层。
+     *
+     * @return {@code true} 如果配置为隐藏（叠加层启用时由 Mixin 拦截 Create 的 visualiseSignalEdgeGroups）
+     */
+    public static boolean isHideCreateTrackMap() {
+        return KPConfig.HIDE_CREATE_TRACK_MAP.get();
+    }
+
+    /**
+     * 设置是否隐藏 Create 的信号边组叠加层。
+     *
+     * @param hide 是否隐藏
+     */
+    public static void setHideCreateTrackMap(boolean hide) {
+        KPConfig.HIDE_CREATE_TRACK_MAP.set(hide);
+    }
+
+    /**
      * 返回叠加层状态字符串（用于命令输出）。
      *
      * <p>格式：
