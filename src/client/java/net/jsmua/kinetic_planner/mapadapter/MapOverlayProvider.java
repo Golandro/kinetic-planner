@@ -1,6 +1,8 @@
 package net.jsmua.kinetic_planner.mapadapter;
 
+import net.jsmua.kinetic_planner.data.ProviderConfig;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 import javax.annotation.Nullable;
 
@@ -47,4 +49,21 @@ public interface MapOverlayProvider {
      * @return mod ID（如 {@code "xaeroworldmap"}、{@code "journeymap"}）
      */
     String modId();
+
+    /**
+     * 返回该 provider 的本地化显示名，用于 CLI 输出和 UI 显示。
+     *
+     * @return {@link Component} 显示名（如 "Xaero's World Map"）
+     */
+    Component displayName();
+
+    /**
+     * 返回该 provider 的默认配置。
+     *
+     * <p>由 {@link net.jsmua.kinetic_planner.data.ProviderConfigRegistry}
+     * 在启动时收集，{@link net.jsmua.kinetic_planner.config.KPConfig} 加载时与 TOML 值合并。
+     *
+     * @return 默认 {@link ProviderConfig}
+     */
+    ProviderConfig defaultConfig();
 }

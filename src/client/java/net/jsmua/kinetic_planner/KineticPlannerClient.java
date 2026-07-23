@@ -3,8 +3,10 @@ package net.jsmua.kinetic_planner;
 import net.jsmua.kinetic_planner.config.KPCommands;
 import net.jsmua.kinetic_planner.config.KPConfig;
 import net.jsmua.kinetic_planner.config.KPClothConfigScreen;
+import net.jsmua.kinetic_planner.data.ProviderConfigRegistry;
 import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayDispatcher;
+import net.jsmua.kinetic_planner.mapadapter.MapOverlayProvider;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -40,6 +42,11 @@ public class KineticPlannerClient {
     @SubscribeEvent
     static void onClientSetup(FMLClientSetupEvent event) {
         KineticPlannerMod.LOGGER.info("Kinetic Planner client setup");
+
+        // 注册各 provider 的默认配置
+        for (MapOverlayProvider p : MapOverlayDispatcher.registeredProviders()) {
+            ProviderConfigRegistry.register(p.modId(), p.defaultConfig());
+        }
     }
 
     @SubscribeEvent

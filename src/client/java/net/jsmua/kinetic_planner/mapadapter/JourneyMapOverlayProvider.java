@@ -1,6 +1,8 @@
 package net.jsmua.kinetic_planner.mapadapter;
 
+import net.jsmua.kinetic_planner.data.ProviderConfig;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import javax.annotation.Nullable;
 
 /**
@@ -22,4 +24,15 @@ public class JourneyMapOverlayProvider implements MapOverlayProvider {
 
     @Override
     public String modId() { return "journeymap"; }
+
+    @Override
+    public Component displayName() {
+        return Component.literal("JourneyMap");
+    }
+
+    @Override
+    public ProviderConfig defaultConfig() {
+        // JM Mixin 推迟，但 defaultConfig 仍注册以便出现在 CLI/UI
+        return ProviderConfig.defaultValue("journeymap", "JourneyMap");
+    }
 }

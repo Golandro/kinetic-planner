@@ -1,9 +1,11 @@
 package net.jsmua.kinetic_planner.mapadapter;
 
 import net.jsmua.kinetic_planner.KineticPlannerMod;
+import net.jsmua.kinetic_planner.data.ProviderConfig;
 import net.jsmua.kinetic_planner.mixin.XaeroMapAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import xaero.map.gui.GuiMap;
@@ -79,4 +81,14 @@ public class XaeroMapOverlayProvider implements MapOverlayProvider {
 
     @Override
     public String modId() { return "xaeroworldmap"; }
+
+    @Override
+    public Component displayName() {
+        return Component.literal("Xaero's World Map");
+    }
+
+    @Override
+    public ProviderConfig defaultConfig() {
+        return ProviderConfig.defaultValue("xaeroworldmap", "Xaero's World Map");
+    }
 }
