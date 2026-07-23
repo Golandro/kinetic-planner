@@ -12,7 +12,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 
 /**
  * Kinetic Planner 客户端入口类（client sourceSet）。
@@ -22,7 +22,7 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
  * <p>职责：
  * <ul>
  *   <li>注册客户端配置（KPConfig TOML）与配置屏幕（Cloth Config GUI）</li>
- *   <li>注册 /kp 命令体系</li>
+ *   <li>注册 /kp 客户端命令体系（{@link RegisterClientCommandsEvent}）</li>
  *   <li>每 tick 调用 {@link MapOverlayDispatcher#tick()} 检测地图是否打开</li>
  *   <li>每 tick 调用 {@link WorldTreeReadOverlay#onClientTick()} 刷新几何缓存</li>
  * </ul>
@@ -43,7 +43,7 @@ public class KineticPlannerClient {
     }
 
     @SubscribeEvent
-    static void onRegisterCommands(RegisterCommandsEvent event) {
+    static void onRegisterClientCommands(RegisterClientCommandsEvent event) {
         KPCommands.register(event.getDispatcher());
     }
 

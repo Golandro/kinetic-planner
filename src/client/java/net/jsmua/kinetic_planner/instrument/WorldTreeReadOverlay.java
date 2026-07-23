@@ -4,6 +4,7 @@ import net.jsmua.kinetic_planner.KineticPlannerMod;
 import net.jsmua.kinetic_planner.cadengine.CADRenderEngine;
 import net.jsmua.kinetic_planner.cadengine.Theme;
 import net.jsmua.kinetic_planner.data.EdgeGeometry;
+import net.jsmua.kinetic_planner.config.KPConfig;
 import net.jsmua.kinetic_planner.data.IRailwayDataAccess;
 import net.jsmua.kinetic_planner.data.RailwayDataAccess;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayContext;
@@ -145,6 +146,8 @@ public final class WorldTreeReadOverlay {
      * 地图渲染回调，由 XaeroMapRenderHook Mixin 调用。
      */
     public static void onMapRender(Object guiMap, GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        // 配置开关检查：用户通过 /kp overlay toggle 或配置屏幕关闭叠加层时，直接跳过渲染
+        if (!KPConfig.OVERLAY_ENABLED.get()) return;
         if (lastContext == null || lastTransform == null) return;
 
         try {
@@ -209,6 +212,128 @@ public final class WorldTreeReadOverlay {
             KineticPlannerMod.LOGGER.error("WorldTreeReadOverlay render failed", t);
             try { engine.endFrame(); } catch (Throwable ignored) {}
         }
+    }
+
+    // === 统计与诊断方法（供 /kp debug 命令调用）===
+
+    /**
+     * 当前缓存的轨道图数量。
+     *
+     * @return {@link GeometryCache#geometries()} 的大小
+     */
+    public static int getGraphCount() {
+        return geometryCache.geometries().size();
+    }
+
+    /**
+     * 当前缓存的所有图中的节点总数。
+     *
+     * @return 所有 {@link GeometryCache.GraphGeometry#nodes()} 大小之和
+     */
+    public static int getNodeCount() {
+        int count = 0;
+        for (GeometryCache.GraphGeometry geom : geometryCache.geometries()) {
+            count += geom.nodes().size();
+        }
+        return count;
+    }
+
+    /**
+     * 当前缓存的所有图中的边总数。
+     *
+     * @return 所有 {@link GeometryCache.GraphGeometry#edges()} 大小之和
+     */
+    public static int getEdgeCount() {
+        int count = 0;
+        for (GeometryCache.GraphGeometry geom : geometryCache.geometries()) {
+            count += geom.edges().size();
+        }
+        return count;
+    }
+
+    /**
+     * 当前缓存的所有图中的边点总数。
+     *
+     * @return 所有 {@link GeometryCache.GraphGeometry#edgePoints()} 大小之和
+     */
+    public static int getEdgePointCount() {
+        int count = 0;
+        for (GeometryCache.GraphGeometry geom : geometryCache.geometries()) {
+            count += geom.edgePoints().size();
+        }
+        return count;
+    }
+
+    /**
+     * 将当前维度的 TrackGraph 数据完整转储到日志。
+     *
+     * <p>由 {@code /kp debug dump} 命令调用。输出每个图的 UUID、颜色、
+     * 节点坐标列表、边类型与端点、边点数量。地图未打开时输出提示。
+     */
+    public static void dumpData() {
+        KineticPlannerMod.LOGGER.info("[KP] === TrackGraph Dump ===");
+        if (lastContext == null) {
+            KineticPlannerMod.LOGGER.info("[KP] No map context (map not open)");
+            return;
+        }
+        KineticPlannerMod.LOGGER.info("[KP] Dimension: {}", lastContext.dimension().location());
+        for (GeometryCache.GraphGeometry geom : geometryCache.geometries()) {
+            KineticPlannerMod.LOGGER.info("[KP] Graph {} | color={}",
+                geom.graphId(), String.format("%08X", geom.graphColor()));
+            KineticPlannerMod.LOGGER.info("[KP]   Nodes: {}", geom.nodes().size());
+            for (Vec3 node : geom.nodes()) {
+                KineticPlannerMod.LOGGER.info("[KP]     ({}, {}, {})",
+                    node.x, node.y, node.z);
+            }
+            KineticPlannerMod.LOGGER.info("[KP]   Edges: {}", geom.edges().size());
+            for (EdgeGeometry edge : geom.edges()) {
+                KineticPlannerMod.LOGGER.info("[KP]     {} | {} -> {}",
+                    edge.type(), edge.p1(), edge.p2());
+            }
+            KineticPlannerMod.LOGGER.info("[KP]   EdgePoints: {}", geom.edgePoints().size());
+        }
+        KineticPlannerMod.LOGGER.info("[KP] === End Dump ===");
+    }
+
+    /**
+     * 各图层对象计数字符串（供 {@code /kp debug layer-count} 命令输出）。
+     *
+     * @return 格式化字符串，如 {@code "[KP] Layers | Tracks: 12 | Nodes: 15 | EdgePoints: 5"}
+     */
+    public static String getLayerCounts() {
+        int tracks = 0, nodes = 0, edgePoints = 0;
+        for (GeometryCache.GraphGeometry geom : geometryCache.geometries()) {
+            tracks += geom.edges().size();
+            nodes += geom.nodes().size();
+            edgePoints += geom.edgePoints().size();
+        }
+        return String.format("[KP] Layers | Tracks: %d | Nodes: %d | EdgePoints: %d",
+            tracks, nodes, edgePoints);
+    }
+
+    /**
+     * 叠加层锚点诊断字符串（供 {@code /kp debug overlay-anchors} 命令输出）。
+     *
+     * <p>输出相机坐标、缩放比例、屏幕中心、屏幕尺寸、DPR 和当前维度，
+     * 用于诊断叠加层对齐问题。
+     *
+     * @return 诊断信息字符串，地图未打开时返回提示
+     */
+    public static String getOverlayAnchors() {
+        if (lastContext == null || lastTransform == null) {
+            return "[KP] No map context (map not open)";
+        }
+        return String.format(
+            "[KP] Anchors | CamX: %.1f | CamZ: %.1f | BPP: %.4f | CenterX: %d | CenterY: %d | ScreenW: %d | ScreenH: %d | DPR: %.2f | Dim: %s",
+            lastTransform.cam().cameraBlockX(),
+            lastTransform.cam().cameraBlockZ(),
+            lastTransform.cam().blocksPerPixel(),
+            lastTransform.cam().screenCenterX(),
+            lastTransform.cam().screenCenterY(),
+            lastContext.screenWidth(),
+            lastContext.screenHeight(),
+            lastContext.dpr(),
+            lastContext.dimension().location());
     }
 
     private static int applyAlpha(int color, float alpha) {

@@ -43,6 +43,14 @@ sourceSets {
         compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
         runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
     }
+    // server sourceSet：逻辑服务端代码（P1+ 编辑引擎服务端实例、同步/QoL/校验）
+    server {
+        java {
+            srcDir 'src/server/java'
+        }
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
 }
 
 // 让 main 的编译类路径能感知 client（用于 IDE 同步，运行时靠 NeoForge 加载）
@@ -50,6 +58,9 @@ configurations {
     clientImplementation.extendsFrom implementation
     clientCompileOnly.extendsFrom compileOnly
     clientRuntimeOnly.extendsFrom runtimeOnly
+    serverImplementation.extendsFrom implementation
+    serverCompileOnly.extendsFrom compileOnly
+    serverRuntimeOnly.extendsFrom runtimeOnly
 }
 
 repositories {
@@ -150,6 +161,7 @@ neoForge {
         "${mod_id}" {
             sourceSet(sourceSets.main)
             sourceSet(sourceSets.client)
+            sourceSet(sourceSets.server)
         }
     }
 }
@@ -289,6 +301,7 @@ idea {
         downloadSources = true
         downloadJavadoc = true
         sourceDirs += sourceSets.client.java.srcDirs
+        sourceDirs += sourceSets.server.java.srcDirs
     }
 }
 
@@ -299,11 +312,14 @@ test {
 // 让 client sourceSet 的类被加入主 jar（NeoForge 自动按 @Mod 注解加载）
 jar {
     from sourceSets.client.output
+    from sourceSets.server.output
 }
 
-// 让测试能访问 client sourceSet
+// 让测试能访问 client 和 server sourceSet
 sourceSets.test.compileClasspath += sourceSets.client.output
 sourceSets.test.runtimeClasspath += sourceSets.client.output
+sourceSets.test.compileClasspath += sourceSets.server.output
+sourceSets.test.runtimeClasspath += sourceSets.server.output
 
 // Javadoc 生成配置
 javadoc {
