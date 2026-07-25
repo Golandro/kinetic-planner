@@ -114,8 +114,8 @@ public class KPConfig {
     public static net.jsmua.kinetic_planner.cadengine.Theme toTheme() {
         return new net.jsmua.kinetic_planner.cadengine.Theme(
             THEME_ACTIVE.get(),
-            new net.jsmua.kinetic_planner.cadengine.Theme.GeometryStyle(
-                THEME_FIXED_SCREEN_LINE_WIDTH_PX.get().floatValue(), false, 1.0f),
+            // 轨道宽度使用世界单位默认值；恒定屏幕像素线宽由 GlobalStyle.fixedScreenLineWidthPx 承载
+            net.jsmua.kinetic_planner.cadengine.Theme.defaultValue().track(),
             new net.jsmua.kinetic_planner.cadengine.Theme.GeometryStyle(4.0f, false, 1.0f),
             new net.jsmua.kinetic_planner.cadengine.Theme.GeometryStyle(3.0f, false, 1.0f),
             new net.jsmua.kinetic_planner.cadengine.Theme.LayerVisibility(
@@ -199,7 +199,10 @@ public class KPConfig {
         return switch (param) {
             case "lineWidthScale" -> { PROVIDER_XAERO_LINE_WIDTH_SCALE.set(Double.parseDouble(value)); yield true; }
             case "alphaScale" -> { PROVIDER_XAERO_ALPHA_SCALE.set(Double.parseDouble(value)); yield true; }
-            case "dashed" -> { PROVIDER_XAERO_DASHED.set(Boolean.parseBoolean(value)); yield true; }
+            case "dashed" -> {
+                if (!isStrictBool(value)) yield false;
+                PROVIDER_XAERO_DASHED.set(Boolean.parseBoolean(value)); yield true;
+            }
             case "priority" -> { PROVIDER_XAERO_PRIORITY.set(Integer.parseInt(value)); yield true; }
             default -> false;
         };
@@ -209,9 +212,24 @@ public class KPConfig {
         return switch (param) {
             case "lineWidthScale" -> { PROVIDER_JM_LINE_WIDTH_SCALE.set(Double.parseDouble(value)); yield true; }
             case "alphaScale" -> { PROVIDER_JM_ALPHA_SCALE.set(Double.parseDouble(value)); yield true; }
-            case "dashed" -> { PROVIDER_JM_DASHED.set(Boolean.parseBoolean(value)); yield true; }
+            case "dashed" -> {
+                if (!isStrictBool(value)) yield false;
+                PROVIDER_JM_DASHED.set(Boolean.parseBoolean(value)); yield true;
+            }
             case "priority" -> { PROVIDER_JM_PRIORITY.set(Integer.parseInt(value)); yield true; }
             default -> false;
         };
+    }
+
+    /**
+     * 严格布尔解析：仅接受 {@code "true"}/{@code "false"}（忽略大小写）。
+     *
+     * <p>用于 {@code dashed} 等布尔参数，避免 {@link Boolean#parseBoolean} 将任意非法字符串静默当作 false。
+     *
+     * @param value 待解析字符串
+     * @return true 如果值为严格布尔字面量
+     */
+    private static boolean isStrictBool(String value) {
+        return "true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value);
     }
 }

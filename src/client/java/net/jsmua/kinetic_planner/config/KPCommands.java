@@ -1,5 +1,6 @@
 package net.jsmua.kinetic_planner.config;
 
+import net.jsmua.kinetic_planner.KineticPlannerClient;
 import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
@@ -311,6 +312,11 @@ public final class KPCommands {
      */
     private static int overlayHideCreateSet(CommandContext<CommandSourceStack> ctx) {
         String value = StringArgumentType.getString(ctx, "value");
+        if (!"true".equalsIgnoreCase(value) && !"false".equalsIgnoreCase(value)) {
+            ctx.getSource().sendFailure(
+                Component.literal("[KP] Invalid value: " + value + " (use true or false)"));
+            return 0;
+        }
         boolean hide = Boolean.parseBoolean(value);
         OverlayControl.setHideCreateTrackMap(hide);
         ctx.getSource().sendSuccess(() ->

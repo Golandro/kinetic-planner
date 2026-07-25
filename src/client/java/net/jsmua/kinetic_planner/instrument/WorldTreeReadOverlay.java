@@ -177,7 +177,6 @@ public final class WorldTreeReadOverlay {
             engine.applyWorldTransform(lastTransform);
 
             for (GeometryCache.GraphGeometry geom : geometryCache.geometries()) {
-                int trackColor = applyAlpha(geom.graphColor(), theme.track().alpha());
 
                 // 1. 轨道层
                 if (theme.layers().tracks()) {
@@ -185,7 +184,9 @@ public final class WorldTreeReadOverlay {
                         ? theme.global().fixedScreenLineWidthPx()
                         : theme.track().width() / (float) lastTransform.cam().blocksPerPixel())
                         * activeLineWidthScale;
-                    int trackColorScaled = applyAlpha(trackColor, theme.track().alpha() * activeAlphaScale);
+                    // 仅对原始颜色应用一次主题 alpha 与 provider alphaScale（避免重复叠加）
+                    int trackColorScaled = applyAlpha(geom.graphColor(),
+                        theme.track().alpha() * activeAlphaScale);
                     for (EdgeGeometry edge : geom.edges()) {
                         try {
                             if (edge.type() == EdgeGeometry.Type.BEZIER && edge.bezier() != null) {
