@@ -1,96 +1,55 @@
-# Kinetic Planner - LLM 项目规则
+# Kinetic Planner - LLM 核心规则
 
-> 本文件为 AI 编码助手提供项目上下文。请在开始任何任务前阅读此文件。
+> 本文件为 AI 编码助手提供**必须遵守的规则**与**最低限度上下文**。
+> 详细引用信息（包结构、构建测试、文档索引）已拆分至 `.agents/` 目录。
 
 ## 项目概述
 
-Kinetic Planner 是 Minecraft 1.21.1 NeoForge 模组，在全屏地图（Xaero's World Map）上以 CAD 思路叠加显示机械动力（Create）铁路拓扑。使用 Blaze3D 三角形带做矢量渲染。
+Kinetic Planner 是 Minecraft 1.21.1 NeoForge 模组，在全屏地图（Xaero's World Map / JourneyMap）上以 CAD 思路叠加显示机械动力（Create）铁路拓扑。使用 Blaze3D 三角形带做矢量渲染。
 
-## 构建与测试
+- mod_id：`kinetic_planner`
+- mod_group_id：`net.jsmua.kinetic_planner`
+- 许可证：MIT
+- 分支：`1.21`
+
+## 构建命令
 
 ```bash
-# 编译（common + client 两个 sourceSet）
-gradlew compileJava compileClientJava
-
-# 运行测试
-gradlew test
-
-# 完整构建（编译 + 测试 + jar）
-gradlew build
-
-# 启动游戏客户端
-gradlew runClient
+gradlew compileJava compileClientJava compileServerJava   # 编译
+gradlew test                                               # 测试（42 @Test，2 @Disabled）
+gradlew build                                              # 完整构建
+gradlew runClient                                          # 启动游戏
 ```
 
-- 请优先使用 `GRADLE_USER_HOME` 作为 Gradle 用户目录
-- 若 Shell 是 `cmd.exe`，多命令须用 `&` 或 `&&` 分隔
-- Gradle wrapper 版本 9.6.1，Java 21 (Zulu 21.0.11)
-- 测试框架：JUnit 5 + Mockito 5
+- 优先使用 `GRADLE_USER_HOME` 作为 Gradle 用户目录
+- Shell 为 `cmd.exe` 时多命令用 `&` 或 `&&` 分隔
+- Gradle wrapper 9.6.1，Java 21 (Zulu 21.0.11)
 
-## 包结构
+## 规则清单
 
-```
-net.jsmua.kinetic_planner
-├── KineticPlannerMod.java          @Mod 主类（common）
-├── KineticPlannerClient.java       @Mod(dist=CLIENT) 客户端入口
-├── data/                           数据访问层
-│   ├── IRailwayDataAccess.java     只读接口（common）
-│   ├── StubRailwayDataAccess.java  测试桩（common）
-│   ├── RailwayDataAccess.java      生产实现（client）
-│   └── EdgeGeometry.java           边几何描述符（common）
-├── projection/                     投影变换层（common，纯数学）
-│   ├── Vec2d.java
-│   ├── CameraParams.java
-│   ├── WorldRect.java
-│   └── WorldScreenTransform.java
-├── cadengine/                      渲染引擎 + 主题（common + client）
-│   ├── Theme.java                  主题数据 record（common）
-│   ├── ThemeSerializer.java        Gson JSON 序列化（common）
-│   ├── LineGeometry.java           三角形带展开纯数学（common）
-│   ├── BezierTessellator.java      贝塞尔采样纯数学（common）
-│   ├── CADRenderEngine.java        Blaze3D 渲染封装（client）
-│   └── GLStateGuard.java           RenderSystem 状态管理（client）
-├── config/                         配置/命令/GUI（client）
-│   ├── KPConfig.java               NeoForge ModConfigSpec TOML
-│   ├── KPCommands.java             /kp 命令注册
-│   └── KPClothConfigScreen.java    Cloth Config GUI
-├── mapadapter/                     地图适配层（client）
-│   ├── MapOverlayProvider.java     接口
-│   ├── MapOverlayContext.java      上下文 record
-│   ├── MapOverlayDispatcher.java   分发 + 熔断
-│   ├── XaeroMapOverlayProvider.java Xaero 实现
-│   └── JourneyMapOverlayProvider.java 占位
-├── instrument/                     叠加层编排（client）
-│   ├── WorldTreeReadOverlay.java   顶层编排器
-│   ├── GeometryCache.java          几何缓存 + 脏检测
-│   └── EdgePointColorResolver.java 边点颜色委托
-└── mixin/                          Mixin（client）
-    ├── TrackGraphAccessor.java     @Accessor connectionsByNode
-    ├── XaeroMapAccessor.java       @Accessor GuiMap 字段
-    └── XaeroMapRenderHook.java     @Inject GuiMap.render
-```
+### sourceSet 分离（勿违反）
 
-## sourceSet 分离规则
+| sourceSet | 路径 | 约束 |
+|---|---|---|
+| **main (common)** | `src/main/java/` | **不引用** `net.minecraft.client.*` / `com.mojang.blaze3d.*` |
+| **client** | `src/client/java/` | 可引用 main + client 类 |
+| **server** | `src/server/java/` | 可引用 main + 服务端 API（P1 填充） |
+| **test** | `src/test/java/` | 可访问全部 sourceSet |
 
-- **main (common)**：`src/main/java/`，不引用 `net.minecraft.client.*` / `com.mojang.blaze3d.*`
-- **client**：`src/client/java/`，可引用 main + client 类
-- **test**：`src/test/java/`，可访问两个 sourceSet
 - client 类用 `@Mod(dist=CLIENT)` + `@EventBusSubscriber(value=Dist.CLIENT)` 双保险
+- jar 包含 main + client + server output
 
-## 关键 API 约定（勿违反）
+### MC 1.21.1 API（勿违反）
 
-### MC 1.21.1 VertexConsumer
-- `addVertex(x, y, z)` 不是 `vertex()`
-- `setColor(r, g, b, a)` 不是 `color()`
-- `setNormal(x, y, z)` 不是 `normal()`
+- `addVertex(x, y, z)` **不是** `vertex()`
+- `setColor(r, g, b, a)` **不是** `color()`
+- `setNormal(x, y, z)` **不是** `normal()`
 - **无 `endVertex()`**（顶点在下一个 addVertex 时自动提交）
-
-### MC 1.21.1 RenderSystem
 - `RenderSystem.isEnabledBlend()` **不存在**（不要调用）
-- 用 `RenderSystem.enableBlend()` / `disableBlend()` 直接设置
 - Shader：`RenderSystem.setShader(GameRenderer::getPositionColorShader)`
 
-### Create 6.0.10
+### Create 6.0.10 API（勿违反）
+
 - `TrackGraph.getNodes()` 返回 `Set<TrackNodeLocation>`（不是 TrackNode），用 `locateNode()` 转
 - `TrackNode.getLocation()` 返回 TrackNodeLocation，`.getLocation().getLocation()` 得 Vec3
 - `TrackGraph.connectionsByNode` 是 package-private，用 Mixin `@Accessor` 访问
@@ -99,39 +58,60 @@ net.jsmua.kinetic_planner
 - `SignalBoundary.groupId` 不存在，实际是 `groups`（`Couple<UUID>`）
 - `TrackEdge.trackMaterial` 是 package-private，用 `getTrackMaterial()`
 
-### NeoForge 1.21.1
+### NeoForge 1.21.1（勿违反）
+
 - Mixin 配置用 `defaultRequire: 0`（未安装目标 mod 时不崩溃）
 - Mixin on Create/Xaero 类用 `remap = false`
-- `ModContainer.registerConfigScreen()` API 需运行时验证（TODO）
 - Config 用 `ModConfigSpec.Builder` + `push()`/`pop()` 分段
+- 客户端命令：`RegisterClientCommandsEvent`（`net.neoforged.neoforge.client.event` 包），`getDispatcher()` 返回 `CommandDispatcher<CommandSourceStack>`
+- `ClientCommandSourceStack` 继承 `CommandSourceStack`，`sendSuccess(Supplier<Component>, boolean)` 签名不变
 
-## 测试策略
+### Mixin 约定
 
-- **common 类**：JUnit 5 纯 JVM 单测（Vec2d, CameraParams, WorldScreenTransform, LineGeometry, BezierTessellator, ThemeSerializer）
-- **client 类**：Mockito mock MC 依赖（但 Create 类 mock 受 JVM instrumentation 限制，部分 `@Disabled`）
-- 运行时行为靠手动验收（`gradlew runClient` + 游戏内验证）
-- 当前：29 个测试，2 个 `@Disabled`
+- 方法名用 `kp$` 前缀避免与其他模组冲突
+- `remap = false` 用于非 Mojang 类（Create/Xaero）
+- Mojang 类的 Mixin 不需要 `remap = false`
+- 无 MixinPlugin（ModDev Mixin `extensibility` 接口编译冲突，用 `defaultRequire:0` 替代）
 
-## Git 工作流
+### Git 工作流
 
 - 分支 `1.21`，直接在此分支开发
 - 提交消息格式：`type: description`（feat/fix/refactor/docs）
-- 不要提交 `.codebuddy/`、`.superpowers/`（已在 .gitignore）
+- 不要提交 `.superpowers/` 之类的 skill 中间文件和 `.claude/` 之类的特定 Agent 工具配置目录（已在 .gitignore）
+- `.agents/memory` 也定性为“工作区记忆”，不应同步，而是只同步完成的状态到相应文档中。
 
-## 关键文档
+### 测试策略
 
-| 文档 | 路径 |
+- common 类：JUnit 5 纯 JVM 单测
+- client 类：Mockito mock MC 依赖（Create 类 mock 受限，部分 `@Disabled`）
+- 运行时行为靠手动验收（`gradlew runClient`）
+
+> 详细的 API 模式、代码示例和常见错误修复见 `docs/conventions.md`。
+
+## 详细上下文索引
+
+以下内容已拆分至 `.agents/` 目录，按需查阅：
+
+| 文件 | 内容 |
 |---|---|
-| Phase 0 设计规格 | `docs/superpowers/specs/2026-07-20-kinetic-planner-phase0-design.md` |
-| Phase 0b 设计规格 | `docs/superpowers/specs/2026-07-22-kinetic-planner-phase0b-design.md` |
-| Phase 0a 实现计划 | `docs/superpowers/plans/2026-07-21-kinetic-planner-phase0a.md` |
-| Phase 0b 实现计划 | `docs/superpowers/plans/2026-07-22-kinetic-planner-phase0b.md` |
-| 路线图与状态 | `STATUS.md` |
-| 编码规范速查 | `docs/conventions.md` |
-| JavaDoc 查询指南 | `docs/javadoc-guide.md` |
+| `.agents/rules/package-structure.md` | 完整包结构树、代码统计、Mixin 清单 |
+| `.agents/rules/build-and-test.md` | 构建环境详情、sourceSet 规则细节、测试策略、测试文件清单 |
+| `.agents/rules/documents.md` | 完整文档索引（设计规格、实现计划、开发参考） |
 
-## 当前状态
+项目路线图与当前状态见 `STATUS.md`。
 
-- Phase 0a + 0b 代码实现完成
-- 29 个测试通过（2 个 @Disabled）
-- 待运行时验收（TrackGraphAccessor Mixin、CADRenderEngine shader、Config screen 注册 API）
+## 上下文补全规则
+
+当当前上下文不含完成任务所需的规则或信息时，**必须**按以下顺序补全：
+
+1. **查阅 `.agents/` 目录**：包结构、构建测试、文档索引等详细引用信息。
+3. **查阅 `STATUS.md`**：当前阶段状态、兼容性矩阵、技术假设核实。
+4. **关联品牌工具目录**：若使用特定 AI 编码工具，查阅其品牌目录获取工具特定规则与记忆：
+    > 若在此前发生缺失 `AGENT.md` 要求的必需规则，须向用户提出关联`.agents/`目录到品牌工具目录的请求。
+    > 须包含：当前情况、不分发品牌工具目录的理由、如何操作（最好的免维护方案是符号链接）
+5. **查阅实现计划与设计规格**：`docs/superpowers/plans/` 和 `docs/superpowers/specs/` 下的文档。
+6. **搜索代码库**：使用搜索工具验证 API 签名、字段可见性等。如果可能，应该优先使用 LSP。
+7. **搜索外部文档**：项目使用的外部依赖，其签名和定义文档需要通过 `Context7` 等工具获取，或者使用网络搜索。 
+
+**不得在未查阅上述资源的情况下猜测 API 签名或项目约定。**
+**若进行探索性工作，可以选择性忽略部分资源提供的信息，但后续相关设计的改动工作中必须同时更新您了解了存在的规则中的信息。**

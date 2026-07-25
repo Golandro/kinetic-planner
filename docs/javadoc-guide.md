@@ -189,7 +189,7 @@ Create 的部分字段是 package-private，在编译时会报错。常见情况
 
 ### 5.4 使用项目记忆文件
 
-本项目的 `.codebuddy/memory/MEMORY.md` 中有"Create 6.0.10 API 实测修正"和"MC 1.21.1 API"段落，记录了所有已验证的 API 信息。查询 API 前应先查阅此文件。
+本项目的 `../.agents/memory/MEMORY.md` 中有"Create 6.0.10 API 实测修正"和"MC 1.21.1 API"段落，记录了所有已验证的 API 信息。查询 API 前应先查阅此文件。
 
 ---
 
