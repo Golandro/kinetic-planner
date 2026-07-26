@@ -24,7 +24,7 @@ import net.minecraft.network.chat.Component;
  * /kp overlay disable         -- 显式关闭
  * /kp overlay reload          -- 从配置值重建 Theme 并应用
  * /kp overlay status          -- 查看状态（开关/图数/节点数/边数）
- * /kp overlay hide-create [true|false] -- 切换/设置隐藏 Create 信号边组叠加层
+ * /kp overlay show-create [true|false] -- 切换/设置显示 Create 列车地图叠加层
  * /kp provider list           -- 列出所有 provider 及状态
  * /kp provider enable &lt;modId&gt; -- 启用某 provider
  * /kp provider disable &lt;modId&gt;-- 禁用某 provider
@@ -72,10 +72,10 @@ public final class KPCommands {
                     .executes(KPCommands::overlayReload))
                 .then(Commands.literal("status")
                     .executes(KPCommands::overlayStatus))
-                .then(Commands.literal("hide-create")
-                    .executes(KPCommands::overlayHideCreateToggle)
+                .then(Commands.literal("show-create")
+                    .executes(KPCommands::overlayShowCreateToggle)
                     .then(Commands.argument("value", StringArgumentType.word())
-                        .executes(KPCommands::overlayHideCreateSet))))
+                        .executes(KPCommands::overlayShowCreateSet))))
             .then(Commands.literal("provider")
                 .then(Commands.literal("list")
                     .executes(KPCommands::providerList))
@@ -293,39 +293,38 @@ public final class KPCommands {
         return 1;
     }
 
-    // === /kp overlay hide-create -- 隐藏 Create 信号边组叠加层 ===
+    // === /kp overlay show-create -- 显示/隐藏 Create 列车地图叠加层 ===
 
     /**
-     * {@code /kp overlay hide-create}：切换隐藏 Create 信号边组叠加层。
+     * {@code /kp overlay show-create}：切换显示 Create 列车地图叠加层。
      *
-     * <p>当 KP overlay 启用且此开关为 true 时，CreateTrackVisualizerHiderMixin
-     * 会 cancel Create 的 {@code visualiseSignalEdgeGroups}，完全跳过 Create
-     * 在 3D 世界中绘制信号边组彩色线条。
+     * <p>当此开关为 true 时，CreateTrainMapMixin 放行 Create 的 renderAndPick，
+     * Create 的列车地图叠加层在地图上正常渲染；为 false 时由 KP 完全替代。
      */
-    private static int overlayHideCreateToggle(CommandContext<CommandSourceStack> ctx) {
-        boolean newVal = !OverlayControl.isHideCreateTrackMap();
-        OverlayControl.setHideCreateTrackMap(newVal);
+    private static int overlayShowCreateToggle(CommandContext<CommandSourceStack> ctx) {
+        boolean newVal = !OverlayControl.isShowCreateTrackMap();
+        OverlayControl.setShowCreateTrackMap(newVal);
         ctx.getSource().sendSuccess(() ->
-            Component.literal("[KP] Hide Create Track Map: " + (newVal ? "ON" : "OFF")), false);
+            Component.literal("[KP] Show Create Track Map: " + (newVal ? "ON" : "OFF")), false);
         return 1;
     }
 
     /**
-     * {@code /kp overlay hide-create <value>}：显式设置隐藏 Create 信号边组叠加层。
+     * {@code /kp overlay show-create <value>}：显式设置显示 Create 列车地图叠加层。
      *
      * <p>{@code value} 接受 {@code true}/{@code false}（{@link Boolean#parseBoolean} 解析）。
      */
-    private static int overlayHideCreateSet(CommandContext<CommandSourceStack> ctx) {
+    private static int overlayShowCreateSet(CommandContext<CommandSourceStack> ctx) {
         String value = StringArgumentType.getString(ctx, "value");
         if (!"true".equalsIgnoreCase(value) && !"false".equalsIgnoreCase(value)) {
             ctx.getSource().sendFailure(
                 Component.literal("[KP] Invalid value: " + value + " (use true or false)"));
             return 0;
         }
-        boolean hide = Boolean.parseBoolean(value);
-        OverlayControl.setHideCreateTrackMap(hide);
+        boolean show = Boolean.parseBoolean(value);
+        OverlayControl.setShowCreateTrackMap(show);
         ctx.getSource().sendSuccess(() ->
-            Component.literal("[KP] Hide Create Track Map: " + (hide ? "ON" : "OFF")), false);
+            Component.literal("[KP] Show Create Track Map: " + (show ? "ON" : "OFF")), false);
         return 1;
     }
 

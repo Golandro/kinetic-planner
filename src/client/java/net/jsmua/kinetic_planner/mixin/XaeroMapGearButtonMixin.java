@@ -3,7 +3,6 @@ package net.jsmua.kinetic_planner.mixin;
 import net.jsmua.kinetic_planner.config.MapGearButtonWidget;
 import net.jsmua.kinetic_planner.config.OverlayControl;
 import net.jsmua.kinetic_planner.config.ProviderConfigScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -42,9 +41,10 @@ public class XaeroMapGearButtonMixin {
      */
     @Unique
     private static void kp$ensureInit() {
-        int screenW = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+        // 贴左边缘、全屏地图设置下方的社区惯例位置（与 Create 列车地图按钮同位），
+        // 取代 Create 在 (3,30) 的开关，由 KP 按钮接管。
         if (kp$gearButton == null) {
-            kp$gearButton = new MapGearButtonWidget(screenW - 20, 4, () -> {
+            kp$gearButton = new MapGearButtonWidget(3, 30, () -> {
                 kp$ensureConfigScreen();
                 kp$configScreen.toggle();
             });

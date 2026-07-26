@@ -7,9 +7,11 @@ import net.jsmua.kinetic_planner.data.ProviderConfigRegistry;
 import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayDispatcher;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayProvider;
+import net.jsmua.kinetic_planner.compat.create.KPIntegration;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
@@ -47,6 +49,13 @@ public class KineticPlannerClient {
         for (MapOverlayProvider p : MapOverlayDispatcher.registeredProviders()) {
             ProviderConfigRegistry.register(p.modId(), p.defaultConfig());
         }
+
+        // 一次性打通 Create 列车地图管线：此后叠加层仅由 KP "Show Create Track Map" 开关把守
+        event.enqueueWork(() -> {
+            if (ModList.get().isLoaded("create")) {
+                KPIntegration.forceCreateOverlayPipeline();
+            }
+        });
     }
 
     @SubscribeEvent

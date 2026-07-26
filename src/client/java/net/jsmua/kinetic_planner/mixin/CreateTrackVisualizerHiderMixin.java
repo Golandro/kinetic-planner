@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * 隐藏 Create 的信号边组叠加层（{@link TrackGraphVisualizer#visualiseSignalEdgeGroups}）。
  *
- * <p>当 KP 叠加层启用且配置 {@code hideCreateTrackMap=true} 时，cancel 该方法，
+ * <p>当 KP 叠加层启用且未配置 {@code showCreateTrackMap} 时，cancel 该方法，
  * 完全跳过 Create 在 3D 世界中绘制信号边组彩色线条（玩家手持信号物品时触发）。
  *
  * <p>不干涉 {@code debugViewGraph}（F3 调试图视图）-- 那是 Create 自有调试功能，
@@ -29,7 +29,7 @@ public class CreateTrackVisualizerHiderMixin {
     @Inject(method = "visualiseSignalEdgeGroups",
             at = @At("HEAD"), cancellable = true)
     private static void kp$hideSignalEdgeGroups(TrackGraph graph, CallbackInfo ci) {
-        if (KPConfig.OVERLAY_ENABLED.get() && KPConfig.HIDE_CREATE_TRACK_MAP.get()) {
+        if (KPConfig.OVERLAY_ENABLED.get() && !KPConfig.SHOW_CREATE_TRACK_MAP.get()) {
             ci.cancel();
         }
     }

@@ -78,7 +78,8 @@ gradlew runClient                                          # 启动游戏
 - 分支 `1.21`，直接在此分支开发
 - 提交消息格式：`type: description`（feat/fix/refactor/docs）
 - 不要提交 `.superpowers/` 之类的 skill 中间文件和 `.claude/` 之类的特定 Agent 工具配置目录（已在 .gitignore）
-- `.agents/memory` 也定性为“工作区记忆”，不应同步，而是只同步完成的状态到相应文档中。
+- `.agents/memory` 也定性为“工作区记忆”，属于短期记忆。不应同步，而是只同步完成的状态到相应文档中。
+- 对于作为事实的长期记忆，应当沉淀到对应模块的规则细则中。
 
 ### 测试策略
 

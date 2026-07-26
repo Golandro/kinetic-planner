@@ -223,7 +223,6 @@ dependencies {
         localImplementation("maven.modrinth:farmers-delight:${farmers_delight_version}")
     }
 
-    localRuntimeOnly("dev.architectury:architectury-neoforge:13d.0.8")
     localImplementation("dev.ftb.mods:ftb-chunks-neoforge:2101.1.1")
     localImplementation("dev.ftb.mods:ftb-teams-neoforge:2101.1.0")
     localImplementation("dev.ftb.mods:ftb-library-neoforge:2101.1.3")

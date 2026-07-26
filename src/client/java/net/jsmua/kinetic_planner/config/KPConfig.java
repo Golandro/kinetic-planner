@@ -15,7 +15,7 @@ public class KPConfig {
 
     // [overlay]
     public static final ModConfigSpec.BooleanValue OVERLAY_ENABLED;
-    public static final ModConfigSpec.BooleanValue HIDE_CREATE_TRACK_MAP;
+    public static final ModConfigSpec.BooleanValue SHOW_CREATE_TRACK_MAP;
 
     // [theme]
     public static final ModConfigSpec.ConfigValue<String> THEME_ACTIVE;
@@ -58,7 +58,7 @@ public class KPConfig {
 
         builder.push("overlay");
         OVERLAY_ENABLED = builder.define("enabled", true);
-        HIDE_CREATE_TRACK_MAP = builder.define("hideCreateTrackMap", true);
+        SHOW_CREATE_TRACK_MAP = builder.define("showCreateTrackMap", false);
         builder.pop();
 
         builder.push("theme");

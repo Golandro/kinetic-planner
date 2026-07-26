@@ -65,21 +65,22 @@ public final class OverlayControl {
     }
 
     /**
-     * 查询是否隐藏 Create 的信号边组叠加层。
+     * 查询是否显示 Create 的列车地图叠加层。
      *
-     * @return {@code true} 如果配置为隐藏（叠加层启用时由 Mixin 拦截 Create 的 visualiseSignalEdgeGroups）
+     * @return {@code true} 如果配置为显示（叠加层启用时 Create 的 renderAndPick 正常执行）；
+     *         {@code false} 表示阻止（由 Mixin 拦截 Create 的 renderAndPick，KP 完全替代）
      */
-    public static boolean isHideCreateTrackMap() {
-        return KPConfig.HIDE_CREATE_TRACK_MAP.get();
+    public static boolean isShowCreateTrackMap() {
+        return KPConfig.SHOW_CREATE_TRACK_MAP.get();
     }
 
     /**
-     * 设置是否隐藏 Create 的信号边组叠加层。
+     * 设置是否显示 Create 的列车地图叠加层。
      *
-     * @param hide 是否隐藏
+     * @param show 是否显示
      */
-    public static void setHideCreateTrackMap(boolean hide) {
-        KPConfig.HIDE_CREATE_TRACK_MAP.set(hide);
+    public static void setShowCreateTrackMap(boolean show) {
+        KPConfig.SHOW_CREATE_TRACK_MAP.set(show);
     }
 
     /**

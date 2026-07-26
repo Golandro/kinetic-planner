@@ -65,9 +65,9 @@ public class ProviderConfigScreen {
         int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
         int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
 
-        // 面板定位：右上角，齿轮按钮下方
-        panelX = screenWidth - PANEL_WIDTH - 4;
-        panelY = 24;
+        // 面板定位：左侧，齿轮按钮右侧（齿轮在 3,30 → 面板从 x=22 开始）
+        panelX = 22;
+        panelY = 50;
 
         // 半透明背景
         gg.fill(panelX, panelY, panelX + PANEL_WIDTH, panelY + PANEL_HEIGHT, BG_COLOR);
@@ -134,11 +134,11 @@ public class ProviderConfigScreen {
                     panelX + 6, cursorY, 0xFFFFFFFF);
                 cursorY += 12;
 
-                // hideCreateTrackMap
-                boolean hideCreate = OverlayControl.isHideCreateTrackMap();
-                String hideCreateText = "[ " + (hideCreate ? "X" : " ") + " ] Hide Create Track Map";
+                // showCreateTrackMap
+                boolean showCreate = OverlayControl.isShowCreateTrackMap();
+                String showCreateText = "[ " + (showCreate ? "X" : " ") + " ] Show Create Track Map";
                 gg.drawString(Minecraft.getInstance().font,
-                    Component.literal(hideCreateText),
+                    Component.literal(showCreateText),
                     panelX + 6, cursorY, 0xFFFFFFFF);
                 cursorY += 12;
 
@@ -202,9 +202,9 @@ public class ProviderConfigScreen {
                     return true;
                 }
                 toggleY += 12;
-                // hideCreateTrackMap
+                // showCreateTrackMap
                 if (mouseY >= toggleY && mouseY < toggleY + 12) {
-                    OverlayControl.setHideCreateTrackMap(!OverlayControl.isHideCreateTrackMap());
+                    OverlayControl.setShowCreateTrackMap(!OverlayControl.isShowCreateTrackMap());
                     return true;
                 }
             }
