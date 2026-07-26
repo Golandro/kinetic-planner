@@ -31,6 +31,7 @@ import net.minecraft.network.chat.Component;
  * /kp provider set &lt;modId&gt; &lt;param&gt; &lt;value&gt; -- 设置 provider 参数
  * /kp provider get &lt;modId&gt; [param] -- 查询 provider 配置
  * /kp provider reset &lt;modId&gt;  -- 重置 provider 为默认
+ * /kp provider reset-circuit [modId] -- 重置熔断状态（省略 modId 重置全部）
  * /kp theme list              -- 扫描目录列出可用主题
  * /kp theme set &lt;name&gt;        -- 切换到指定主题（从 JSON 文件加载）
  * /kp theme reload            -- 从磁盘重载当前主题 JSON
@@ -96,7 +97,11 @@ public final class KPCommands {
                             .executes(KPCommands::providerGetParam))))
                 .then(Commands.literal("reset")
                     .then(Commands.argument("modId", StringArgumentType.word())
-                        .executes(KPCommands::providerReset))))
+                        .executes(KPCommands::providerReset)))
+                .then(Commands.literal("reset-circuit")
+                    .executes(KPCommands::providerResetCircuitAll)
+                    .then(Commands.argument("modId", StringArgumentType.word())
+                        .executes(KPCommands::providerResetCircuitOne))))
             .then(Commands.literal("theme")
                 .then(Commands.literal("list")
                     .executes(KPCommands::themeList))
@@ -425,6 +430,37 @@ public final class KPCommands {
         } else {
             ctx.getSource().sendFailure(
                 Component.literal("[KP] Unknown provider: " + modId));
+            return 0;
+        }
+    }
+
+    /**
+     * {@code /kp provider reset-circuit}：重置所有 provider 的熔断状态。
+     */
+    private static int providerResetCircuitAll(CommandContext<CommandSourceStack> ctx) {
+        boolean hadAny = ProviderConfigControl.resetCircuit(null);
+        if (hadAny) {
+            ctx.getSource().sendSuccess(() ->
+                Component.literal("[KP] All circuit breakers reset"), false);
+        } else {
+            ctx.getSource().sendSuccess(() ->
+                Component.literal("[KP] No circuit breakers to reset"), false);
+        }
+        return 1;
+    }
+
+    /**
+     * {@code /kp provider reset-circuit <modId>}：重置指定 provider 的熔断状态。
+     */
+    private static int providerResetCircuitOne(CommandContext<CommandSourceStack> ctx) {
+        String modId = StringArgumentType.getString(ctx, "modId");
+        if (ProviderConfigControl.resetCircuit(modId)) {
+            ctx.getSource().sendSuccess(() ->
+                Component.literal("[KP] Circuit breaker reset for " + modId), false);
+            return 1;
+        } else {
+            ctx.getSource().sendSuccess(() ->
+                Component.literal("[KP] No circuit breaker for " + modId), false);
             return 0;
         }
     }

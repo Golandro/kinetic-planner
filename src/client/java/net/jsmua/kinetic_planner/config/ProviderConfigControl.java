@@ -5,6 +5,7 @@ import net.jsmua.kinetic_planner.data.ProviderConfigRegistry;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayDispatcher;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayProvider;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,11 +31,11 @@ public final class ProviderConfigControl {
     /**
      * 列出所有已注册 provider 及其状态。
      *
-     * <p>格式（每行一个 provider，{@code *} 标记当前激活的 provider）：
+     * <p>格式（每行一个 provider，{@code *} 标记当前激活的 provider，{@code [FUSED]} 标记已熔断的）：
      * <pre>
      * [KP] Map Providers:
-     *   * xaeroworldmap  [ON]  pri=0 lineWidth=1.00 alpha=1.00 dashed=false(P1.1)
-     *     journeymap     [OFF] pri=1 lineWidth=1.00 alpha=1.00 dashed=false(P1.1)
+     *   * xaeroworldmap  [ON]  pri=0 lineWidth=1.00 alpha=1.00 dashed=false
+     *     journeymap     [OFF] pri=1 lineWidth=1.00 alpha=1.00 dashed=false [FUSED]
      * </pre>
      *
      * @return 格式化字符串，每行一个 provider
@@ -47,12 +48,14 @@ public final class ProviderConfigControl {
             ProviderConfig config = KPConfig.getProviderConfig(p.modId());
             String status = config != null && config.enabled() ? "ON" : "OFF";
             String activeMark = active.map(a -> a.equals(p.modId()) ? " *" : "  ").orElse("  ");
-            lines.add(String.format("%s %-15s [%s] pri=%d lineWidth=%.2f alpha=%.2f dashed=%s(P1.1)",
+            String fusedMark = MapOverlayDispatcher.isCircuitBroken(p.modId()) ? " [FUSED]" : "";
+            lines.add(String.format("%s %-15s [%s] pri=%d lineWidth=%.2f alpha=%.2f dashed=%s%s",
                 activeMark, p.modId(), status,
                 config != null ? config.priority() : 0,
                 config != null ? config.lineWidthScale() : 1.0f,
                 config != null ? config.alphaScale() : 1.0f,
-                config != null && config.dashed()));
+                config != null && config.dashed() ? "true" : "false",
+                fusedMark));
         }
         return String.join("\n", lines);
     }
@@ -143,6 +146,25 @@ public final class ProviderConfigControl {
             && KPConfig.setProviderParam(modId, "dashed", String.valueOf(def.dashed()));
         if (ok) OverlayControl.reload();
         return ok;
+    }
+
+    /**
+     * 重置 provider 的熔断状态。
+     *
+     * @param modId provider mod ID；null 表示重置全部
+     * @return true 如果有熔断被重置
+     */
+    public static boolean resetCircuit(@Nullable String modId) {
+        var failed = MapOverlayDispatcher.getFailedProviders();
+        if (modId != null) {
+            boolean wasBroken = failed.contains(modId);
+            MapOverlayDispatcher.resetCircuitBreaker(modId);
+            return wasBroken;
+        } else {
+            boolean hadAny = !failed.isEmpty();
+            MapOverlayDispatcher.resetCircuitBreaker(null);
+            return hadAny;
+        }
     }
 
     /**
