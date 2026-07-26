@@ -196,12 +196,12 @@ public final class WorldTreeReadOverlay {
                                     (float) b.control1().x, (float) b.control1().z,
                                     (float) b.control2().x, (float) b.control2().z,
                                     (float) b.end().x, (float) b.end().z,
-                                    widthPx, trackColorScaled, 32);
+                                    widthPx, trackColorScaled, 32, activeDashed);
                             } else {
                                 engine.drawLine(
                                     (float) edge.p1().x, (float) edge.p1().z,
                                     (float) edge.p2().x, (float) edge.p2().z,
-                                    widthPx, trackColorScaled);
+                                    widthPx, trackColorScaled, activeDashed);
                             }
                         } catch (Throwable ignored) {}
                     }

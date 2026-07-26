@@ -50,4 +50,45 @@ public final class LineGeometry {
             x2 - nx, y2 - ny   // v4: 终点 - 法线
         };
     }
+
+    /**
+     * 将线段按 dash/gap 模式分段，用于虚线渲染。
+     *
+     * <p>仅生成完整长度的 dash 段；末尾不足一个 dashLen 的部分会被丢弃
+     * （保持虚线视觉一致性，避免出现短截线）。
+     *
+     * @param x1      起点 x
+     * @param y1      起点 y
+     * @param x2      终点 x
+     * @param y2      终点 y
+     * @param dashLen 每段实线长度（像素）
+     * @param gapLen  每段间隔长度（像素）
+     * @return 分段数组，每段 [x1, y1, x2, y2]；无线段时返回空数组
+     */
+    public static float[][] buildDashedSegments(
+            float x1, float y1, float x2, float y2,
+            float dashLen, float gapLen) {
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        float totalLen = (float) Math.sqrt(dx * dx + dy * dy);
+        if (totalLen < 1e-6f || dashLen <= 0) {
+            return new float[0][];
+        }
+
+        float unitX = dx / totalLen;
+        float unitY = dy / totalLen;
+        float cycleLen = dashLen + gapLen;
+
+        java.util.List<float[]> segments = new java.util.ArrayList<>();
+        float pos = 0;
+        while (pos + dashLen <= totalLen) {
+            float dashEnd = pos + dashLen;
+            segments.add(new float[]{
+                x1 + unitX * pos, y1 + unitY * pos,
+                x1 + unitX * dashEnd, y1 + unitY * dashEnd
+            });
+            pos += cycleLen;
+        }
+        return segments.toArray(new float[0][]);
+    }
 }

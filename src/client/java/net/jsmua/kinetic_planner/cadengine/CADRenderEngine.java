@@ -93,10 +93,76 @@ public final class CADRenderEngine {
             float p0x, float p0y, float p1x, float p1y,
             float p2x, float p2y, float p3x, float p3y,
             float widthPx, int color, int segments) {
+        drawBezier(p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y, widthPx, color, segments, false);
+    }
+
+    /**
+     * 绘制三次贝塞尔曲线（可选虚线）。虚线模式下沿 tessellate 后的每段折线分别进行 dash/gap 分段，
+     * 再逐段调用实线 {@link #drawLine(float, float, float, float, float, int)}。
+     *
+     * <p>注意：dashed 模式下分段阈值基于屏幕像素坐标，tessellate 段数过少时虚线视觉效果会变粗糙。
+     * 调用方应保证 segments 足够大（通常 32）以获得平滑虚线。
+     *
+     * @param segments tessellate 段数
+     * @param dashed   是否虚线
+     */
+    public void drawBezier(
+            float p0x, float p0y, float p1x, float p1y,
+            float p2x, float p2y, float p3x, float p3y,
+            float widthPx, int color, int segments, boolean dashed) {
         if (!inFrame) return;
         float[] pts = BezierTessellator.tessellate(p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y, segments);
-        for (int i = 0; i < segments; i++) {
-            drawLine(pts[i * 2], pts[i * 2 + 1], pts[(i + 1) * 2], pts[(i + 1) * 2 + 1], widthPx, color);
+        if (dashed) {
+            for (int i = 0; i < segments; i++) {
+                float x1 = pts[i * 2], y1 = pts[i * 2 + 1];
+                float x2 = pts[(i + 1) * 2], y2 = pts[(i + 1) * 2 + 1];
+                float[][] segs = LineGeometry.buildDashedSegments(x1, y1, x2, y2, 4f, 2f);
+                for (float[] s : segs) {
+                    drawLine(s[0], s[1], s[2], s[3], widthPx, color);
+                }
+            }
+        } else {
+            for (int i = 0; i < segments; i++) {
+                drawLine(pts[i * 2], pts[i * 2 + 1], pts[(i + 1) * 2], pts[(i + 1) * 2 + 1], widthPx, color);
+            }
+        }
+    }
+
+    /**
+     * 绘制虚线段（三角形展开 + dash/gap 分段，默认 dash=4, gap=2）。
+     *
+     * @param dashed 是否虚线；false 时退化为普通 {@link #drawLine}
+     */
+    public void drawLine(float x1, float y1, float x2, float y2,
+                         float widthPx, int color, boolean dashed) {
+        drawLine(x1, y1, x2, y2, widthPx, color, dashed, 4f, 2f);
+    }
+
+    /**
+     * 绘制虚线段（三角形展开 + dash/gap 分段）。
+     *
+     * @param dashed   是否虚线；false 时退化为普通 {@link #drawLine}
+     * @param dashLen  实线段长度（像素）
+     * @param gapLen   间隔长度（像素）
+     */
+    public void drawLine(float x1, float y1, float x2, float y2,
+                         float widthPx, int color, boolean dashed,
+                         float dashLen, float gapLen) {
+        if (!inFrame) return;
+        if (!dashed) {
+            drawLine(x1, y1, x2, y2, widthPx, color);
+            return;
+        }
+        // 注意：dashed 分段在屏幕空间进行，需要先做世界->屏幕变换
+        float sx1 = toScreenX(x1), sy1 = toScreenY(y1);
+        float sx2 = toScreenX(x2), sy2 = toScreenY(y2);
+        float[][] segments = LineGeometry.buildDashedSegments(sx1, sy1, sx2, sy2, dashLen, gapLen);
+        float[] rgba = unpackColor(color);
+        for (float[] seg : segments) {
+            float[] quad = LineGeometry.expandLineToTriangleStrip(seg[0], seg[1], seg[2], seg[3], widthPx);
+            // 屏幕空间坐标，直接 addTriangle 不再走 toScreenX/Y
+            addTriangle(quad[0], quad[1], quad[2], quad[3], quad[4], quad[5], rgba);
+            addTriangle(quad[2], quad[3], quad[6], quad[7], quad[4], quad[5], rgba);
         }
     }
 

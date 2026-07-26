@@ -17,12 +17,6 @@ import java.util.Optional;
  * 不直接访问 {@link KPConfig} 或 {@link net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay}。
  *
  * <p>修改配置后自动通过 {@link OverlayControl#reload()} 重建 Theme 并应用到渲染层。
- *
- * <h2>已知限制</h2>
- * <ul>
- *   <li>{@code dashed} 参数当前被读取但未应用到 CADRenderEngine（dashed 渲染逻辑推迟到 P1.1），
- *       CLI 输出中以 {@code (P1.1)} 标注</li>
- * </ul>
  */
 public final class ProviderConfigControl {
 
@@ -114,7 +108,7 @@ public final class ProviderConfigControl {
             return "[KP] Unknown provider: " + modId;
         }
         if (param == null || param.isEmpty()) {
-            return String.format("[KP] %s | enabled=%s | priority=%d | lineWidth=%.2f | alpha=%.2f | dashed=%s(P1.1)",
+            return String.format("[KP] %s | enabled=%s | priority=%d | lineWidth=%.2f | alpha=%.2f | dashed=%s",
                 modId, config.enabled(), config.priority(),
                 config.lineWidthScale(), config.alphaScale(), config.dashed());
         }
@@ -123,7 +117,7 @@ public final class ProviderConfigControl {
             case "priority" -> "[KP] " + modId + ".priority = " + config.priority();
             case "lineWidthScale" -> "[KP] " + modId + ".lineWidthScale = " + config.lineWidthScale();
             case "alphaScale" -> "[KP] " + modId + ".alphaScale = " + config.alphaScale();
-            case "dashed" -> "[KP] " + modId + ".dashed = " + config.dashed() + " (P1.1)";
+            case "dashed" -> "[KP] " + modId + ".dashed = " + config.dashed();
             default -> "[KP] Unknown param: " + param + " (valid: enabled/priority/lineWidthScale/alphaScale/dashed)";
         };
     }
