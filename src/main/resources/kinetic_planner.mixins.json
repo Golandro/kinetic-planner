@@ -9,7 +9,8 @@
         "TrackGraphAccessor",
         "XaeroMapAccessor",
         "XaeroMapRenderHook",
-        "CreateTrackVisualizerHiderMixin"
+        "CreateTrackVisualizerHiderMixin",
+        "XaeroMapGearButtonMixin"
     ],
     "injectors": {
         "defaultRequire": 0
