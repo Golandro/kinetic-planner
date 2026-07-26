@@ -1,8 +1,8 @@
 # Kinetic Planner 开发路线图与状态
 
-> **最后更新：** 2026-07-25
+> **最后更新：** 2026-07-26
 > **当前分支：** `1.21`
-> **当前状态：** Phase 0a + 0b + P0 重构 + P1.0（Phase A）代码完成，42 个测试（2 个 @Disabled），待运行时验收
+> **当前状态：** Phase 0a + 0b + P0 重构 + P1.0（Phase A）代码完成，P0.5 + Phase B + P1.1 计划就绪，42 个测试（2 个 @Disabled），待运行时验收
 
 ---
 
@@ -14,85 +14,18 @@ Kinetic Planner 是 Minecraft 模组，用于在全屏地图模组（Xaero's Wor
 
 ### 2.1 整体阶段规划
 
-| 阶段 | 内容 | 状态 | 预估复杂度 | 关键交付物 |
-|---|---|---|---|---|
+| 阶段         | 内容 | 状态 | 预估复杂度 | 关键交付物 |
+|--------------|---|---|---|---|
 | **Phase 0a** | 骨架 + 数据层 + 投影 + **简化渲染**（MC 原生线）+ Xaero Mixin | ✅ 代码完成 | 中 | 地图上能看到轨道拓扑（线条/节点），验证数据链路 |
 | **Phase 0b** | Blaze3D CADRenderEngine + 主题 + 配置/命令 + 视觉打磨 | ✅ 代码完成 | 高 | 矢量三角形带粗线、可配线宽/主题、`/kp` 命令体系 |
-| **P0 重构** | sourceSet 重构（server）+ 客户端命令迁移 + OverlayControl/ThemeManager 提取 + 14 命令 | ✅ 代码完成 | 中 | 三 sourceSet 架构、14 个 `/kp` 命令节点 |
-| **P1.0** | 地图模组独立配置（per-provider）+ 隐藏 Create 信号叠加层 | 🟡 Phase A 完成，Phase B 未开始 | 中 | `/kp provider` CLI + hideCreateTrackMap + CreateTrackVisualizerHiderMixin |
-| **Phase 0.5** | JourneyMap 适配器 + `MapOverlayDispatcher` 熔断 | 🟡 占位就绪 | 中 | JM provider 已注册但 `isMapOpen` 返回 false（Mixin 推迟） |
-| **Phase 1** | 暂存树 + 基础 CAD 编辑工具（拾取/捕捉/绘制） | 🔲 未开始 | 高 | 在地图上编辑轨道规划，暂存树脱离 Create 运行时 |
-| **Phase 2** | 高级几何（样条/双圆弧/地形拟合） | 🔲 未开始 | 高 | `EdgeGeometry.ARC`/`SPLINE` 类型启用 |
-| **Phase 3** | 规划树 + 类 SVN 版本控制 | 🔲 未开始 | 极高 | 规划分支/合并/回滚，信号段着色 |
-| **Phase 4** | 多格式 IO（CAD 原生/NBT/蓝图/Litematica/IFC 4.3 rail 子集） | 🔲 未开始 | 高 | 与主流格式互通 |
-| **Phase 5** | 远程铺设 + 路基模板生成 | 🔲 未开始 | 高 | 规划落地到方块世界 |
-
-### 2.2 Phase 0 拆分说明（0a -> 0b）
-
-原 Phase 0 设计（spec 2026-07-20）将 8 个能力域一次性交付，风险集中在渲染引擎--若一上来就上矢量渲染，引擎崩了连数据层是否正确都无法可视化验证。故拆成两个可独立交付的里程碑：
-
-| 里程碑 | 范围 | 渲染方案 | 价值 | 退场条件 |
-|---|---|---|---|---|
-| **Phase 0a（真 MVP）** | 骨架重命名 + `IRailwayDataAccess` + `WorldScreenTransform` + `XaeroMapOverlayProvider` + **MC 原生 `RenderType.lines()` / `GuiGraphics.fill`** | 1px 线宽，无抗锯齿 | 跑通"数据->投影->叠加"全链路，验证数据访问与 Mixin 注入点 | 地图上能看到轨道线条与节点圆点 |
-| **Phase 0b** | `CADRenderEngine`（Blaze3D 三角形带）+ `Theme` + `KPConfig`/`KPCommands` + 视觉打磨 | Blaze3D 矢量渲染，可配线宽 | 矢量粗线、主题系统、配置/命令体系 | spec 5.1–5.4 验收（CADRenderEngine 用 Blaze3D 三角形带封装，替代原 NanoVG 方案） |
-
-> **渲染方案变更：** 原 spec §4.5 为 NanoVG 方案，Phase 0b 头脑风暴（2026-07-22）确定为 **Blaze3D 薄封装**（三角形带粗线，无外部 native 依赖）。抗锯齿推迟到后续。
-
-### 2.3 Phase 0a 实现进度
-
-> **Plan 文档：** `docs/superpowers/plans/2026-07-21-kinetic-planner-phase0a.md`
-> **架构：** sourceSet 分离（main=common, client=仅逻辑客户端）；MC 原生 `RenderType.lines()` + `GuiGraphics.fill`
-
-| Task | 内容 | sourceSet | 状态 |
-|---|---|---|---|
-| Task 1 | 骨架重命名 + sourceSet 拆分 + Mixin 基础设施 | both | ✅ 完成 |
-| Task 2 | Vec2d | common | ✅ 完成 |
-| Task 3 | CameraParams + WorldRect | common | ✅ 完成 |
-| Task 4 | WorldScreenTransform | common | ✅ 完成 |
-| Task 5 | EdgeGeometry 描述符 | common | ✅ 完成 |
-| Task 6 | IRailwayDataAccess 接口 + Stub | common | ✅ 完成 |
-| Task 7 | RailwayDataAccess 生产实现 | client | ✅ 完成 |
-| Task 8 | MapOverlayProvider + Xaero Mixin | client | ✅ 完成 |
-| Task 9 | NativeLineOverlay + 可视化锚点 | client | ✅ 完成 |
-| Task 10 | 集成验收（Phase 0a 退场条件） | - | 🟡 代码完成，待运行时验收 |
-
-### 2.4 Phase 0b 实现进度
-
-> **Plan 文档：** `docs/superpowers/plans/2026-07-22-kinetic-planner-phase0b.md`（11 个 Task）
-> **Spec 文档：** `docs/superpowers/specs/2026-07-22-kinetic-planner-phase0b-design.md`
-> **范围：** Blaze3D 三角形带封装（CADRenderEngine）+ Theme/ThemeSerializer + KPConfig/KPCommands + KPClothConfigScreen + spec 5.1-5.4 验收
-
-| Task | 内容 | sourceSet | 状态 |
-|---|---|---|---|
-| Task 1 | CADRenderEngine（Blaze3D 三角形带）+ GLStateGuard | client | ✅ 完成 |
-| Task 2 | Theme record + ThemeSerializer（Gson JSON） | common | ✅ 完成 |
-| Task 3 | LineGeometry 三角形带展开纯数学 | common | ✅ 完成 |
-| Task 4 | BezierTessellator 三次贝塞尔采样纯数学 | common | ✅ 完成 |
-| Task 5 | KPConfig TOML（5 段）+ KPClothConfigScreen GUI | client | ✅ 完成 |
-| Task 6 | KPCommands `/kp` 命令体系 | client | ✅ 完成 |
-| Task 7 | WorldTreeReadOverlay（替代 NativeLineOverlay）| client | ✅ 完成 |
-| Task 8 | TrackGraphAccessor Mixin（@Accessor connectionsByNode）| client | ✅ 完成 |
-| Task 9 | GeometryCache + EdgePointColorResolver | client | ✅ 完成 |
-| Task 10 | 标签渲染 + Bezier/边点集成 | client | ✅ 完成 |
-| Task 11 | 集成验收（Phase 0b 退场条件） | - | 🟡 代码完成，待运行时验收 |
-
-### 2.5 P0 重构与修复
-
-> **Plan 文档：** `docs/superpowers/plans/2026-07-23-kinetic-planner-p0-refactor-fix.md`（5 个 Task，已执行完毕）
-
-| Task | 内容 | 状态 |
-|---|---|---|
-| Task 1 | sourceSet 重构 -- 添加 server sourceSet | ✅ 完成 |
-| Task 2 | WorldTreeReadOverlay 增强 -- OVERLAY_ENABLED 检查 + 统计/诊断方法 | ✅ 完成 |
-| Task 3 | ThemeManager -- 主题管理（含纯方法单测） | ✅ 完成 |
-| Task 4 | OverlayControl -- 叠加层状态管理 | ✅ 完成 |
-| Task 5 | 命令注册迁移（RegisterClientCommandsEvent）+ KPCommands 完整重写（14 命令） | ✅ 完成 |
-
-**P0 交付物：**
-- 三 sourceSet 架构（main + client + server）
-- 14 个 `/kp` 命令节点：overlay{toggle,enable,disable,reload,status} + theme{list,set,reload,reset} + debug{stats,dump,layer-count,overlay-anchors} + root overview
-- OverlayControl / ThemeManager 提取（命令层不直接访问 KPConfig / WorldTreeReadOverlay）
-- IWorldEditAccess 接口推迟到 P1（P0 不使用）
+| **P0 重构**  | sourceSet 重构（server）+ 客户端命令迁移 + OverlayControl/ThemeManager 提取 + 14 命令 | ✅ 代码完成 | 中 | 三 sourceSet 架构、14 个 `/kp` 命令节点 |
+| **P1**       | 地图模组独立配置（per-provider）+ 隐藏 Create 信号叠加层 + 嵌入式 UI（Xaero+JM） | 🟡 Phase A 完成，Phase B 计划就绪 | 中 | Phase A: CLI 完成；Phase B: 齿轮按钮+配置面板+JM 双路注入 |
+| **P0.5**     | JourneyMap 适配器（JM Plugin API）+ 熔断器精细化 + provider reset-circuit | 🟡 计划就绪 | 中 | JM isMapOpen/captureContext + 熔断自动重试 + `/kp provider reset-circuit` |
+| **P2**       | 暂存树 + 基础 CAD 编辑工具（拾取/捕捉/绘制） | 🔲 未开始 | 高 | 在地图上编辑轨道规划，暂存树脱离 Create 运行时 |
+| **P3**       | 高级几何（样条/双圆弧/地形拟合） | 🔲 未开始 | 高 | `EdgeGeometry.ARC`/`SPLINE` 类型启用 |
+| **P4**       | 规划树 + 类 SVN 版本控制 | 🔲 未开始 | 极高 | 规划分支/合并/回滚，信号段着色 |
+| **P5**       | 多格式 IO（CAD 原生/NBT/蓝图/Litematica/IFC 4.3 rail 子集） | 🔲 未开始 | 高 | 与主流格式互通 |
+| **P6**       | 远程铺设 + 路基模板生成 | 🔲 未开始 | 高 | 规划落地到方块世界 |
 
 ### 2.6 P1.0 地图模组独立配置
 
@@ -247,6 +180,7 @@ Xaero 是当前唯一功能完整的地图适配器，其 Mixin 注入点（`Gui
 | Phase 0b 实现计划 | `docs/superpowers/plans/2026-07-22-kinetic-planner-phase0b.md` | 11 个 Task：Blaze3D 矢量封装+主题+配置命令+验收 |
 | P0 重构计划 | `docs/superpowers/plans/2026-07-23-kinetic-planner-p0-refactor-fix.md` | 5 个 Task：sourceSet 重构+命令迁移+OverlayControl/ThemeManager+14 命令 |
 | P1.0 实现计划 | `docs/superpowers/plans/2026-07-23-kinetic-planner-p1.0-provider-config.md` | per-provider 配置+hideCreateTrackMap+嵌入式 UI（Phase A/B） |
+| P0.5+PhaseB+P1.1 计划 | `docs/superpowers/plans/2026-07-25-kinetic-planner-p0.5-phaseb-p1.1.md` | JM 适配器+熔断器+嵌入式 UI（Xaero+JM 双路）+dashed 渲染（9 Task） |
 | 本路线图 | `STATUS.md` | 阶段规划、进度跟踪、兼容性、核实状态 |
 | 编码规范速查 | `docs/conventions.md` | MC 1.21.1 API 约定、Create 6.0.10 API 修正 |
 | JavaDoc 查询指南 | `docs/javadoc-guide.md` | 外部依赖 JavaDoc 查询方法 |
