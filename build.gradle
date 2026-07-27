@@ -71,6 +71,7 @@ repositories {
     maven { url = "https://maven.squiddev.cc" } // CC: Tweaked
     maven { url = "https://www.cursemaven.com" }
     maven { url = "https://api.modrinth.com/maven" }
+    maven { url = "https://maven.firstdark.dev/snapshots" } // LDLib2
     maven { url = "https://maven.ftb.dev/releases" } // FTB Mods
     maven { url = "https://maven.architectury.dev" } // Arch API
     // NeoForge config api port, needed by ponder
@@ -206,15 +207,13 @@ dependencies {
 
     implementation("com.simibubi.create:create-${minecraft_version}:${create_version}") { transitive = false }
     implementation("net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}")
-    compileOnly("dev.engine-room.flywheel:flywheel-neoforge-api-${minecraft_version}:${flywheel_version}")
-    localRuntimeOnly("dev.engine-room.flywheel:flywheel-neoforge-${minecraft_version}:${flywheel_version}")
+    implementation("maven.modrinth:create-steam-n-rails-1.21.1:${steam_rails_version}+neoforge-mc${minecraft_version}")
+    implementation("com.lowdragmc.ldlib2:ldlib2-neoforge-${minecraft_version}:${ldlib2_version}:all")
     implementation("com.tterrag.registrate:Registrate:${registrate_version}")
 
     // Local dependencies - not published to consumers
     localRuntimeOnly("dev.engine-room.vanillin:vanillin-neoforge-$minecraft_version:$vanillin_version")
-
     localImplementation("mezz.jei:jei-$minecraft_version-neoforge:$jei_version")
-
     compileOnly("top.theillusivec4.curios:curios-neoforge:$curios_version+$minecraft_version:api")
     localRuntimeOnly("top.theillusivec4.curios:curios-neoforge:$curios_version+$minecraft_version")
 
@@ -240,9 +239,6 @@ dependencies {
 
     // Modern UI：开发环境软依赖，验证字体/UI 兼容性
     localImplementation("maven.modrinth:modern-ui:3.12.0.2")
-
-    // Create: Steam 'n' Rails（1.21.1 移植版）：开发环境软依赖，验证铁路拓扑叠加
-    localImplementation("maven.modrinth:create-steam-n-rails-1.21.1:0.3.0-beta+neoforge-mc1.21.1")
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
