@@ -1,6 +1,6 @@
 ---
 description: 构建环境与测试策略规则
-alwaysApply: true
+alwaysApply: false
 enabled: true
 updatedAt:
 provider:

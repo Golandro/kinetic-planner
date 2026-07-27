@@ -10,7 +10,7 @@
 | 文件                                 | 始终包含？ | 内容                                                     |
 |--------------------------------------|------------|----------------------------------------------------------|
 | `.agents/rules/package-structure.md` | 是         | 完整包结构树、代码统计、Mixin 清单                       |
-| `.agents/rules/build-and-test.md`    | 是         | 构建环境详情、sourceSet 规则细节、测试策略、测试文件清单 |
+| `.agents/rules/build-and-test.md`    | 否         | 构建环境详情、sourceSet 规则细节、测试策略、测试文件清单 |
 | `.agents/rules/documents.md`         | 是         | 完整文档索引（设计规格、实现计划、开发参考）             |
 
 

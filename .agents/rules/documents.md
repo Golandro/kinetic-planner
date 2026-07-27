@@ -1,6 +1,6 @@
 ---
 description: 项目文档索引
-alwaysApply: false
+alwaysApply: true
 enabled: true
 updatedAt:
 provider:

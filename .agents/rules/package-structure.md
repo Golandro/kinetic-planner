@@ -1,6 +1,6 @@
 ---
 description: 项目包结构参考
-alwaysApply: false
+alwaysApply: true
 enabled: true
 updatedAt:
 provider:
