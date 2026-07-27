@@ -103,6 +103,13 @@ config="${mod_id}.mixins.json"
     side="CLIENT"
 
 [[dependencies.${mod_id}]]
+    modId="ldlib2"
+    type="required"
+    versionRange="[2.2.0,)"
+    ordering="AFTER"
+    side="CLIENT"
+
+[[dependencies.${mod_id}]]
     modId="journeymap"
     type="optional"
     # Journeymap 的 mod 版本号带 MC 版本前缀（实测最新正式版 1.21.1-6.0.1）。
