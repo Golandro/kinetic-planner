@@ -311,8 +311,12 @@ jar {
 }
 
 // 让测试能访问 client 和 server sourceSet
+// 同时继承 client/server 的 compileClasspath，使测试可见 MC、Create、LDLib2 等依赖
+// （client sourceSet 通过 neoForge moddev 拿到 MC 类，但默认不传递给 test）
 sourceSets.test.compileClasspath += sourceSets.client.output
 sourceSets.test.runtimeClasspath += sourceSets.client.output
+sourceSets.test.compileClasspath += sourceSets.client.compileClasspath
+sourceSets.test.runtimeClasspath += sourceSets.client.runtimeClasspath
 sourceSets.test.compileClasspath += sourceSets.server.output
 sourceSets.test.runtimeClasspath += sourceSets.server.output
 

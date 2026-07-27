@@ -1,8 +1,8 @@
 # Kinetic Planner 开发路线图与状态
 
-> **最后更新：** 2026-07-26
+> **最后更新：** 2026-07-27
 > **当前分支：** `1.21`
-> **当前状态：** Phase 0a + 0b + P0 重构 + P1.0（Phase A）代码完成，P0.5 + Phase B + P1.1 计划就绪，42 个测试（2 个 @Disabled），待运行时验收
+> **当前状态：** Phase 0a + 0b + P0 重构 + P1.0（Phase A+B）+ P0.5 代码完成，60 个测试（2 个 @Disabled），待运行时验收（LDLib2 配置面板）
 
 ---
 
@@ -19,8 +19,8 @@ Kinetic Planner 是 Minecraft 模组，用于在全屏地图模组（Xaero's Wor
 | **Phase 0a** | 骨架 + 数据层 + 投影 + **简化渲染**（MC 原生线）+ Xaero Mixin | ✅ 代码完成 | 中 | 地图上能看到轨道拓扑（线条/节点），验证数据链路 |
 | **Phase 0b** | Blaze3D CADRenderEngine + 主题 + 配置/命令 + 视觉打磨 | ✅ 代码完成 | 高 | 矢量三角形带粗线、可配线宽/主题、`/kp` 命令体系 |
 | **P0 重构**  | sourceSet 重构（server）+ 客户端命令迁移 + OverlayControl/ThemeManager 提取 + 14 命令 | ✅ 代码完成 | 中 | 三 sourceSet 架构、14 个 `/kp` 命令节点 |
-| **P1**       | 地图模组独立配置（per-provider）+ 隐藏 Create 信号叠加层 + 嵌入式 UI（Xaero+JM） | 🟡 Phase A 完成，Phase B 计划就绪 | 中 | Phase A: CLI 完成；Phase B: 齿轮按钮+配置面板+JM 双路注入 |
-| **P0.5**     | JourneyMap 适配器（JM Plugin API）+ 熔断器精细化 + provider reset-circuit | 🟡 计划就绪 | 中 | JM isMapOpen/captureContext + 熔断自动重试 + `/kp provider reset-circuit` |
+| **P1**       | 地图模组独立配置（per-provider）+ 隐藏 Create 信号叠加层 + 嵌入式 UI（Xaero+JM） | ✅ Phase A+B 完成 | 中 | Phase A: CLI 完成；Phase B: LDLib2 齿轮按钮+配置面板+JM 双路注入 |
+| **P0.5**     | JourneyMap 适配器（JM Plugin API）+ 熔断器精细化 + provider reset-circuit | ✅ 代码完成 | 中 | JM isMapOpen/captureContext + 熔断自动重试 + `/kp provider reset-circuit` |
 | **P2**       | 暂存树 + 基础 CAD 编辑工具（拾取/捕捉/绘制） | 🔲 未开始 | 高 | 在地图上编辑轨道规划，暂存树脱离 Create 运行时 |
 | **P3**       | 高级几何（样条/双圆弧/地形拟合） | 🔲 未开始 | 高 | `EdgeGeometry.ARC`/`SPLINE` 类型启用 |
 | **P4**       | 规划树 + 类 SVN 版本控制 | 🔲 未开始 | 极高 | 规划分支/合并/回滚，信号段着色 |
@@ -52,13 +52,37 @@ Kinetic Planner 是 Minecraft 模组，用于在全屏地图模组（Xaero's Wor
 - WorldTreeReadOverlay 根据 active provider 应用 lineWidthScale / alphaScale
 - CreateTrackVisualizerHiderMixin（仅隐藏 `visualiseSignalEdgeGroups`，不干涉 `debugViewGraph`）
 
-#### Phase B: 嵌入式 UI（未开始）
+#### Phase B: 嵌入式 UI（LDLib2 路线，已完成）
 
-| Task | 内容 | 状态 |
-|---|---|---|
-| B1 | MapGearButtonWidget -- 自绘齿轮按钮 | 🔲 未开始 |
-| B2 | ProviderConfigScreen -- 嵌入式配置面板渲染器 | 🔲 未开始 |
-| B3 | XaeroMapGearButtonMixin -- Mixin 注入齿轮按钮 + 配置面板 | 🔲 未开始 |
+> **Spec 文档：** `docs/superpowers/specs/2026-07-26-config-panel-flat-gui-design.md`
+> **API 审计：** `docs/superpowers/specs/2026-07-27-ldlib2-api-verification.md`
+> **范围：** 用 LDLib2 替换旧的 MapGearButtonWidget + ProviderConfigScreen，达成现代扁平 GUI（KP 紫色 accent + 真实控件 + 即时生效）
+
+| Task | 内容 | sourceSet | 状态 |
+|---|---|---|---|
+| B1 | `KpClientState` - 面板可见性共享状态（Xaero Mixin + JM Plugin 共用） | client | ✅ 完成 |
+| B2 | `KpConfigUIFactory.computeSteppedValue()` - 步进器 clamp 纯函数 | client | ✅ 完成 |
+| B3 | `KpUIEventForwarder` - ModularUIWidget 事件转发封装 | client | ✅ 完成 |
+| B4 | `KpConfigUIFactory.create()` - LDLib2 UIElement 树构建 + 数据绑定 | client | ✅ 完成 |
+| B5 | `KpStylesheet` - KP 紫 accent LSS 主题 | client | ✅ 完成 |
+| B6 | `KpGearButton` - 自绘齿轮按钮（替代 MapGearButtonWidget） | client | ✅ 完成 |
+| B7 | `XaeroMapGearButtonMixin` 重写 - 通过 KpUIEventForwarder 注入 | client | ✅ 完成 |
+| B8 | `KineticPlannerJMPlugin` 扩展 - FullscreenEventRegistry 订阅 + KpUIEventForwarder | client | ✅ 完成 |
+| B9 | 旧代码清理 - 删除 MapGearButtonWidget + ProviderConfigScreen | - | ✅ 完成 |
+
+**Phase B 交付物：**
+- 5 个新 client 类：`KpClientState` / `KpConfigUIFactory` / `KpStylesheet` / `KpUIEventForwarder` / `KpGearButton`
+- 2 个重写类：`XaeroMapGearButtonMixin`（改用 LDLib2）/ `KineticPlannerJMPlugin`（新增事件订阅）
+- 3 个新测试文件：`KpClientStateTest`（3）/ `KpConfigUIFactoryTest`（6）/ `KpUIEventForwarderTest`（9）= 18 个新 @Test
+- 删除 2 个旧类：`MapGearButtonWidget` / `ProviderConfigScreen`
+- LDLib2 依赖（`ldlib2-neoforge-1.21.1:2.2.26`）+ `neoforge.mods.toml` 声明
+- 编译/测试/构建全通过：`gradlew compileClientJava` / `gradlew test` / `gradlew build`
+
+**待运行时验收（spec §8.3）：**
+- Xaero/JM 全屏地图齿轮按钮 + 配置面板视觉与交互
+- Modern UI 共存（字体）
+- LDLib2 Mixin 与 KP Mixin 无注入点竞争
+- 屏幕尺寸/GUI Scale 适配
 
 ---
 
@@ -81,6 +105,7 @@ Kinetic Planner 是 Minecraft 模组，用于在全屏地图模组（Xaero's Wor
 | Blaze3D（MC 内置渲染引擎） | 内置于 MC 1.21.1 | - | 低 | CAD 渲染基于 Blaze3D 三角形带封装（POSITION_COLOR shader） |
 | Modern UI | 开发环境软依赖 | 3.12.0.2 | 低 | 验证字体/UI 兼容性 |
 | Create: Steam 'n' Rails | 开发环境软依赖 | 0.3.0-beta | 低 | 验证铁路拓扑叠加 |
+| LDLib2 | `[2.2.0,)` required（CLIENT） | 2.2.26 | 低 | Phase B 配置面板 UI 库（ModularUI/TabView/Toggle/LSS 样式表） |
 
 ### 高风险项：Xaero Mixin 注入点
 
@@ -156,12 +181,12 @@ Xaero 是当前唯一功能完整的地图适配器，其 Mixin 注入点（`Gui
 | sourceSet | Java 文件 | 说明 |
 |---|---|---|
 | main (common) | 14 | 纯 JVM，不引用 client/blaze3d，可单测 |
-| client | 22 | GUI/渲染/适配器/Mixin/命令 |
+| client | 32 | GUI/渲染/适配器/Mixin/命令 |
 | server | 0 | 占位（P1 编辑引擎填充） |
-| test | 11 | 42 个 @Test（2 个 @Disabled） |
-| **合计** | **47** | |
+| test | 16 | 60 个 @Test（2 个 @Disabled） |
+| **合计** | **62** | |
 
-**Mixin（4 个）：** TrackGraphAccessor / XaeroMapAccessor / XaeroMapRenderHook / CreateTrackVisualizerHiderMixin
+**Mixin（7 个）：** TrackGraphAccessor / XaeroMapAccessor / XaeroMapRenderHook / XaeroMapGearButtonMixin / CreateTrackVisualizerHiderMixin / CreateTrainMapMixin / CreateTrainMapOverlayMixin
 
 **命令节点（~22 个）：**
 - P0（14）：`/kp` + overlay{toggle,enable,disable,reload,status} + theme{list,set,reload,reset} + debug{stats,dump,layer-count,overlay-anchors}
@@ -181,6 +206,8 @@ Xaero 是当前唯一功能完整的地图适配器，其 Mixin 注入点（`Gui
 | P0 重构计划 | `docs/superpowers/plans/2026-07-23-kinetic-planner-p0-refactor-fix.md` | 5 个 Task：sourceSet 重构+命令迁移+OverlayControl/ThemeManager+14 命令 |
 | P1.0 实现计划 | `docs/superpowers/plans/2026-07-23-kinetic-planner-p1.0-provider-config.md` | per-provider 配置+hideCreateTrackMap+嵌入式 UI（Phase A/B） |
 | P0.5+PhaseB+P1.1 计划 | `docs/superpowers/plans/2026-07-25-kinetic-planner-p0.5-phaseb-p1.1.md` | JM 适配器+熔断器+嵌入式 UI（Xaero+JM 双路）+dashed 渲染（9 Task） |
+| 配置面板扁平 GUI 设计 | `docs/superpowers/specs/2026-07-26-config-panel-flat-gui-design.md` | Phase B 实施规格：LDLib2 UI 树/控件/LSS 主题/事件转发/TDD 要求 |
+| LDLib2 API 审计 | `docs/superpowers/specs/2026-07-27-ldlib2-api-verification.md` | LDLib2 关键 API 签名验证（TabView/Toggle/Stylesheet/纹理类等） |
 | 本路线图 | `STATUS.md` | 阶段规划、进度跟踪、兼容性、核实状态 |
 | 编码规范速查 | `docs/conventions.md` | MC 1.21.1 API 约定、Create 6.0.10 API 修正 |
 | JavaDoc 查询指南 | `docs/javadoc-guide.md` | 外部依赖 JavaDoc 查询方法 |

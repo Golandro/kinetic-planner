@@ -1,5 +1,6 @@
 package net.jsmua.kinetic_planner.mapadapter;
 
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import journeymap.api.v2.client.IClientAPI;
 import journeymap.api.v2.client.IClientPlugin;
 import journeymap.api.v2.client.event.FullscreenDisplayEvent;
@@ -10,9 +11,11 @@ import journeymap.api.v2.client.fullscreen.ThemeButtonDisplay;
 import journeymap.api.v2.common.JourneyMapPlugin;
 import journeymap.api.v2.common.event.FullscreenEventRegistry;
 import net.jsmua.kinetic_planner.KineticPlannerMod;
-import net.jsmua.kinetic_planner.config.MapGearButtonWidget;
+import net.jsmua.kinetic_planner.config.KpClientState;
+import net.jsmua.kinetic_planner.config.KpConfigUIFactory;
+import net.jsmua.kinetic_planner.config.KpGearButton;
+import net.jsmua.kinetic_planner.config.KpUIEventForwarder;
 import net.jsmua.kinetic_planner.config.OverlayControl;
-import net.jsmua.kinetic_planner.config.ProviderConfigScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
@@ -28,8 +31,9 @@ import javax.annotation.Nullable;
  * <p>在 {@link #initialize} 中接收 {@link IClientAPI} 实例并保存在 static 字段，
  * 供 {@link JourneyMapOverlayProvider} 通过 {@link #getApi()} 获取。
  *
- * <p>Phase B 扩展：在 initialize 中订阅 {@link FullscreenEventRegistry} 事件，
- * 实现 JM 全屏地图上的齿轮按钮和配置面板。
+ * <p>Phase B 扩展（spec §D）：在 initialize 中订阅 {@link FullscreenEventRegistry} 事件，
+ * 实现 JM 全屏地图上的齿轮按钮和配置面板。事件通过 {@link KpUIEventForwarder}
+ * 转发到 LDLib2 {@link ModularUI}{@code .ModularUIWidget}，与 Xaero 侧共用同一 UI 树。
  *
  * <h2>订阅的事件</h2>
  * <ul>
@@ -45,10 +49,10 @@ public class KineticPlannerJMPlugin implements IClientPlugin {
     private static IClientAPI api;
 
     @Nullable
-    private static MapGearButtonWidget jmGearButton;
+    private static KpGearButton jmGearButton;
 
     @Nullable
-    private static ProviderConfigScreen jmConfigScreen;
+    private static KpUIEventForwarder jmForwarder;
 
     @Override
     public String getModId() {
@@ -84,6 +88,8 @@ public class KineticPlannerJMPlugin implements IClientPlugin {
 
     /**
      * JM 工具栏按钮显示事件 -- 添加 "KP" 按钮到 JM 右侧面板。
+     *
+     * <p>点击切换配置面板可见性（spec §5.4）。
      */
     private void onAddonButtonDisplay(FullscreenDisplayEvent.AddonButtonDisplayEvent event) {
         ThemeButtonDisplay display = event.getThemeButtonDisplay();
@@ -91,28 +97,31 @@ public class KineticPlannerJMPlugin implements IClientPlugin {
         ResourceLocation icon = ResourceLocation.fromNamespaceAndPath(
             KineticPlannerMod.MODID, "textures/gui/gear.png");
         display.addThemeButton("KP", "KP", icon, button -> {
-            ensureUiComponents();
-            if (jmConfigScreen != null) {
-                jmConfigScreen.toggle();
-            }
+            KpClientState.toggleConfigPanel();
         });
     }
 
     /**
      * JM 全屏地图渲染事件 -- 在地图渲染后、按钮前渲染齿轮按钮 + 配置面板。
+     *
+     * <p>spec §8.2：齿轮按钮始终渲染；配置面板仅在 {@link KpClientState#isConfigPanelVisible()} 时渲染。
      */
     private void onFullscreenRender(FullscreenRenderEvent event) {
         if (!OverlayControl.isEnabled()) return;
         ensureUiComponents();
-        if (jmGearButton == null || jmConfigScreen == null) return;
+        if (jmGearButton == null || jmForwarder == null) return;
 
         GuiGraphics gg = event.getGraphics();
         int mouseX = event.getMouseX();
         int mouseY = event.getMouseY();
         float partialTicks = event.getPartialTicks();
 
+        // 齿轮按钮始终渲染
         jmGearButton.render(gg, mouseX, mouseY);
-        jmConfigScreen.renderPanel(gg, mouseX, mouseY, partialTicks);
+        // 配置面板仅在可见时渲染
+        if (KpClientState.isConfigPanelVisible()) {
+            jmForwarder.render(gg, mouseX, mouseY, partialTicks);
+        }
     }
 
     /**
@@ -125,35 +134,43 @@ public class KineticPlannerJMPlugin implements IClientPlugin {
         if (!OverlayControl.isEnabled()) return;
         if (event.getStage() != FullscreenMapEvent.Stage.PRE) return;
         ensureUiComponents();
-        if (jmGearButton == null || jmConfigScreen == null) return;
+        if (jmGearButton == null || jmForwarder == null) return;
 
         double mouseX = event.getMouseX();
         double mouseY = event.getMouseY();
         int button = event.getButton();
 
-        // 先检查配置面板
-        if (jmConfigScreen.handleMouseClick(mouseX, mouseY, button)) {
+        // 先检查齿轮按钮
+        if (jmGearButton.mouseClicked(mouseX, mouseY, button)) {
             event.cancel();
             return;
         }
-        // 再检查齿轮按钮
-        if (jmGearButton.mouseClicked(mouseX, mouseY, button)) {
+        // 再检查配置面板（仅在可见时）
+        if (KpClientState.isConfigPanelVisible()
+            && jmForwarder.mouseClicked(mouseX, mouseY, button)) {
             event.cancel();
         }
     }
 
     /**
-     * 懒加载 UI 组件。
+     * 懒加载 UI 组件 - 与 Xaero Mixin 共用 {@link KpConfigUIFactory} 构建的 UI 树。
      */
     private static void ensureUiComponents() {
-        if (jmGearButton == null) {
-            int screenW = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-            jmGearButton = new MapGearButtonWidget(screenW - 20, 4, () -> {
-                if (jmConfigScreen != null) jmConfigScreen.toggle();
-            });
+        var window = Minecraft.getInstance().getWindow();
+        int screenW = window.getGuiScaledWidth();
+        int screenH = window.getGuiScaledHeight();
+
+        if (jmForwarder == null) {
+            var modularUI = KpConfigUIFactory.create();
+            modularUI.init(screenW, screenH);
+            jmForwarder = new KpUIEventForwarder(modularUI);
         }
-        if (jmConfigScreen == null && jmGearButton != null) {
-            jmConfigScreen = new ProviderConfigScreen(jmGearButton);
+        jmForwarder.checkResize(screenW, screenH);
+
+        if (jmGearButton == null) {
+            // 齿轮按钮位于右上角 (screenW - 20, 4)，16x16
+            jmGearButton = new KpGearButton(screenW - 20, 4,
+                () -> KpClientState.toggleConfigPanel());
         }
     }
 }

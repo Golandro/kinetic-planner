@@ -1,9 +1,13 @@
 package net.jsmua.kinetic_planner.mixin;
 
-import net.jsmua.kinetic_planner.config.MapGearButtonWidget;
+import net.jsmua.kinetic_planner.config.KpClientState;
+import net.jsmua.kinetic_planner.config.KpConfigUIFactory;
+import net.jsmua.kinetic_planner.config.KpGearButton;
+import net.jsmua.kinetic_planner.config.KpUIEventForwarder;
 import net.jsmua.kinetic_planner.config.OverlayControl;
-import net.jsmua.kinetic_planner.config.ProviderConfigScreen;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,10 +17,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xaero.map.gui.GuiMap;
 
 /**
- * Mixin 注入齿轮按钮和配置面板到 Xaero 全屏地图。
+ * Mixin 注入 KP 配置面板到 Xaero 全屏地图。
  *
- * <p>在 {@code GuiMap.render} RETURN 注入齿轮按钮渲染 + 配置面板渲染。
- * 在 {@code GuiMap.mouseClicked} HEAD 注入鼠标事件路由（cancellable）。
+ * <p>spec §8.2：保持现有 Mixin 挂载点（{@code GuiMap.render} RETURN +
+ * {@code GuiMap.mouseClicked} HEAD），但通过 {@link KpUIEventForwarder}
+ * 转发事件到 LDLib2 {@link ModularUI}{@code .ModularUIWidget}。
  *
  * <p>{@code remap = false} 因为目标类属于 Xaero mod（非 MC 原生类）。
  * Mixin 配置 {@code defaultRequire: 0}，Xaero 未安装时不崩溃。
@@ -31,54 +36,63 @@ import xaero.map.gui.GuiMap;
 public class XaeroMapGearButtonMixin {
 
     @Unique
-    private static MapGearButtonWidget kp$gearButton;
+    private static KpUIEventForwarder kp$forwarder;
 
     @Unique
-    private static ProviderConfigScreen kp$configScreen;
+    private static KpGearButton kp$gearButton;
 
     /**
      * 初始化 UI 组件（懒加载）。
+     *
+     * <p>spec §8.2：齿轮按钮始终渲染；配置面板仅在 {@link KpClientState#isConfigPanelVisible()} 时渲染。
      */
     @Unique
     private static void kp$ensureInit() {
-        // 贴左边缘、全屏地图设置下方的社区惯例位置（与 Create 列车地图按钮同位），
-        // 取代 Create 在 (3,30) 的开关，由 KP 按钮接管。
-        if (kp$gearButton == null) {
-            kp$gearButton = new MapGearButtonWidget(3, 30, () -> {
-                kp$ensureConfigScreen();
-                kp$configScreen.toggle();
-            });
-        }
-    }
+        var window = Minecraft.getInstance().getWindow();
+        int screenW = window.getGuiScaledWidth();
+        int screenH = window.getGuiScaledHeight();
 
-    @Unique
-    private static void kp$ensureConfigScreen() {
-        if (kp$configScreen == null && kp$gearButton != null) {
-            kp$configScreen = new ProviderConfigScreen(kp$gearButton);
+        if (kp$forwarder == null) {
+            var modularUI = KpConfigUIFactory.create();
+            modularUI.init(screenW, screenH);
+            kp$forwarder = new KpUIEventForwarder(modularUI);
+        }
+        // 屏幕尺寸变化时 re-init
+        kp$forwarder.checkResize(screenW, screenH);
+
+        if (kp$gearButton == null) {
+            // 齿轮按钮位于右上角 (screenW - 20, 4)，16x16
+            kp$gearButton = new KpGearButton(screenW - 20, 4,
+                () -> KpClientState.toggleConfigPanel());
         }
     }
 
     @Inject(method = "render", at = @At("RETURN"))
-    private void kp$renderGearButton(GuiGraphics gg, int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
+    private void kp$renderConfigPanel(GuiGraphics gg, int mouseX, int mouseY,
+                                       float partialTicks, CallbackInfo ci) {
         if (!OverlayControl.isEnabled()) return;
         kp$ensureInit();
+        // 齿轮按钮始终渲染
         kp$gearButton.render(gg, mouseX, mouseY);
-        kp$ensureConfigScreen();
-        kp$configScreen.renderPanel(gg, mouseX, mouseY, partialTicks);
+        // 配置面板仅在可见时渲染
+        if (KpClientState.isConfigPanelVisible()) {
+            kp$forwarder.render(gg, mouseX, mouseY, partialTicks);
+        }
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
-    private void kp$handleMouseClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+    private void kp$handleMouseClick(double mouseX, double mouseY, int button,
+                                      CallbackInfoReturnable<Boolean> cir) {
         if (!OverlayControl.isEnabled()) return;
         kp$ensureInit();
-        // 先检查配置面板
-        kp$ensureConfigScreen();
-        if (kp$configScreen.handleMouseClick(mouseX, mouseY, button)) {
+        // 先检查齿轮按钮
+        if (kp$gearButton.mouseClicked(mouseX, mouseY, button)) {
             cir.setReturnValue(true);
             return;
         }
-        // 再检查齿轮按钮
-        if (kp$gearButton.mouseClicked(mouseX, mouseY, button)) {
+        // 再检查配置面板（仅在可见时）
+        if (KpClientState.isConfigPanelVisible()
+            && kp$forwarder.mouseClicked(mouseX, mouseY, button)) {
             cir.setReturnValue(true);
         }
     }

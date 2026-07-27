@@ -1,7 +1,7 @@
 # KP 地图内嵌配置面板 - 扁平 GUI 设计规格
 
 > 日期：2026-07-26
-> 状态：已评审（待实现）
+> 状态：✅ 已实现（代码完成，待运行时验收）
 > 范围：`ProviderConfigScreen`（Xaero / JourneyMap 全屏地图内嵌配置面板）的视觉与交互重设计。
 > 本文定义**设计决策、规格与 TDD 要求**，不含逐步实现细节。
 >
@@ -9,6 +9,7 @@
 > - 2026-07-26 初版（Catnip）
 > - 2026-07-27 改用 LDLib2（嵌入式能力 + 控件完整度 + 横向扩展性三者最优，且与 §1 约束无冲突）
 > - 2026-07-27b API 审计修正（ModularUIWidget 不继承 AbstractWidget 等）+ 架构组件细化 + TDD 要求融入
+> - 2026-07-27c 实现完成：5 个新 client 类 + 2 个重写类 + 18 个新 @Test 全部通过；运行时验收待 `gradlew runClient`
 
 ## 1. 背景与目标
 
@@ -631,55 +632,57 @@ KpClientState (无依赖)
 
 ## 11. 完整实现目标清单
 
+> **实现状态：** 全部代码目标完成（2026-07-27）。A/B/C/D/E/F1/F2 已通过；F3 运行时验收待 `gradlew runClient` 手动执行（spec §8.3）。
+
 ### A. LDLib2 集成基础
 
-| # | 目标 | 验证 |
-|---|---|---|
-| A1 | `build.gradle` 添加 LDLib2 依赖 + maven 仓库 | `gradlew compileClientJava` |
-| A2 | `neoforge.mods.toml` 添加 LDLib2 依赖声明（`side = "CLIENT"`） | 编译检查 |
-| A3 | `gradle.properties` 添加 `ldlib2_version` | 编译检查 |
+| # | 目标 | 验证 | 状态 |
+|---|---|---|---|
+| A1 | `build.gradle` 添加 LDLib2 依赖 + maven 仓库 | `gradlew compileClientJava` | ✅ |
+| A2 | `neoforge.mods.toml` 添加 LDLib2 依赖声明（`side = "CLIENT"`） | 编译检查 | ✅ |
+| A3 | `gradle.properties` 添加 `ldlib2_version` | 编译检查 | ✅ |
 
 ### B. UI 核心组件（TDD）
 
-| # | 目标 | 测试 | sourceSet |
-|---|---|---|---|
-| B1 | `KpClientState` - 面板可见性状态 | `KpClientStateTest` (2 tests) | client |
-| B2 | `KpConfigUIFactory.computeSteppedValue()` - 步进器 clamp 纯函数 | `KpConfigUIFactoryTest` (6 tests) | client |
-| B3 | `KpUIEventForwarder` - 事件转发封装 | `KpUIEventForwarderTest` (3+ tests, Mockito) | client |
-| B4 | `KpConfigUIFactory.create()` - UI 树构建 + 数据绑定 + LSS 注册 | 手动验收 | client |
-| B5 | `KpStylesheet` - LSS 样式表定义与注册 | 手动验收 | client |
-| B6 | `KpGearButton` - 自绘齿轮按钮 | 手动验收 | client |
+| # | 目标 | 测试 | sourceSet | 状态 |
+|---|---|---|---|---|
+| B1 | `KpClientState` - 面板可见性状态 | `KpClientStateTest` (3 tests) | client | ✅ |
+| B2 | `KpConfigUIFactory.computeSteppedValue()` - 步进器 clamp 纯函数 | `KpConfigUIFactoryTest` (6 tests) | client | ✅ |
+| B3 | `KpUIEventForwarder` - 事件转发封装 | `KpUIEventForwarderTest` (9 tests, Mockito) | client | ✅ |
+| B4 | `KpConfigUIFactory.create()` - UI 树构建 + 数据绑定 + LSS 注册 | 手动验收 | client | ✅ |
+| B5 | `KpStylesheet` - LSS 样式表定义与注册 | 手动验收 | client | ✅ |
+| B6 | `KpGearButton` - 自绘齿轮按钮 | 手动验收 | client | ✅ |
 
 ### C. Xaero 集成
 
-| # | 目标 | 验证 |
-|---|---|---|
-| C1 | `XaeroMapGearButtonMixin` - 注入 render + mouseClicked（通过 `KpUIEventForwarder`） | `gradlew build` + 运行时 |
-| C2 | `kinetic_planner.mixins.json` 注册新 Mixin | 编译检查 |
-| C3 | 其他事件转发（mouseReleased/mouseScrolled 等，按需） | 运行时 |
+| # | 目标 | 验证 | 状态 |
+|---|---|---|---|
+| C1 | `XaeroMapGearButtonMixin` - 注入 render + mouseClicked（通过 `KpUIEventForwarder`） | `gradlew build` + 运行时 | ✅ |
+| C2 | `kinetic_planner.mixins.json` 注册新 Mixin | 编译检查 | ✅ |
+| C3 | 其他事件转发（mouseReleased/mouseScrolled 等，按需） | 运行时 | 🟡 按需（首批只转发 render + mouseClicked） |
 
 ### D. JM 集成
 
-| # | 目标 | 验证 |
-|---|---|---|
-| D1 | `KineticPlannerJMPlugin` 扩展 - 订阅 FullscreenEventRegistry 事件 | `gradlew compileClientJava` |
-| D2 | JM 事件通过 `KpUIEventForwarder` 转发 | 运行时 |
-| D3 | JM `ADDON_BUTTON_DISPLAY_EVENT` 添加 KP 按钮 | 运行时 |
+| # | 目标 | 验证 | 状态 |
+|---|---|---|---|
+| D1 | `KineticPlannerJMPlugin` 扩展 - 订阅 FullscreenEventRegistry 事件 | `gradlew compileClientJava` | ✅ |
+| D2 | JM 事件通过 `KpUIEventForwarder` 转发 | 运行时 | ✅ |
+| D3 | JM `ADDON_BUTTON_DISPLAY_EVENT` 添加 KP 按钮 | 运行时 | ✅ |
 
 ### E. 旧代码清理
 
-| # | 目标 | 验证 |
-|---|---|---|
-| E1 | 删除 `MapGearButtonWidget.java` | 编译检查（无引用残留） |
-| E2 | 删除 `ProviderConfigScreen.java` | 编译检查（无引用残留） |
+| # | 目标 | 验证 | 状态 |
+|---|---|---|---|
+| E1 | 删除 `MapGearButtonWidget.java` | 编译检查（无引用残留） | ✅ |
+| E2 | 删除 `ProviderConfigScreen.java` | 编译检查（无引用残留） | ✅ |
 
 ### F. 验收
 
-| # | 目标 | 验证 |
-|---|---|---|
-| F1 | `gradlew test` 全部测试 PASS（含 TDD 新增测试） | CI |
-| F2 | `gradlew build` 完整构建通过 | CI |
-| F3 | 运行时验收（§8.3 全部标准） | `gradlew runClient` 手动 |
+| # | 目标 | 验证 | 状态 |
+|---|---|---|---|
+| F1 | `gradlew test` 全部测试 PASS（含 TDD 新增测试） | CI | ✅ 60 @Test 全 PASS |
+| F2 | `gradlew build` 完整构建通过 | CI | ✅ BUILD SUCCESSFUL |
+| F3 | 运行时验收（§8.3 全部标准） | `gradlew runClient` 手动 | 🔲 待执行 |
 
 ## 12. 与现有计划的关系
 
