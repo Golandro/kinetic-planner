@@ -1,6 +1,7 @@
 package net.jsmua.kinetic_planner.mixin;
 
 import net.jsmua.kinetic_planner.KineticPlannerMod;
+import net.jsmua.kinetic_planner.config.KpClientState;
 import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import net.minecraft.client.gui.GuiGraphics;
 import org.spongepowered.asm.mixin.Mixin;
@@ -35,6 +36,8 @@ public class XaeroMapRenderHook {
      */
     @Inject(method = "render", at = @At("RETURN"))
     private void kp$onMapRender(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
+        // 编辑模式跳过：CAD 由 EditLayerRenderer 在 KpEditorScreen.render 中直接渲染
+        if (KpClientState.isEditMode()) return;
         try {
             // (GuiMap)(Object)this 是 Mixin 中获取目标实例的标准写法
             WorldTreeReadOverlay.onMapRender((GuiMap) (Object) this, guiGraphics, mouseX, mouseY, partialTicks);
