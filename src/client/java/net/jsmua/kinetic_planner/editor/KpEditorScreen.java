@@ -4,6 +4,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import net.jsmua.kinetic_planner.KineticPlannerMod;
 import net.jsmua.kinetic_planner.cadengine.CADRenderEngine;
+import net.jsmua.kinetic_planner.cadengine.EditLayerRenderer;
 import net.jsmua.kinetic_planner.config.KpClientState;
 import net.jsmua.kinetic_planner.config.KpUIEventForwarder;
 import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
@@ -84,8 +85,8 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
     public void render(GuiGraphics gg, int mouseX, int mouseY, float partialTicks) {
         // ① 地图层渲染（Phase 3 实现）
         renderMapLayer(gg, mouseX, mouseY, partialTicks);
-        // ② CAD 编辑层渲染（Phase 6 实现）
-        // EditLayerRenderer.render(gg, guiMap, EditToolState.getInstance());
+        // ② CAD 编辑层渲染
+        EditLayerRenderer.render(gg, EditToolState.getInstance());
         // ③ Editor UI 层渲染
         eventForwarder.render(gg, mouseX, mouseY, partialTicks);
     }
@@ -119,8 +120,13 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
         if (tool == EditToolState.Tool.NAVIGATION) {
             return guiMap.mouseClicked(mouseX, mouseY, button);
         }
-        // 其他工具 -> CADRenderEngine 命中检测（Phase 6）
-        return false;
+        // 其他工具 -> CADRenderEngine 命中检测
+        var transform = WorldTreeReadOverlay.getTransform();
+        var cache = WorldTreeReadOverlay.getGeometryCache();
+        if (transform == null || cache == null) return false;
+        // CADRenderEngine 实例由 EditLayerRenderer 持有，此处通过 EditLayerRenderer 转发
+        // 或直接持有 CADRenderEngine 实例（简化）
+        return false;  // P2 后续：EditLayerRenderer.handleClick
     }
 
     @Override
