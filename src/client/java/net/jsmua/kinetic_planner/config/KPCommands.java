@@ -1,13 +1,17 @@
 package net.jsmua.kinetic_planner.config;
 
 import net.jsmua.kinetic_planner.KineticPlannerClient;
+import net.jsmua.kinetic_planner.editor.KpEditorScreen;
 import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.network.chat.Component;
+import xaero.map.gui.GuiMap;
 
 /**
  * /kp 命令体系注册（P0 + P1.0 Phase A 完整版）。
@@ -40,6 +44,8 @@ import net.minecraft.network.chat.Component;
  * /kp debug dump              -- 转储 TrackGraph 数据到日志
  * /kp debug layer-count       -- 各图层对象计数
  * /kp debug overlay-anchors   -- 叠加层锚点诊断（相机/缩放/屏幕/维度）
+ * /kp edit                    -- 进入编辑模式（需 Xaero World Map 已打开）
+ * /kp exit                    -- 退出编辑模式，回到观看模式
  * </pre>
  *
  * <p>NeoForge 1.21.1 的 {@code RegisterClientCommandsEvent.getDispatcher()} 返回
@@ -121,6 +127,10 @@ public final class KPCommands {
                     .executes(KPCommands::debugLayerCount))
                 .then(Commands.literal("overlay-anchors")
                     .executes(KPCommands::debugOverlayAnchors)))
+            .then(Commands.literal("edit")
+                .executes(KPCommands::editMode))
+            .then(Commands.literal("exit")
+                .executes(KPCommands::exitEditMode))
         );
     }
 
@@ -462,5 +472,55 @@ public final class KPCommands {
                 Component.literal("[KP] No circuit breaker for " + modId), false);
             return 0;
         }
+    }
+
+    // === /kp edit / /kp exit -- 编辑模式进入/退出 ===
+
+    /**
+     * {@code /kp edit}：从观看模式进入编辑模式。
+     *
+     * <p>前置条件：当前 Screen 必须是 Xaero {@link GuiMap}（即 Xaero's World Map 已打开）。
+     * 进入流程：调用 {@link KpEditorScreen#create(GuiMap)} 构造编辑 Screen
+     * （内部已设置 {@code KpClientState.setEditMode(true)}），然后 {@code setScreen} 切换。
+     */
+    private static int editMode(CommandContext<CommandSourceStack> ctx) {
+        Screen screen = Minecraft.getInstance().screen;
+        if (!(screen instanceof GuiMap guiMap)) {
+            ctx.getSource().sendFailure(Component.literal(
+                "[KP] Edit mode requires Xaero's World Map to be open"));
+            return 0;
+        }
+        KpEditorScreen editorScreen = KpEditorScreen.create(guiMap);
+        Minecraft.getInstance().setScreen(editorScreen);
+        ctx.getSource().sendSuccess(() ->
+            Component.literal("[KP] Entered edit mode"), false);
+        return 1;
+    }
+
+    /**
+     * {@code /kp exit}：退出编辑模式，回到观看模式。
+     *
+     * <p>前置条件：当前必须处于编辑模式（{@link KpClientState#isEditMode()} 为 true）。
+     * 退出流程：调用当前 {@link KpEditorScreen} 的 {@code onClose()}
+     * （其内部会重置 editMode 并 {@code setScreen} 切回 GuiMap）。
+     * 若 editMode=true 但当前 Screen 非 KpEditorScreen（不应发生），强制重置 editMode 兜底。
+     */
+    private static int exitEditMode(CommandContext<CommandSourceStack> ctx) {
+        if (!KpClientState.isEditMode()) {
+            ctx.getSource().sendFailure(Component.literal("[KP] Not in edit mode"));
+            return 0;
+        }
+        Screen screen = Minecraft.getInstance().screen;
+        if (screen instanceof KpEditorScreen editorScreen) {
+            editorScreen.onClose();
+            ctx.getSource().sendSuccess(() ->
+                Component.literal("[KP] Exited edit mode"), false);
+        } else {
+            // 防御性兜底：editMode=true 但 screen 非 KpEditorScreen（不应发生）
+            KpClientState.setEditMode(false);
+            ctx.getSource().sendSuccess(() ->
+                Component.literal("[KP] Exited edit mode (forced)"), false);
+        }
+        return 1;
     }
 }
