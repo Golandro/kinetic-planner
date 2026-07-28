@@ -13,7 +13,8 @@
         "CreateTrainMapMixin",
         "CreateTrainMapOverlayMixin",
         "XaeroMapGearButtonMixin",
-        "XaeroUiSuppressMixin"
+        "XaeroUiSuppressMixin",
+        "GuiMapRemovedMixin"
     ],
     "injectors": {
         "defaultRequire": 0
