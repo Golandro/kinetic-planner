@@ -38,6 +38,8 @@ import java.util.stream.Stream;
  */
 public final class ThemeManager {
 
+    private static final IKPConfig config = KPConfig.getInstance();
+
     private ThemeManager() {}
 
     /**
@@ -119,13 +121,13 @@ public final class ThemeManager {
      */
     public static boolean setTheme(String name) {
         if ("default".equals(name)) {
-            KPConfig.THEME_ACTIVE.set("default");
+            config.setActiveThemeName("default");
             WorldTreeReadOverlay.setTheme(Theme.defaultValue());
             return true;
         }
         Theme theme = loadThemeFile(getThemesDir(), name);
         if (theme != null) {
-            KPConfig.THEME_ACTIVE.set(name);
+            config.setActiveThemeName(name);
             WorldTreeReadOverlay.setTheme(theme);
             return true;
         }
@@ -140,7 +142,7 @@ public final class ThemeManager {
      * 并更新 {@link KPConfig#THEME_ACTIVE}。
      */
     public static void reload() {
-        String currentName = KPConfig.THEME_ACTIVE.get();
+        String currentName = config.getActiveThemeName();
         if ("default".equals(currentName)) {
             WorldTreeReadOverlay.setTheme(Theme.defaultValue());
             return;
@@ -150,7 +152,7 @@ public final class ThemeManager {
             WorldTreeReadOverlay.setTheme(theme);
         } else {
             // 主题文件已删除，回退到默认
-            KPConfig.THEME_ACTIVE.set("default");
+            config.setActiveThemeName("default");
             WorldTreeReadOverlay.setTheme(Theme.defaultValue());
         }
     }
@@ -162,7 +164,7 @@ public final class ThemeManager {
      * 并将 {@link Theme#defaultValue()} 应用到渲染层。
      */
     public static void reset() {
-        KPConfig.THEME_ACTIVE.set("default");
+        config.setActiveThemeName("default");
         WorldTreeReadOverlay.setTheme(Theme.defaultValue());
     }
 }

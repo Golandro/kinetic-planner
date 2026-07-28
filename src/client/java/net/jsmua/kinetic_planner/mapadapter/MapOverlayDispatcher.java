@@ -1,6 +1,7 @@
 package net.jsmua.kinetic_planner.mapadapter;
 
 import net.jsmua.kinetic_planner.KineticPlannerMod;
+import net.jsmua.kinetic_planner.config.IKPConfig;
 import net.jsmua.kinetic_planner.config.KPConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -83,7 +84,7 @@ public class MapOverlayDispatcher {
         // 按 priority 排序（数字越小越优先），provider 仅 2 个，排序开销可忽略
         List<MapOverlayProvider> sorted = PROVIDERS.stream()
             .sorted(Comparator.comparingInt(p -> {
-                var config = KPConfig.getProviderConfig(p.modId());
+                var config = KPConfig.getInstance().getProviderConfig(p.modId());
                 return config != null ? config.priority() : Integer.MAX_VALUE;
             }))
             .toList();
@@ -99,7 +100,7 @@ public class MapOverlayDispatcher {
                 KineticPlannerMod.LOGGER.info("Circuit breaker for {} expired, retrying", modId);
             }
             // 读 per-provider enabled 配置
-            var config = KPConfig.getProviderConfig(p.modId());
+            var config = KPConfig.getInstance().getProviderConfig(p.modId());
             if (config != null && !config.enabled()) continue;
             try {
                 if (p.isMapOpen(screen)) {

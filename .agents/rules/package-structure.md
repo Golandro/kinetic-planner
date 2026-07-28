@@ -44,18 +44,38 @@ net.jsmua.kinetic_planner
 │   ├── BezierTessellator.java          贝塞尔采样纯数学（common）
 │   ├── CADRenderEngine.java            Blaze3D 渲染封装（client）
 │   └── GLStateGuard.java               RenderSystem 状态管理（client）
-├── config/                             配置/命令/GUI（client）
-│   ├── KPConfig.java                   NeoForge ModConfigSpec TOML
-│   ├── KPCommands.java                 /kp 命令注册（~22 节点）
-│   ├── KPClothConfigScreen.java        Cloth Config GUI
-│   ├── OverlayControl.java             叠加层状态管理
-│   ├── ThemeManager.java               主题管理（扫描/加载/切换/重载）
-│   ├── ProviderConfigControl.java      provider 配置 CRUD
-│   ├── KpClientState.java              配置面板可见性共享状态（Phase B）
-│   ├── KpConfigUIFactory.java          LDLib2 UIElement 树构建 + 步进器纯函数（Phase B）
-│   ├── KpStylesheet.java               KP 紫 accent LSS 主题（Phase B）
-│   ├── KpUIEventForwarder.java         ModularUIWidget 事件转发封装（Phase B）
-│   └── KpGearButton.java               自绘齿轮按钮（Phase B，替代 MapGearButtonWidget）
+├── config/                             配置中介层（main: IKPConfig + client: KPConfig/控制类）
+│   ├── IKPConfig.java                  配置中介接口（main，纯 Java 无 client 依赖）
+│   ├── KPConfig.java                   NeoForge ModConfigSpec TOML，implements IKPConfig
+│   ├── KpClientState.java              配置面板可见性 + 编辑模式全局状态
+│   ├── OverlayControl.java             叠加层状态管理（依赖 IKPConfig）
+│   ├── ProviderConfigControl.java      provider 配置 CRUD（依赖 IKPConfig）
+│   └── ThemeManager.java               主题管理（扫描/加载/切换/重载，依赖 IKPConfig）
+├── command/                            命令体系（main: 树定义 + client: 处理器实现）
+│   ├── KpCommandHandlers.java          命令处理器接口（main，27 方法）
+│   ├── KPCommandTree.java              命令树构建器（main，纯定义无 GUI 依赖）
+│   └── KPClientCommands.java           处理器实现（client，implements KpCommandHandlers）
+├── gui/                                GUI 层（client）
+│   ├── config/                         配置面板 UI
+│   │   ├── KpConfigUIFactory.java      LDLib2 面板组装（行构建委托 widgets）
+│   │   ├── KpStylesheet.java           KP 紫 accent LSS 主题
+│   │   ├── KpGearButton.java           自绘齿轮按钮（extends KpIconButton）
+│   │   └── KPClothConfigScreen.java    Cloth Config GUI
+│   ├── editor/                         编辑模式
+│   │   ├── EditToolState.java          编辑会话状态（工具/选择集）
+│   │   ├── KpEditorScreen.java         编辑模式 Screen 壳
+│   │   ├── KpMapEditor.java            LDLib2 Editor 子类
+│   │   ├── KpEditButton.java           自绘编辑按钮（extends KpIconButton）
+│   │   └── EditorCommands.java         /kp edit /exit 命令处理器（GUI 依赖）
+│   ├── event/                          事件基础设施
+│   │   └── KpUIEventForwarder.java     ModularUIWidget 事件转发封装
+│   ├── widgets/                        可复用 UI 组件
+│   │   ├── KpIconButton.java           自绘图标按钮抽象基类
+│   │   ├── ConfigToggleRow.java        配置面板 Toggle 行构建器
+│   │   └── ConfigStepperRow.java       配置面板步进器行构建器 + clamp 纯函数
+│   ├── KpRibbonBar.java                Editor Ribbon 栏
+│   ├── MapPlaceholderView.java         Editor 中心区透明占位
+│   └── ToolPanelView.java             Editor 左侧工具面板
 ├── mapadapter/                         地图适配层（client）
 │   ├── MapOverlayProvider.java         接口（displayName/defaultConfig）
 │   ├── MapOverlayContext.java          上下文 record
@@ -83,11 +103,11 @@ net.jsmua.kinetic_planner
 
 | sourceSet | Java 文件 | 说明 |
 |---|---|---|
-| main (common) | 14 | 纯 JVM，不引用 client/blaze3d，可单测 |
-| client | 32 | GUI/渲染/适配器/Mixin/命令 |
+| main (common) | 17 | 纯 JVM，含 IKPConfig + 命令树定义 |
+| client | 36 | GUI/渲染/适配器/Mixin/命令处理器 |
 | server | 0 | 占位（P1 编辑引擎填充） |
 | test | 16 | 60 个 @Test（2 个 @Disabled） |
-| **合计** | **62** | |
+| **合计** | **69** | |
 
 ## Mixin 清单
 

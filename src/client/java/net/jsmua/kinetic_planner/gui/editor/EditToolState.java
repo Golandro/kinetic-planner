@@ -1,4 +1,4 @@
-package net.jsmua.kinetic_planner.editor;
+package net.jsmua.kinetic_planner.gui.editor;
 
 import java.util.LinkedHashSet;
 import java.util.Set;

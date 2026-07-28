@@ -528,7 +528,7 @@ git commit -m "feat(gui): add MapPlaceholderView transparent center view"
 ### Task 2.3: KpMapEditor Editor 子类
 
 **Files:**
-- Create: `src/client/java/net/jsmua/kinetic_planner/editor/KpMapEditor.java`
+- Create: `../../../src/client/java/net/jsmua/kinetic_planner/gui/editor/KpMapEditor.java`
 - Test: `src/test/java/net/jsmua/kinetic_planner/editor/KpMapEditorTest.java`
 
 **Interfaces:**
@@ -596,7 +596,7 @@ Expected: 编译失败 `cannot find symbol KpMapEditor`。
 
 - [ ] **Step 3: 创建 KpMapEditor**
 
-创建 `src/client/java/net/jsmua/kinetic_planner/editor/KpMapEditor.java`：
+创建 `../../../src/client/java/net/jsmua/kinetic_planner/gui/editor/KpMapEditor.java`：
 
 ```java
 package net.jsmua.kinetic_planner.editor;
@@ -717,7 +717,7 @@ git commit -m "feat(editor): add KpMapEditor with stripped config and custom vie
 ### Task 2.4: KpEditorScreen 编辑模式 Screen 壳
 
 **Files:**
-- Create: `src/client/java/net/jsmua/kinetic_planner/editor/KpEditorScreen.java`
+- Create: `../../../src/client/java/net/jsmua/kinetic_planner/gui/editor/KpEditorScreen.java`
 
 **Interfaces:**
 - Consumes: `KpClientState.setEditMode` / `KpUIEventForwarder` / `KpMapEditor.placeCustomViews` / `ModularUI.setScreen/init`
@@ -725,7 +725,7 @@ git commit -m "feat(editor): add KpMapEditor with stripped config and custom vie
 
 - [ ] **Step 1: 创建 KpEditorScreen**
 
-创建 `src/client/java/net/jsmua/kinetic_planner/editor/KpEditorScreen.java`：
+创建 `../../../src/client/java/net/jsmua/kinetic_planner/gui/editor/KpEditorScreen.java`：
 
 ```java
 package net.jsmua.kinetic_planner.editor;
@@ -1087,7 +1087,7 @@ git commit -m "feat(mixin): add XaeroUiSuppressMixin for edit-mode render cancel
 ### Task 3.3: KpEditorScreen.renderMapLayer 实现
 
 **Files:**
-- Modify: `src/client/java/net/jsmua/kinetic_planner/editor/KpEditorScreen.java`
+- Modify: `../../../src/client/java/net/jsmua/kinetic_planner/gui/editor/KpEditorScreen.java`
 
 **前置**：Task 3.1 已确定手动调用的子方法名。
 
@@ -1396,7 +1396,7 @@ git commit -m "feat(commands): add /kp edit and /kp exit commands"
 ### Task 4.1: EditToolState 工具状态管理
 
 **Files:**
-- Create: `src/client/java/net/jsmua/kinetic_planner/editor/EditToolState.java`
+- Create: `../../../src/client/java/net/jsmua/kinetic_planner/gui/editor/EditToolState.java`
 - Test: `src/test/java/net/jsmua/kinetic_planner/editor/EditToolStateTest.java`
 
 **Interfaces:**
@@ -1479,7 +1479,7 @@ Expected: 编译失败 `cannot find symbol EditToolState`。
 
 - [ ] **Step 3: 创建 EditToolState**
 
-创建 `src/client/java/net/jsmua/kinetic_planner/editor/EditToolState.java`：
+创建 `../../../src/client/java/net/jsmua/kinetic_planner/gui/editor/EditToolState.java`：
 
 ```java
 package net.jsmua.kinetic_planner.editor;
@@ -1808,7 +1808,7 @@ git commit -m "feat(gui): add KpRibbonBar with File/Tools/View groups"
 ### Task 4.4: KpMapEditor 集成 KpRibbonBar
 
 **Files:**
-- Modify: `src/client/java/net/jsmua/kinetic_planner/editor/KpMapEditor.java`
+- Modify: `../../../src/client/java/net/jsmua/kinetic_planner/gui/editor/KpMapEditor.java`
 
 - [ ] **Step 1: 在 initMenus 中放置 KpRibbonBar**
 
@@ -1910,7 +1910,7 @@ Run: `gradlew test --tests net.jsmua.kinetic_planner.config.KpUIEventForwarderTe
 ### Task 5.4: KpEditorScreen 事件路由实现
 
 **Files:**
-- Modify: `src/client/java/net/jsmua/kinetic_planner/editor/KpEditorScreen.java`
+- Modify: `../../../src/client/java/net/jsmua/kinetic_planner/gui/editor/KpEditorScreen.java`
 
 **Interfaces:**
 - Consumes: `KpUIEventForwarder.mouseXxx`、`EditToolState.getCurrentTool`、`GuiMap.mouseXxx`、`CADRenderEngine.handleXxx`（Phase 6）
@@ -2543,7 +2543,7 @@ git commit -m "feat(cadengine): add EditLayerRenderer skeleton for edit graphics
 ### Task 6.5: KpEditorScreen 集成 EditLayerRenderer
 
 **Files:**
-- Modify: `src/client/java/net/jsmua/kinetic_planner/editor/KpEditorScreen.java`
+- Modify: `../../../src/client/java/net/jsmua/kinetic_planner/gui/editor/KpEditorScreen.java`
 
 - [ ] **Step 1: 在 render 方法中调用 EditLayerRenderer**
 

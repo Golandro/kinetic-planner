@@ -1,4 +1,4 @@
-package net.jsmua.kinetic_planner.config;
+package net.jsmua.kinetic_planner.gui.config;
 
 import com.lowdragmc.lowdraglib2.gui.ui.style.Stylesheet;
 

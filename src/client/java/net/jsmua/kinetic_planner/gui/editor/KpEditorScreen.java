@@ -1,12 +1,11 @@
-package net.jsmua.kinetic_planner.editor;
+package net.jsmua.kinetic_planner.gui.editor;
 
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
-import net.jsmua.kinetic_planner.KineticPlannerMod;
 import net.jsmua.kinetic_planner.cadengine.CADRenderEngine;
 import net.jsmua.kinetic_planner.cadengine.EditLayerRenderer;
 import net.jsmua.kinetic_planner.config.KpClientState;
-import net.jsmua.kinetic_planner.config.KpUIEventForwarder;
+import net.jsmua.kinetic_planner.gui.event.KpUIEventForwarder;
 import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayContextProvider;
 import net.minecraft.client.Minecraft;
@@ -14,8 +13,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import xaero.map.gui.GuiMap;
-
-import javax.annotation.Nullable;
 
 /**
  * 编辑模式 Screen 壳（spec §6.2 + §4.2）。

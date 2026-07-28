@@ -1,8 +1,9 @@
 package net.jsmua.kinetic_planner;
 
-import net.jsmua.kinetic_planner.config.KPCommands;
+import net.jsmua.kinetic_planner.command.KPClientCommands;
+import net.jsmua.kinetic_planner.command.KPCommandTree;
 import net.jsmua.kinetic_planner.config.KPConfig;
-import net.jsmua.kinetic_planner.config.KPClothConfigScreen;
+import net.jsmua.kinetic_planner.gui.config.KPClothConfigScreen;
 import net.jsmua.kinetic_planner.data.ProviderConfigRegistry;
 import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayDispatcher;
@@ -60,7 +61,7 @@ public class KineticPlannerClient {
 
     @SubscribeEvent
     static void onRegisterClientCommands(RegisterClientCommandsEvent event) {
-        KPCommands.register(event.getDispatcher());
+        KPCommandTree.register(event.getDispatcher(), new KPClientCommands());
     }
 
     @SubscribeEvent

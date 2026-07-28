@@ -1,4 +1,4 @@
-package net.jsmua.kinetic_planner.config;
+package net.jsmua.kinetic_planner.gui.event;
 
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import net.minecraft.client.gui.GuiGraphics;

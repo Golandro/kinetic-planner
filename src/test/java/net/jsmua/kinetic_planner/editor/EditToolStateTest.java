@@ -1,6 +1,7 @@
 package net.jsmua.kinetic_planner.editor;
 
-import net.jsmua.kinetic_planner.editor.EditToolState.Tool;
+import net.jsmua.kinetic_planner.gui.editor.EditToolState;
+import net.jsmua.kinetic_planner.gui.editor.EditToolState.Tool;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

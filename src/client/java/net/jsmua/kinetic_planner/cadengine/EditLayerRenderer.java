@@ -1,7 +1,8 @@
 package net.jsmua.kinetic_planner.cadengine;
 
 import net.jsmua.kinetic_planner.KineticPlannerMod;
-import net.jsmua.kinetic_planner.editor.EditToolState;
+import net.jsmua.kinetic_planner.gui.editor.EditToolState;
+import net.jsmua.kinetic_planner.gui.editor.KpEditorScreen;
 import net.jsmua.kinetic_planner.instrument.GeometryCache;
 import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import net.jsmua.kinetic_planner.projection.WorldScreenTransform;
@@ -31,7 +32,7 @@ public final class EditLayerRenderer {
     /**
      * 渲染编辑图形层。
      *
-     * <p>由 {@link net.jsmua.kinetic_planner.editor.KpEditorScreen#render} 在地图层之后、UI 层之前调用。
+     * <p>由 {@link KpEditorScreen#render} 在地图层之后、UI 层之前调用。
      *
      * @param gg           外部 GuiGraphics
      * @param editToolState 编辑会话状态

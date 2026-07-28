@@ -21,6 +21,8 @@ import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
  */
 public final class OverlayControl {
 
+    private static final IKPConfig config = KPConfig.getInstance();
+
     private OverlayControl() {}
 
     /**
@@ -29,28 +31,28 @@ public final class OverlayControl {
      * @return {@link KPConfig#OVERLAY_ENABLED} 的当前值
      */
     public static boolean isEnabled() {
-        return KPConfig.OVERLAY_ENABLED.get();
+        return config.isOverlayEnabled();
     }
 
     /**
      * 启用叠加层。
      */
     public static void enable() {
-        KPConfig.OVERLAY_ENABLED.set(true);
+        config.setOverlayEnabled(true);
     }
 
     /**
      * 禁用叠加层。
      */
     public static void disable() {
-        KPConfig.OVERLAY_ENABLED.set(false);
+        config.setOverlayEnabled(false);
     }
 
     /**
      * 切换叠加层开关。
      */
     public static void toggle() {
-        KPConfig.OVERLAY_ENABLED.set(!isEnabled());
+        config.setOverlayEnabled(!isEnabled());
     }
 
     /**
@@ -61,7 +63,7 @@ public final class OverlayControl {
      * 请使用 NeoForge 的配置管理或重启游戏。
      */
     public static void reload() {
-        WorldTreeReadOverlay.setTheme(KPConfig.toTheme());
+        WorldTreeReadOverlay.setTheme(config.toTheme());
     }
 
     /**
@@ -71,7 +73,7 @@ public final class OverlayControl {
      *         {@code false} 表示阻止（由 Mixin 拦截 Create 的 renderAndPick，KP 完全替代）
      */
     public static boolean isShowCreateTrackMap() {
-        return KPConfig.SHOW_CREATE_TRACK_MAP.get();
+        return config.isShowCreateTrackMap();
     }
 
     /**
@@ -80,7 +82,7 @@ public final class OverlayControl {
      * @param show 是否显示
      */
     public static void setShowCreateTrackMap(boolean show) {
-        KPConfig.SHOW_CREATE_TRACK_MAP.set(show);
+        config.setShowCreateTrackMap(show);
     }
 
     /**

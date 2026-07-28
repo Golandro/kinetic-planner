@@ -2,6 +2,7 @@ package net.jsmua.kinetic_planner.mixin;
 
 import com.simibubi.create.content.trains.graph.TrackGraph;
 import com.simibubi.create.content.trains.graph.TrackGraphVisualizer;
+import net.jsmua.kinetic_planner.config.IKPConfig;
 import net.jsmua.kinetic_planner.config.KPConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,7 +30,8 @@ public class CreateTrackVisualizerHiderMixin {
     @Inject(method = "visualiseSignalEdgeGroups",
             at = @At("HEAD"), cancellable = true)
     private static void kp$hideSignalEdgeGroups(TrackGraph graph, CallbackInfo ci) {
-        if (KPConfig.OVERLAY_ENABLED.get() && !KPConfig.SHOW_CREATE_TRACK_MAP.get()) {
+        IKPConfig config = KPConfig.getInstance();
+        if (config.isOverlayEnabled() && !config.isShowCreateTrackMap()) {
             ci.cancel();
         }
     }

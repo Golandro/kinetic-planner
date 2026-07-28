@@ -3,8 +3,8 @@ package net.jsmua.kinetic_planner.gui;
 import com.lowdragmc.lowdraglib2.editor.ui.View;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import dev.vfyjxf.taffy.style.FlexDirection;
-import net.jsmua.kinetic_planner.editor.EditToolState;
-import net.jsmua.kinetic_planner.editor.EditToolState.Tool;
+import net.jsmua.kinetic_planner.gui.editor.EditToolState;
+import net.jsmua.kinetic_planner.gui.editor.EditToolState.Tool;
 
 /**
  * 工具面板 View（spec §6.5）。

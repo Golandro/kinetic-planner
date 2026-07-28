@@ -246,7 +246,7 @@ UIElement (root, position=absolute, x=panelX, y=panelY, w=200, h=auto)
 
 ## 7. 关联
 
-- Mixin 封杀设计（Create 按钮/Toast/叠加层接管）：见 `.codebuddy/memory/MEMORY.md`「接管 Create Track Map」。
+- Mixin 封杀设计（Create 按钮/Toast/叠加层接管）：见 `../../../.agents/memory/MEMORY.md`「接管 Create Track Map」。
 - 前置设计：`2026-07-20-kinetic-planner-phase0-design.md`。
 - Modern UI 嵌入式调研（否决依据）：`2026-07-26-modern-ui-embedded-rendering-research.md`。
 - 现有实现计划（Tasks 1-4/9 保留，Tasks 5-8 被 spec 替代）：`2026-07-25-kinetic-planner-p0.5-phaseb-p1.1.md`。

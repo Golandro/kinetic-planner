@@ -2,7 +2,7 @@ package net.jsmua.kinetic_planner.gui;
 
 import com.lowdragmc.lowdraglib2.editor.ui.View;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
-import net.jsmua.kinetic_planner.editor.EditToolState;
+import net.jsmua.kinetic_planner.gui.editor.EditToolState;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 

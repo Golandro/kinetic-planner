@@ -4,6 +4,7 @@ import net.jsmua.kinetic_planner.KineticPlannerMod;
 import net.jsmua.kinetic_planner.cadengine.CADRenderEngine;
 import net.jsmua.kinetic_planner.cadengine.Theme;
 import net.jsmua.kinetic_planner.data.EdgeGeometry;
+import net.jsmua.kinetic_planner.config.IKPConfig;
 import net.jsmua.kinetic_planner.config.KPConfig;
 import net.jsmua.kinetic_planner.data.IRailwayDataAccess;
 import net.jsmua.kinetic_planner.data.RailwayDataAccess;
@@ -77,7 +78,7 @@ public final class WorldTreeReadOverlay {
         // 更新 active provider 视觉 scale
         MapOverlayDispatcher.activeProviderModId().ifPresentOrElse(
             modId -> {
-                var pc = KPConfig.getProviderConfig(modId);
+                var pc = KPConfig.getInstance().getProviderConfig(modId);
                 if (pc != null) {
                     activeLineWidthScale = pc.lineWidthScale();
                     activeAlphaScale = pc.alphaScale();
@@ -169,7 +170,7 @@ public final class WorldTreeReadOverlay {
      */
     public static void onMapRender(Object guiMap, GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         // 配置开关检查：用户通过 /kp overlay toggle 或配置屏幕关闭叠加层时，直接跳过渲染
-        if (!KPConfig.OVERLAY_ENABLED.get()) return;
+        if (!KPConfig.getInstance().isOverlayEnabled()) return;
         if (lastContext == null || lastTransform == null) return;
 
         try {

@@ -1,5 +1,6 @@
 package net.jsmua.kinetic_planner.config;
 
+import net.jsmua.kinetic_planner.cadengine.Theme;
 import net.jsmua.kinetic_planner.data.ProviderConfig;
 import net.jsmua.kinetic_planner.data.ProviderConfigRegistry;
 import net.neoforged.neoforge.common.ModConfigSpec;
@@ -8,50 +9,64 @@ import net.neoforged.neoforge.common.ModConfigSpec;
  * Kinetic Planner 客户端配置（TOML）。
  *
  * <p>配置段：overlay / theme / layers / label / debug / provider.&lt;modId&gt;
+ *
+ * <p>实现 {@link IKPConfig} 中介接口，所有外部访问通过 {@link #getInstance()} 获取实例，
+ * 不直接接触 {@link ModConfigSpec} 字段。{@link #SPEC} 保留 public static 供 NeoForge 注册。
  */
-public class KPConfig {
+public final class KPConfig implements IKPConfig {
+
+    private static final KPConfig INSTANCE = new KPConfig();
 
     public static final ModConfigSpec SPEC;
 
     // [overlay]
-    public static final ModConfigSpec.BooleanValue OVERLAY_ENABLED;
-    public static final ModConfigSpec.BooleanValue SHOW_CREATE_TRACK_MAP;
+    private static final ModConfigSpec.BooleanValue OVERLAY_ENABLED;
+    private static final ModConfigSpec.BooleanValue SHOW_CREATE_TRACK_MAP;
 
     // [theme]
-    public static final ModConfigSpec.ConfigValue<String> THEME_ACTIVE;
-    public static final ModConfigSpec.BooleanValue THEME_CONSTANT_SCREEN_LINE_WIDTH;
-    public static final ModConfigSpec.DoubleValue THEME_FIXED_SCREEN_LINE_WIDTH_PX;
-    public static final ModConfigSpec.DoubleValue THEME_MIN_ZOOM;
-    public static final ModConfigSpec.DoubleValue THEME_MAX_ZOOM;
+    private static final ModConfigSpec.ConfigValue<String> THEME_ACTIVE;
+    private static final ModConfigSpec.BooleanValue THEME_CONSTANT_SCREEN_LINE_WIDTH;
+    private static final ModConfigSpec.DoubleValue THEME_FIXED_SCREEN_LINE_WIDTH_PX;
+    private static final ModConfigSpec.DoubleValue THEME_MIN_ZOOM;
+    private static final ModConfigSpec.DoubleValue THEME_MAX_ZOOM;
 
     // [layers]
-    public static final ModConfigSpec.BooleanValue LAYERS_TRACKS;
-    public static final ModConfigSpec.BooleanValue LAYERS_NODES;
-    public static final ModConfigSpec.BooleanValue LAYERS_EDGE_POINTS;
+    private static final ModConfigSpec.BooleanValue LAYERS_TRACKS;
+    private static final ModConfigSpec.BooleanValue LAYERS_NODES;
+    private static final ModConfigSpec.BooleanValue LAYERS_EDGE_POINTS;
 
     // [label]
-    public static final ModConfigSpec.BooleanValue LABEL_SHOW_NODE_LABELS;
-    public static final ModConfigSpec.BooleanValue LABEL_SHOW_STATION_NAMES;
-    public static final ModConfigSpec.DoubleValue LABEL_MIN_ZOOM;
+    private static final ModConfigSpec.BooleanValue LABEL_SHOW_NODE_LABELS;
+    private static final ModConfigSpec.BooleanValue LABEL_SHOW_STATION_NAMES;
+    private static final ModConfigSpec.DoubleValue LABEL_MIN_ZOOM;
 
     // [debug]
-    public static final ModConfigSpec.BooleanValue DEBUG_SHOW_FPS;
-    public static final ModConfigSpec.BooleanValue DEBUG_SHOW_GEOMETRY_COUNT;
-    public static final ModConfigSpec.BooleanValue DEBUG_DISABLE_GL_STATE_GUARD;
+    private static final ModConfigSpec.BooleanValue DEBUG_SHOW_FPS;
+    private static final ModConfigSpec.BooleanValue DEBUG_SHOW_GEOMETRY_COUNT;
+    private static final ModConfigSpec.BooleanValue DEBUG_DISABLE_GL_STATE_GUARD;
 
     // [provider.xaeroworldmap]
-    public static final ModConfigSpec.BooleanValue PROVIDER_XAERO_ENABLED;
-    public static final ModConfigSpec.IntValue PROVIDER_XAERO_PRIORITY;
-    public static final ModConfigSpec.DoubleValue PROVIDER_XAERO_LINE_WIDTH_SCALE;
-    public static final ModConfigSpec.DoubleValue PROVIDER_XAERO_ALPHA_SCALE;
-    public static final ModConfigSpec.BooleanValue PROVIDER_XAERO_DASHED;
+    private static final ModConfigSpec.BooleanValue PROVIDER_XAERO_ENABLED;
+    private static final ModConfigSpec.IntValue PROVIDER_XAERO_PRIORITY;
+    private static final ModConfigSpec.DoubleValue PROVIDER_XAERO_LINE_WIDTH_SCALE;
+    private static final ModConfigSpec.DoubleValue PROVIDER_XAERO_ALPHA_SCALE;
+    private static final ModConfigSpec.BooleanValue PROVIDER_XAERO_DASHED;
 
     // [provider.journeymap]
-    public static final ModConfigSpec.BooleanValue PROVIDER_JM_ENABLED;
-    public static final ModConfigSpec.IntValue PROVIDER_JM_PRIORITY;
-    public static final ModConfigSpec.DoubleValue PROVIDER_JM_LINE_WIDTH_SCALE;
-    public static final ModConfigSpec.DoubleValue PROVIDER_JM_ALPHA_SCALE;
-    public static final ModConfigSpec.BooleanValue PROVIDER_JM_DASHED;
+    private static final ModConfigSpec.BooleanValue PROVIDER_JM_ENABLED;
+    private static final ModConfigSpec.IntValue PROVIDER_JM_PRIORITY;
+    private static final ModConfigSpec.DoubleValue PROVIDER_JM_LINE_WIDTH_SCALE;
+    private static final ModConfigSpec.DoubleValue PROVIDER_JM_ALPHA_SCALE;
+    private static final ModConfigSpec.BooleanValue PROVIDER_JM_DASHED;
+
+    private KPConfig() {}
+
+    /**
+     * 返回 {@link IKPConfig} 单例实例，供外部消费者访问配置。
+     */
+    public static IKPConfig getInstance() {
+        return INSTANCE;
+    }
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -108,36 +123,118 @@ public class KPConfig {
         SPEC = builder.build();
     }
 
-    /**
-     * 从配置值构建 Theme record。
-     */
-    public static net.jsmua.kinetic_planner.cadengine.Theme toTheme() {
-        return new net.jsmua.kinetic_planner.cadengine.Theme(
-            THEME_ACTIVE.get(),
-            // 轨道宽度使用世界单位默认值；恒定屏幕像素线宽由 GlobalStyle.fixedScreenLineWidthPx 承载
-            net.jsmua.kinetic_planner.cadengine.Theme.defaultValue().track(),
-            new net.jsmua.kinetic_planner.cadengine.Theme.GeometryStyle(4.0f, false, 1.0f),
-            new net.jsmua.kinetic_planner.cadengine.Theme.GeometryStyle(3.0f, false, 1.0f),
-            new net.jsmua.kinetic_planner.cadengine.Theme.LayerVisibility(
-                LAYERS_TRACKS.get(), LAYERS_NODES.get(), LAYERS_EDGE_POINTS.get()),
-            new net.jsmua.kinetic_planner.cadengine.Theme.GlobalStyle(
-                THEME_MIN_ZOOM.get().floatValue(),
-                THEME_MAX_ZOOM.get().floatValue(),
-                THEME_CONSTANT_SCREEN_LINE_WIDTH.get(),
-                THEME_FIXED_SCREEN_LINE_WIDTH_PX.get().floatValue())
-        );
+    // ===== IKPConfig: [overlay] =====
+
+    @Override
+    public boolean isOverlayEnabled() {
+        return OVERLAY_ENABLED.get();
     }
 
-    /**
-     * 查询指定 provider 的配置（合并 TOML 值与默认值）。
-     *
-     * <p>已知 modId（xaeroworldmap / journeymap）读 TOML 段；
-     * 未知 modId 读 {@link ProviderConfigRegistry} 默认值。
-     *
-     * @param modId provider mod ID
-     * @return 配置；未知 modId 且未注册返回 null
-     */
-    public static ProviderConfig getProviderConfig(String modId) {
+    @Override
+    public void setOverlayEnabled(boolean enabled) {
+        OVERLAY_ENABLED.set(enabled);
+    }
+
+    @Override
+    public boolean isShowCreateTrackMap() {
+        return SHOW_CREATE_TRACK_MAP.get();
+    }
+
+    @Override
+    public void setShowCreateTrackMap(boolean show) {
+        SHOW_CREATE_TRACK_MAP.set(show);
+    }
+
+    // ===== IKPConfig: [theme] =====
+
+    @Override
+    public String getActiveThemeName() {
+        return THEME_ACTIVE.get();
+    }
+
+    @Override
+    public void setActiveThemeName(String name) {
+        THEME_ACTIVE.set(name);
+    }
+
+    @Override
+    public boolean isConstantScreenLineWidth() {
+        return THEME_CONSTANT_SCREEN_LINE_WIDTH.get();
+    }
+
+    @Override
+    public void setConstantScreenLineWidth(boolean value) {
+        THEME_CONSTANT_SCREEN_LINE_WIDTH.set(value);
+    }
+
+    @Override
+    public double getFixedScreenLineWidthPx() {
+        return THEME_FIXED_SCREEN_LINE_WIDTH_PX.get();
+    }
+
+    @Override
+    public void setFixedScreenLineWidthPx(double value) {
+        THEME_FIXED_SCREEN_LINE_WIDTH_PX.set(value);
+    }
+
+    // ===== IKPConfig: [layers] =====
+
+    @Override
+    public boolean isLayerTracksVisible() {
+        return LAYERS_TRACKS.get();
+    }
+
+    @Override
+    public void setLayerTracksVisible(boolean value) {
+        LAYERS_TRACKS.set(value);
+    }
+
+    @Override
+    public boolean isLayerNodesVisible() {
+        return LAYERS_NODES.get();
+    }
+
+    @Override
+    public void setLayerNodesVisible(boolean value) {
+        LAYERS_NODES.set(value);
+    }
+
+    @Override
+    public boolean isLayerEdgePointsVisible() {
+        return LAYERS_EDGE_POINTS.get();
+    }
+
+    @Override
+    public void setLayerEdgePointsVisible(boolean value) {
+        LAYERS_EDGE_POINTS.set(value);
+    }
+
+    // ===== IKPConfig: [label] =====
+
+    @Override
+    public boolean isShowNodeLabels() {
+        return LABEL_SHOW_NODE_LABELS.get();
+    }
+
+    @Override
+    public void setShowNodeLabels(boolean value) {
+        LABEL_SHOW_NODE_LABELS.set(value);
+    }
+
+    @Override
+    public boolean isShowStationNames() {
+        return LABEL_SHOW_STATION_NAMES.get();
+    }
+
+    @Override
+    public void setShowStationNames(boolean value) {
+        LABEL_SHOW_STATION_NAMES.set(value);
+    }
+
+    // ===== IKPConfig: [provider] =====
+
+    @Override
+    public ProviderConfig getProviderConfig(String modId) {
         ProviderConfig defaultConfig = ProviderConfigRegistry.getDefault(modId);
         String displayName = defaultConfig != null ? defaultConfig.displayName() : modId;
 
@@ -156,18 +253,12 @@ public class KPConfig {
                 PROVIDER_JM_LINE_WIDTH_SCALE.get().floatValue(),
                 PROVIDER_JM_ALPHA_SCALE.get().floatValue(),
                 PROVIDER_JM_DASHED.get());
-            default -> defaultConfig; // 未知 modId 返回注册表默认值（可能为 null）
+            default -> defaultConfig;
         };
     }
 
-    /**
-     * 设置 provider 的 enabled 状态。
-     *
-     * @param modId   provider mod ID
-     * @param enabled 是否启用
-     * @return true 如果设置成功（modId 已知）
-     */
-    public static boolean setProviderEnabled(String modId, boolean enabled) {
+    @Override
+    public boolean setProviderEnabled(String modId, boolean enabled) {
         return switch (modId) {
             case "xaeroworldmap" -> { PROVIDER_XAERO_ENABLED.set(enabled); yield true; }
             case "journeymap" -> { PROVIDER_JM_ENABLED.set(enabled); yield true; }
@@ -175,15 +266,8 @@ public class KPConfig {
         };
     }
 
-    /**
-     * 设置 provider 的视觉参数。
-     *
-     * @param modId  provider mod ID
-     * @param param  参数名（lineWidthScale / alphaScale / dashed / priority）
-     * @param value  字符串形式的新值
-     * @return true 如果设置成功（modId 已知 + 参数名合法 + 值合法）
-     */
-    public static boolean setProviderParam(String modId, String param, String value) {
+    @Override
+    public boolean setProviderParam(String modId, String param, String value) {
         try {
             return switch (modId) {
                 case "xaeroworldmap" -> setXaeroParam(param, value);
@@ -194,6 +278,27 @@ public class KPConfig {
             return false;
         }
     }
+
+    // ===== IKPConfig: [theme conversion] =====
+
+    @Override
+    public Theme toTheme() {
+        return new Theme(
+            THEME_ACTIVE.get(),
+            Theme.defaultValue().track(),
+            new Theme.GeometryStyle(4.0f, false, 1.0f),
+            new Theme.GeometryStyle(3.0f, false, 1.0f),
+            new Theme.LayerVisibility(
+                LAYERS_TRACKS.get(), LAYERS_NODES.get(), LAYERS_EDGE_POINTS.get()),
+            new Theme.GlobalStyle(
+                THEME_MIN_ZOOM.get().floatValue(),
+                THEME_MAX_ZOOM.get().floatValue(),
+                THEME_CONSTANT_SCREEN_LINE_WIDTH.get(),
+                THEME_FIXED_SCREEN_LINE_WIDTH_PX.get().floatValue())
+        );
+    }
+
+    // ===== private helpers =====
 
     private static boolean setXaeroParam(String param, String value) {
         return switch (param) {
@@ -221,14 +326,6 @@ public class KPConfig {
         };
     }
 
-    /**
-     * 严格布尔解析：仅接受 {@code "true"}/{@code "false"}（忽略大小写）。
-     *
-     * <p>用于 {@code dashed} 等布尔参数，避免 {@link Boolean#parseBoolean} 将任意非法字符串静默当作 false。
-     *
-     * @param value 待解析字符串
-     * @return true 如果值为严格布尔字面量
-     */
     private static boolean isStrictBool(String value) {
         return "true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value);
     }

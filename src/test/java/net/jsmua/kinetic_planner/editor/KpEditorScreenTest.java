@@ -2,7 +2,9 @@ package net.jsmua.kinetic_planner.editor;
 
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import net.jsmua.kinetic_planner.config.KpClientState;
-import net.jsmua.kinetic_planner.config.KpUIEventForwarder;
+import net.jsmua.kinetic_planner.gui.event.KpUIEventForwarder;
+import net.jsmua.kinetic_planner.gui.editor.KpEditorScreen;
+import net.jsmua.kinetic_planner.gui.editor.KpMapEditor;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayContextProvider;
 import net.minecraft.client.gui.screens.Screen;
 import org.junit.jupiter.api.AfterEach;

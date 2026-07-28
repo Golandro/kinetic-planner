@@ -1,6 +1,7 @@
 package net.jsmua.kinetic_planner.config;
 
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import net.jsmua.kinetic_planner.gui.event.KpUIEventForwarder;
 import net.minecraft.client.gui.GuiGraphics;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

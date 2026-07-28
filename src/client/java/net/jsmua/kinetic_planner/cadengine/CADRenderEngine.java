@@ -1,7 +1,7 @@
 package net.jsmua.kinetic_planner.cadengine;
 
 import net.jsmua.kinetic_planner.KineticPlannerMod;
-import net.jsmua.kinetic_planner.editor.EditToolState;
+import net.jsmua.kinetic_planner.gui.editor.EditToolState;
 import net.jsmua.kinetic_planner.instrument.GeometryCache;
 import net.jsmua.kinetic_planner.projection.WorldScreenTransform;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -317,10 +317,10 @@ public final class CADRenderEngine {
     public boolean handleClick(double screenX, double screenY, int button,
                                 net.jsmua.kinetic_planner.projection.WorldScreenTransform transform,
                                 Iterable<GeometryCache.GraphGeometry> geometries,
-                                net.jsmua.kinetic_planner.editor.EditToolState state) {
+                                EditToolState state) {
         if (button != 0) return false;
         var tool = state.getCurrentTool();
-        if (tool == net.jsmua.kinetic_planner.editor.EditToolState.Tool.SELECT) {
+        if (tool == EditToolState.Tool.SELECT) {
             var hit = hitTest(screenX, screenY, transform, geometries);
             if (hit != null && hit.type() == HitResult.Type.NODE) {
                 // 通过 graphId + index 查找节点 UUID
@@ -338,7 +338,7 @@ public final class CADRenderEngine {
     public boolean handleDrag(double screenX, double screenY, int button,
                                double dragX, double dragY,
                                net.jsmua.kinetic_planner.projection.WorldScreenTransform transform,
-                               net.jsmua.kinetic_planner.editor.EditToolState state) {
+                               EditToolState state) {
         // Draw 工具下的拖拽预览（P2 后续实现）
         return false;
     }
@@ -349,7 +349,7 @@ public final class CADRenderEngine {
     public boolean handleHover(double screenX, double screenY,
                                 net.jsmua.kinetic_planner.projection.WorldScreenTransform transform,
                                 Iterable<GeometryCache.GraphGeometry> geometries,
-                                net.jsmua.kinetic_planner.editor.EditToolState state) {
+                                EditToolState state) {
         // Snap 工具下高亮可捕捉点（P2 后续实现）
         return false;
     }

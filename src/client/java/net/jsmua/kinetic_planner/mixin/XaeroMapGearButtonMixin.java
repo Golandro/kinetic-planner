@@ -1,12 +1,12 @@
 package net.jsmua.kinetic_planner.mixin;
 
 import net.jsmua.kinetic_planner.config.KpClientState;
-import net.jsmua.kinetic_planner.config.KpConfigUIFactory;
-import net.jsmua.kinetic_planner.config.KpEditButton;
-import net.jsmua.kinetic_planner.config.KpGearButton;
-import net.jsmua.kinetic_planner.config.KpUIEventForwarder;
+import net.jsmua.kinetic_planner.gui.config.KpConfigUIFactory;
+import net.jsmua.kinetic_planner.gui.editor.KpEditButton;
+import net.jsmua.kinetic_planner.gui.config.KpGearButton;
+import net.jsmua.kinetic_planner.gui.event.KpUIEventForwarder;
 import net.jsmua.kinetic_planner.config.OverlayControl;
-import net.jsmua.kinetic_planner.editor.KpEditorScreen;
+import net.jsmua.kinetic_planner.gui.editor.KpEditorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;

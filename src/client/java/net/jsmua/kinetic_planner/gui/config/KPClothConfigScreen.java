@@ -1,5 +1,7 @@
-package net.jsmua.kinetic_planner.config;
+package net.jsmua.kinetic_planner.gui.config;
 
+import net.jsmua.kinetic_planner.config.IKPConfig;
+import net.jsmua.kinetic_planner.config.KPConfig;
 import net.jsmua.kinetic_planner.KineticPlannerMod;
 import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
@@ -16,6 +18,7 @@ public final class KPClothConfigScreen {
     private KPClothConfigScreen() {}
 
     public static Screen build(Screen parent) {
+        IKPConfig config = KPConfig.getInstance();
         ConfigBuilder builder = ConfigBuilder.create()
             .setParentScreen(parent)
             .setTitle(Component.literal("Kinetic Planner Config"));
@@ -25,66 +28,66 @@ public final class KPClothConfigScreen {
         // [overlay]
         ConfigCategory overlay = builder.getOrCreateCategory(Component.literal("Overlay"));
         overlay.addEntry(entryBuilder.startBooleanToggle(
-                Component.literal("Enabled"), KPConfig.OVERLAY_ENABLED.get())
+                Component.literal("Enabled"), config.isOverlayEnabled())
             .setDefaultValue(true)
-            .setSaveConsumer(KPConfig.OVERLAY_ENABLED::set)
+            .setSaveConsumer(config::setOverlayEnabled)
             .build());
 
         // [layers]
         ConfigCategory layers = builder.getOrCreateCategory(Component.literal("Layers"));
         layers.addEntry(entryBuilder.startBooleanToggle(
-                Component.literal("Tracks"), KPConfig.LAYERS_TRACKS.get())
+                Component.literal("Tracks"), config.isLayerTracksVisible())
             .setDefaultValue(true)
-            .setSaveConsumer(KPConfig.LAYERS_TRACKS::set)
+            .setSaveConsumer(config::setLayerTracksVisible)
             .build());
         layers.addEntry(entryBuilder.startBooleanToggle(
-                Component.literal("Nodes"), KPConfig.LAYERS_NODES.get())
+                Component.literal("Nodes"), config.isLayerNodesVisible())
             .setDefaultValue(true)
-            .setSaveConsumer(KPConfig.LAYERS_NODES::set)
+            .setSaveConsumer(config::setLayerNodesVisible)
             .build());
         layers.addEntry(entryBuilder.startBooleanToggle(
-                Component.literal("Edge Points"), KPConfig.LAYERS_EDGE_POINTS.get())
+                Component.literal("Edge Points"), config.isLayerEdgePointsVisible())
             .setDefaultValue(true)
-            .setSaveConsumer(KPConfig.LAYERS_EDGE_POINTS::set)
+            .setSaveConsumer(config::setLayerEdgePointsVisible)
             .build());
 
         // [theme]
         ConfigCategory theme = builder.getOrCreateCategory(Component.literal("Theme"));
         theme.addEntry(entryBuilder.startStrField(
-                Component.literal("Active Theme"), KPConfig.THEME_ACTIVE.get())
+                Component.literal("Active Theme"), config.getActiveThemeName())
             .setDefaultValue("default")
-            .setSaveConsumer(KPConfig.THEME_ACTIVE::set)
+            .setSaveConsumer(config::setActiveThemeName)
             .build());
         theme.addEntry(entryBuilder.startBooleanToggle(
                 Component.literal("Constant Screen Line Width"),
-                KPConfig.THEME_CONSTANT_SCREEN_LINE_WIDTH.get())
+                config.isConstantScreenLineWidth())
             .setDefaultValue(true)
-            .setSaveConsumer(KPConfig.THEME_CONSTANT_SCREEN_LINE_WIDTH::set)
+            .setSaveConsumer(config::setConstantScreenLineWidth)
             .build());
         theme.addEntry(entryBuilder.startDoubleField(
                 Component.literal("Fixed Line Width (px)"),
-                KPConfig.THEME_FIXED_SCREEN_LINE_WIDTH_PX.get())
+                config.getFixedScreenLineWidthPx())
             .setDefaultValue(2.0)
             .setMin(0.1).setMax(20.0)
-            .setSaveConsumer(KPConfig.THEME_FIXED_SCREEN_LINE_WIDTH_PX::set)
+            .setSaveConsumer(config::setFixedScreenLineWidthPx)
             .build());
 
         // [label]
         ConfigCategory label = builder.getOrCreateCategory(Component.literal("Labels"));
         label.addEntry(entryBuilder.startBooleanToggle(
-                Component.literal("Show Node Labels"), KPConfig.LABEL_SHOW_NODE_LABELS.get())
+                Component.literal("Show Node Labels"), config.isShowNodeLabels())
             .setDefaultValue(false)
-            .setSaveConsumer(KPConfig.LABEL_SHOW_NODE_LABELS::set)
+            .setSaveConsumer(config::setShowNodeLabels)
             .build());
         label.addEntry(entryBuilder.startBooleanToggle(
-                Component.literal("Show Station Names"), KPConfig.LABEL_SHOW_STATION_NAMES.get())
+                Component.literal("Show Station Names"), config.isShowStationNames())
             .setDefaultValue(true)
-            .setSaveConsumer(KPConfig.LABEL_SHOW_STATION_NAMES::set)
+            .setSaveConsumer(config::setShowStationNames)
             .build());
 
         builder.setSavingRunnable(() -> {
             KineticPlannerMod.LOGGER.info("KP config saved, reloading theme");
-            WorldTreeReadOverlay.setTheme(KPConfig.toTheme());
+            WorldTreeReadOverlay.setTheme(config.toTheme());
         });
 
         return builder.build();

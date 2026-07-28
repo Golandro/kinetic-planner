@@ -1,4 +1,4 @@
-package net.jsmua.kinetic_planner.editor;
+package net.jsmua.kinetic_planner.gui.editor;
 
 import com.lowdragmc.lowdraglib2.editor.ui.Editor;
 import net.jsmua.kinetic_planner.gui.KpRibbonBar;

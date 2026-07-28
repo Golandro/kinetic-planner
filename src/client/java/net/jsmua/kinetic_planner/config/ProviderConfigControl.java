@@ -13,12 +13,14 @@ import java.util.Optional;
 /**
  * Provider 配置状态管理器。
  *
- * <p>封装 per-provider 配置的 CRUD 操作，命令层（{@link KPCommands}）通过此类操作配置，
+ * <p>封装 per-provider 配置的 CRUD 操作，命令层（{@link net.jsmua.kinetic_planner.command.KPCommands}）通过此类操作配置，
  * 不直接访问 {@link KPConfig} 或 {@link net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay}。
  *
  * <p>修改配置后自动通过 {@link OverlayControl#reload()} 重建 Theme 并应用到渲染层。
  */
 public final class ProviderConfigControl {
+
+    private static final IKPConfig config = KPConfig.getInstance();
 
     private ProviderConfigControl() {}
 
@@ -39,16 +41,16 @@ public final class ProviderConfigControl {
         List<String> lines = new ArrayList<>();
         lines.add("[KP] Map Providers:");
         for (MapOverlayProvider p : MapOverlayDispatcher.registeredProviders()) {
-            ProviderConfig config = KPConfig.getProviderConfig(p.modId());
-            String status = config != null && config.enabled() ? "ON" : "OFF";
+            ProviderConfig pc = config.getProviderConfig(p.modId());
+            String status = pc != null && pc.enabled() ? "ON" : "OFF";
             String activeMark = active.map(a -> a.equals(p.modId()) ? " *" : "  ").orElse("  ");
             String fusedMark = MapOverlayDispatcher.isCircuitBroken(p.modId()) ? " [FUSED]" : "";
             lines.add(String.format("%s %-15s [%s] pri=%d lineWidth=%.2f alpha=%.2f dashed=%s%s",
                 activeMark, p.modId(), status,
-                config != null ? config.priority() : 0,
-                config != null ? config.lineWidthScale() : 1.0f,
-                config != null ? config.alphaScale() : 1.0f,
-                config != null && config.dashed() ? "true" : "false",
+                pc != null ? pc.priority() : 0,
+                pc != null ? pc.lineWidthScale() : 1.0f,
+                pc != null ? pc.alphaScale() : 1.0f,
+                pc != null && pc.dashed() ? "true" : "false",
                 fusedMark));
         }
         return String.join("\n", lines);
@@ -62,7 +64,7 @@ public final class ProviderConfigControl {
      */
     public static boolean enable(String modId) {
         if (!isKnownModId(modId)) return false;
-        boolean ok = KPConfig.setProviderEnabled(modId, true);
+        boolean ok = config.setProviderEnabled(modId, true);
         if (ok) OverlayControl.reload();
         return ok;
     }
@@ -75,7 +77,7 @@ public final class ProviderConfigControl {
      */
     public static boolean disable(String modId) {
         if (!isKnownModId(modId)) return false;
-        boolean ok = KPConfig.setProviderEnabled(modId, false);
+        boolean ok = config.setProviderEnabled(modId, false);
         if (ok) OverlayControl.reload();
         return ok;
     }
@@ -90,7 +92,7 @@ public final class ProviderConfigControl {
      */
     public static boolean setParam(String modId, String param, String value) {
         if (!isKnownModId(modId)) return false;
-        boolean ok = KPConfig.setProviderParam(modId, param, value);
+        boolean ok = config.setProviderParam(modId, param, value);
         if (ok) OverlayControl.reload();
         return ok;
     }
@@ -103,21 +105,21 @@ public final class ProviderConfigControl {
      * @return 格式化字符串；未知 modId 返回错误提示
      */
     public static String get(String modId, String param) {
-        ProviderConfig config = KPConfig.getProviderConfig(modId);
-        if (config == null) {
+        ProviderConfig pc = config.getProviderConfig(modId);
+        if (pc == null) {
             return "[KP] Unknown provider: " + modId;
         }
         if (param == null || param.isEmpty()) {
             return String.format("[KP] %s | enabled=%s | priority=%d | lineWidth=%.2f | alpha=%.2f | dashed=%s",
-                modId, config.enabled(), config.priority(),
-                config.lineWidthScale(), config.alphaScale(), config.dashed());
+                modId, pc.enabled(), pc.priority(),
+                pc.lineWidthScale(), pc.alphaScale(), pc.dashed());
         }
         return switch (param) {
-            case "enabled" -> "[KP] " + modId + ".enabled = " + config.enabled();
-            case "priority" -> "[KP] " + modId + ".priority = " + config.priority();
-            case "lineWidthScale" -> "[KP] " + modId + ".lineWidthScale = " + config.lineWidthScale();
-            case "alphaScale" -> "[KP] " + modId + ".alphaScale = " + config.alphaScale();
-            case "dashed" -> "[KP] " + modId + ".dashed = " + config.dashed();
+            case "enabled" -> "[KP] " + modId + ".enabled = " + pc.enabled();
+            case "priority" -> "[KP] " + modId + ".priority = " + pc.priority();
+            case "lineWidthScale" -> "[KP] " + modId + ".lineWidthScale = " + pc.lineWidthScale();
+            case "alphaScale" -> "[KP] " + modId + ".alphaScale = " + pc.alphaScale();
+            case "dashed" -> "[KP] " + modId + ".dashed = " + pc.dashed();
             default -> "[KP] Unknown param: " + param + " (valid: enabled/priority/lineWidthScale/alphaScale/dashed)";
         };
     }
@@ -133,11 +135,11 @@ public final class ProviderConfigControl {
     public static boolean reset(String modId) {
         ProviderConfig def = ProviderConfigRegistry.getDefault(modId);
         if (def == null) return false;
-        boolean ok = KPConfig.setProviderEnabled(modId, def.enabled())
-            && KPConfig.setProviderParam(modId, "priority", String.valueOf(def.priority()))
-            && KPConfig.setProviderParam(modId, "lineWidthScale", String.valueOf(def.lineWidthScale()))
-            && KPConfig.setProviderParam(modId, "alphaScale", String.valueOf(def.alphaScale()))
-            && KPConfig.setProviderParam(modId, "dashed", String.valueOf(def.dashed()));
+        boolean ok = config.setProviderEnabled(modId, def.enabled())
+            && config.setProviderParam(modId, "priority", String.valueOf(def.priority()))
+            && config.setProviderParam(modId, "lineWidthScale", String.valueOf(def.lineWidthScale()))
+            && config.setProviderParam(modId, "alphaScale", String.valueOf(def.alphaScale()))
+            && config.setProviderParam(modId, "dashed", String.valueOf(def.dashed()));
         if (ok) OverlayControl.reload();
         return ok;
     }
