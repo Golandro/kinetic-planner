@@ -71,10 +71,10 @@ public class XaeroMapGearButtonMixin {
     private void kp$renderConfigPanel(GuiGraphics gg, int mouseX, int mouseY,
                                        float partialTicks, CallbackInfo ci) {
         if (!OverlayControl.isEnabled()) return;
+        // 编辑模式跳过：齿轮按钮由 KpRibbonBar 替代，配置面板由 Ribbon 设置抽屉承载
+        if (KpClientState.isEditMode()) return;
         kp$ensureInit();
-        // 齿轮按钮始终渲染
         kp$gearButton.render(gg, mouseX, mouseY);
-        // 配置面板仅在可见时渲染
         if (KpClientState.isConfigPanelVisible()) {
             kp$forwarder.render(gg, mouseX, mouseY, partialTicks);
         }
@@ -84,13 +84,13 @@ public class XaeroMapGearButtonMixin {
     private void kp$handleMouseClick(double mouseX, double mouseY, int button,
                                       CallbackInfoReturnable<Boolean> cir) {
         if (!OverlayControl.isEnabled()) return;
+        // 编辑模式跳过：事件由 KpEditorScreen 拦截路由
+        if (KpClientState.isEditMode()) return;
         kp$ensureInit();
-        // 先检查齿轮按钮
         if (kp$gearButton.mouseClicked(mouseX, mouseY, button)) {
             cir.setReturnValue(true);
             return;
         }
-        // 再检查配置面板（仅在可见时）
         if (KpClientState.isConfigPanelVisible()
             && kp$forwarder.mouseClicked(mouseX, mouseY, button)) {
             cir.setReturnValue(true);
