@@ -90,10 +90,17 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
     /**
      * 地图层渲染（Phase 3 Task 3.3 实现）。
      *
-     * <p>方案 B：手动调用 GuiMap 内部瓦片/路标渲染方法。
+     * <p><b>方案 B'</b>（Task 3.1 研究结论）：GuiMap.render() 瓦片渲染完全内联，
+     * 无法通过 @Invoker 单独调用。改为整体委托 {@code guiMap.render()}，
+     * 由 {@link net.jsmua.kinetic_planner.mixin.XaeroUiSuppressMixin} 的
+     * {@code @WrapOperation} 选择性抑制 UI 元素（雷达/HUD/按钮/右键菜单/Tooltip/消息框），
+     * 保留瓦片底图与玩家箭头自然渲染。
+     *
+     * <p>KpEditorScreen 是活跃 Screen 时，MC 渲染循环调用本类 {@link #render}，
+     * 不再自动调用 guiMap.render()。因此必须在此显式委托，否则编辑模式无地图底图。
      */
     private void renderMapLayer(GuiGraphics gg, int mouseX, int mouseY, float partialTicks) {
-        // Phase 3 实现
+        guiMap.render(gg, mouseX, mouseY, partialTicks);
     }
 
     @Override
