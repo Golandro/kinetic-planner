@@ -18,6 +18,7 @@ class KpClientStateTest {
     void resetState() {
         // 静态状态需在每条用例前重置，避免用例间污染
         KpClientState.setConfigPanelVisible(false);
+        KpClientState.setEditMode(false);
     }
 
     @Test
@@ -41,5 +42,31 @@ class KpClientStateTest {
         assertTrue(KpClientState.isConfigPanelVisible());
         KpClientState.setConfigPanelVisible(false);
         assertFalse(KpClientState.isConfigPanelVisible());
+    }
+
+    @Test
+    void editModeDefaultsToFalse() {
+        assertFalse(KpClientState.isEditMode());
+    }
+
+    @Test
+    void setEditModeTrueUpdatesState() {
+        KpClientState.setEditMode(true);
+        assertTrue(KpClientState.isEditMode());
+        KpClientState.setEditMode(false);
+        assertFalse(KpClientState.isEditMode());
+    }
+
+    @Test
+    void editModeIndependentOfConfigPanelVisible() {
+        KpClientState.setEditMode(true);
+        KpClientState.setConfigPanelVisible(false);
+        assertTrue(KpClientState.isEditMode());
+        assertFalse(KpClientState.isConfigPanelVisible());
+
+        KpClientState.setEditMode(false);
+        KpClientState.setConfigPanelVisible(true);
+        assertFalse(KpClientState.isEditMode());
+        assertTrue(KpClientState.isConfigPanelVisible());
     }
 }
