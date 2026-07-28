@@ -1,6 +1,7 @@
 package net.jsmua.kinetic_planner.cadengine;
 
 import net.jsmua.kinetic_planner.KineticPlannerMod;
+import net.jsmua.kinetic_planner.instrument.GeometryCache;
 import net.jsmua.kinetic_planner.projection.WorldScreenTransform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -13,6 +14,7 @@ import org.joml.Matrix4f;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Blaze3D 矢量渲染封装（Phase 0b 核心）。
@@ -241,5 +243,66 @@ public final class CADRenderEngine {
         float b = (color & 0xFF) / 255.0f;
         float a = ((color >> 24) & 0xFF) / 255.0f;
         return new float[]{r, g, b, a};
+    }
+
+    // === 交互区域模块（spec §6.12）===
+
+    /**
+     * 命中检测：判断屏幕坐标点是否命中节点或边。
+     *
+     * @param screenX   屏幕 X
+     * @param screenY   屏幕 Y
+     * @param transform 世界-屏幕变换（可能为 null，按屏幕空间解释）
+     * @param geometries 轨道几何集合
+     * @return 命中结果，未命中返回 null
+     */
+    public HitResult hitTest(double screenX, double screenY,
+                             WorldScreenTransform transform,
+                             Iterable<GeometryCache.GraphGeometry> geometries) {
+        double threshold = 5.0;  // 5px 命中阈值
+        for (var geom : geometries) {
+            // 节点优先
+            for (int i = 0; i < geom.nodes().size(); i++) {
+                var node = geom.nodes().get(i);
+                double sx = transform != null ? transform.worldToScreen(node.x, node.z).x : node.x;
+                double sy = transform != null ? transform.worldToScreen(node.x, node.z).y : node.z;
+                if (Math.abs(sx - screenX) <= threshold && Math.abs(sy - screenY) <= threshold) {
+                    return new HitResult(HitResult.Type.NODE, geom.graphId(), i);
+                }
+            }
+            // 边检测
+            for (int i = 0; i < geom.edges().size(); i++) {
+                var edge = geom.edges().get(i);
+                double sx1 = transform != null ? transform.worldToScreen(edge.p1().x, edge.p1().z).x : edge.p1().x;
+                double sy1 = transform != null ? transform.worldToScreen(edge.p1().x, edge.p1().z).y : edge.p1().z;
+                double sx2 = transform != null ? transform.worldToScreen(edge.p2().x, edge.p2().z).x : edge.p2().x;
+                double sy2 = transform != null ? transform.worldToScreen(edge.p2().x, edge.p2().z).y : edge.p2().z;
+                if (distanceToSegment(screenX, screenY, sx1, sy1, sx2, sy2) <= threshold) {
+                    return new HitResult(HitResult.Type.EDGE, geom.graphId(), i);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 命中检测结果。
+     *
+     * @param type     命中类型（NODE/EDGE）
+     * @param graphId  所属 TrackGraph UUID
+     * @param index    在 nodes/edges 列表中的索引
+     */
+    public record HitResult(Type type, UUID graphId, int index) {
+        public enum Type { NODE, EDGE }
+    }
+
+    private static double distanceToSegment(double px, double py,
+                                              double x1, double y1, double x2, double y2) {
+        double dx = x2 - x1, dy = y2 - y1;
+        double lenSq = dx * dx + dy * dy;
+        if (lenSq == 0) return Math.hypot(px - x1, py - y1);
+        double t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lenSq));
+        double cx = x1 + t * dx, cy = y1 + t * dy;
+        return Math.hypot(px - cx, py - cy);
     }
 }
