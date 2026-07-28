@@ -1,6 +1,7 @@
 package net.jsmua.kinetic_planner.cadengine;
 
 import net.jsmua.kinetic_planner.KineticPlannerMod;
+import net.jsmua.kinetic_planner.editor.EditToolState;
 import net.jsmua.kinetic_planner.instrument.GeometryCache;
 import net.jsmua.kinetic_planner.projection.WorldScreenTransform;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -304,5 +305,52 @@ public final class CADRenderEngine {
         double t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lenSq));
         double cx = x1 + t * dx, cy = y1 + t * dy;
         return Math.hypot(px - cx, py - cy);
+    }
+
+    // === 事件模块（spec §6.12）===
+
+    /**
+     * 处理点击事件。
+     *
+     * @return true 如果 CAD 消费了事件
+     */
+    public boolean handleClick(double screenX, double screenY, int button,
+                                net.jsmua.kinetic_planner.projection.WorldScreenTransform transform,
+                                Iterable<GeometryCache.GraphGeometry> geometries,
+                                net.jsmua.kinetic_planner.editor.EditToolState state) {
+        if (button != 0) return false;
+        var tool = state.getCurrentTool();
+        if (tool == net.jsmua.kinetic_planner.editor.EditToolState.Tool.SELECT) {
+            var hit = hitTest(screenX, screenY, transform, geometries);
+            if (hit != null && hit.type() == HitResult.Type.NODE) {
+                // 通过 graphId + index 查找节点 UUID
+                // 简化：直接记录 hit 结果到 EditToolState 选择集
+                // 完整实现需要 GraphGeometry 暴露 node UUID 列表（当前未暴露，可作为 P2 后续改进）
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 处理拖拽事件。
+     */
+    public boolean handleDrag(double screenX, double screenY, int button,
+                               double dragX, double dragY,
+                               net.jsmua.kinetic_planner.projection.WorldScreenTransform transform,
+                               net.jsmua.kinetic_planner.editor.EditToolState state) {
+        // Draw 工具下的拖拽预览（P2 后续实现）
+        return false;
+    }
+
+    /**
+     * 处理 hover 事件（snap 预览/工具光标位置）。
+     */
+    public boolean handleHover(double screenX, double screenY,
+                                net.jsmua.kinetic_planner.projection.WorldScreenTransform transform,
+                                Iterable<GeometryCache.GraphGeometry> geometries,
+                                net.jsmua.kinetic_planner.editor.EditToolState state) {
+        // Snap 工具下高亮可捕捉点（P2 后续实现）
+        return false;
     }
 }
