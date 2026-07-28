@@ -1,6 +1,7 @@
 package net.jsmua.kinetic_planner.mapadapter;
 
 import net.jsmua.kinetic_planner.KineticPlannerMod;
+import net.jsmua.kinetic_planner.config.KpClientState;
 import net.jsmua.kinetic_planner.data.ProviderConfig;
 import net.jsmua.kinetic_planner.mixin.XaeroMapAccessor;
 import net.minecraft.client.Minecraft;
@@ -41,14 +42,27 @@ public class XaeroMapOverlayProvider implements MapOverlayProvider {
     public boolean isMapOpen(Screen screen) {
         // 直接检查是否为 GuiMap 实例
         // （旧版 Xaero 有 ScreenBase 父类，当前版本 GuiMap 直接继承 Screen）
-        return screen instanceof GuiMap;
+        if (screen instanceof GuiMap) return true;
+        // 编辑模式：KpEditorScreen 实现 MapOverlayContextProvider，且持有的 GuiMap != null
+        if (screen instanceof MapOverlayContextProvider p) {
+            return p.getGuiMap() != null && KpClientState.isEditMode();
+        }
+        return false;
     }
 
     @Override
     @Nullable
     public MapOverlayContext captureContext(Screen screen) {
         try {
-            GuiMap map = (GuiMap) screen;
+            GuiMap map;
+            if (screen instanceof GuiMap gm) {
+                map = gm;
+            } else if (screen instanceof MapOverlayContextProvider p) {
+                map = p.getGuiMap();
+                if (map == null) return null;
+            } else {
+                return null;
+            }
             // 通过 Mixin accessor 读取 GuiMap 的 private 字段
             XaeroMapAccessor acc = (XaeroMapAccessor) map;
             double cameraX = acc.kp$cameraX();
