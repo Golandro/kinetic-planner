@@ -1,6 +1,7 @@
 package net.jsmua.kinetic_planner.editor;
 
 import com.lowdragmc.lowdraglib2.editor.ui.Editor;
+import net.jsmua.kinetic_planner.gui.KpRibbonBar;
 import net.jsmua.kinetic_planner.gui.MapPlaceholderView;
 import net.jsmua.kinetic_planner.gui.ToolPanelView;
 
@@ -41,6 +42,8 @@ public class KpMapEditor extends Editor {
     protected void initMenus() {
         // 不调用 super.initMenus() -- 不添加 FileMenu/ViewMenu
         menuContainer.clearAllChildren();
+        // 替换为 KpRibbonBar
+        menuContainer.addChild(new KpRibbonBar());
         // 调整 top 高度（Ribbon 需 ~24px）
         top.getLayout().height(24);
     }
