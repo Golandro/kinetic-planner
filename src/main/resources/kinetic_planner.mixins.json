@@ -12,7 +12,8 @@
         "CreateTrackVisualizerHiderMixin",
         "CreateTrainMapMixin",
         "CreateTrainMapOverlayMixin",
-        "XaeroMapGearButtonMixin"
+        "XaeroMapGearButtonMixin",
+        "XaeroUiSuppressMixin"
     ],
     "injectors": {
         "defaultRequire": 0
