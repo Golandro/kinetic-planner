@@ -367,6 +367,24 @@ public final class WorldTreeReadOverlay {
     }
 
     /**
+     * 返回当前缓存的 {@link WorldScreenTransform}（供 {@link EditLayerRenderer} 使用）。
+     *
+     * @return 当前变换；地图未打开时为 null
+     */
+    public static WorldScreenTransform getTransform() {
+        return lastTransform;
+    }
+
+    /**
+     * 返回当前 {@link GeometryCache}（供 {@link EditLayerRenderer} 使用）。
+     *
+     * @return 几何缓存实例
+     */
+    public static GeometryCache getGeometryCache() {
+        return geometryCache;
+    }
+
+    /**
      * 渲染标签（MC Font.draw，屏幕坐标）。
      */
     private static void renderLabels(GuiGraphics guiGraphics) {
