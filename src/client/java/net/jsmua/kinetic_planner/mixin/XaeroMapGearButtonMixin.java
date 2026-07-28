@@ -2,11 +2,14 @@ package net.jsmua.kinetic_planner.mixin;
 
 import net.jsmua.kinetic_planner.config.KpClientState;
 import net.jsmua.kinetic_planner.config.KpConfigUIFactory;
+import net.jsmua.kinetic_planner.config.KpEditButton;
 import net.jsmua.kinetic_planner.config.KpGearButton;
 import net.jsmua.kinetic_planner.config.KpUIEventForwarder;
 import net.jsmua.kinetic_planner.config.OverlayControl;
+import net.jsmua.kinetic_planner.editor.KpEditorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -41,6 +44,9 @@ public class XaeroMapGearButtonMixin {
     @Unique
     private static KpGearButton kp$gearButton;
 
+    @Unique
+    private static KpEditButton kp$editButton;
+
     /**
      * 初始化 UI 组件（懒加载）。
      *
@@ -57,14 +63,25 @@ public class XaeroMapGearButtonMixin {
             modularUI.init(screenW, screenH);
             kp$forwarder = new KpUIEventForwarder(modularUI);
         }
-        // 屏幕尺寸变化时 re-init
-        kp$forwarder.checkResize(screenW, screenH);
 
         if (kp$gearButton == null) {
-            // 齿轮按钮位于右上角 (screenW - 20, 4)，16x16
-            kp$gearButton = new KpGearButton(screenW - 20, 4,
+            // 齿轮按钮位于左上角 Xaero 设置按钮下方 (24, 30)，16x16
+            kp$gearButton = new KpGearButton(24, 30,
                 () -> KpClientState.toggleConfigPanel());
         }
+        if (kp$editButton == null) {
+            // 编辑按钮位于齿轮按钮左侧 (4, 30)，16x16，横向并排
+            kp$editButton = new KpEditButton(4, 30,
+                () -> {
+                    Screen screen = Minecraft.getInstance().screen;
+                    if (screen instanceof GuiMap guiMap) {
+                        var editorScreen = KpEditorScreen.create(guiMap);
+                        Minecraft.getInstance().setScreen(editorScreen);
+                    }
+                });
+        }
+        // 屏幕尺寸变化时 re-init
+        kp$forwarder.checkResize(screenW, screenH);
     }
 
     @Inject(method = "render", at = @At("RETURN"))
@@ -74,6 +91,7 @@ public class XaeroMapGearButtonMixin {
         // 编辑模式跳过：齿轮按钮由 KpRibbonBar 替代，配置面板由 Ribbon 设置抽屉承载
         if (KpClientState.isEditMode()) return;
         kp$ensureInit();
+        kp$editButton.render(gg, mouseX, mouseY);
         kp$gearButton.render(gg, mouseX, mouseY);
         if (KpClientState.isConfigPanelVisible()) {
             kp$forwarder.render(gg, mouseX, mouseY, partialTicks);
@@ -87,6 +105,10 @@ public class XaeroMapGearButtonMixin {
         // 编辑模式跳过：事件由 KpEditorScreen 拦截路由
         if (KpClientState.isEditMode()) return;
         kp$ensureInit();
+        if (kp$editButton.mouseClicked(mouseX, mouseY, button)) {
+            cir.setReturnValue(true);
+            return;
+        }
         if (kp$gearButton.mouseClicked(mouseX, mouseY, button)) {
             cir.setReturnValue(true);
             return;
