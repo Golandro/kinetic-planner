@@ -3,8 +3,10 @@ package net.jsmua.kinetic_planner.editor;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import net.jsmua.kinetic_planner.KineticPlannerMod;
+import net.jsmua.kinetic_planner.cadengine.CADRenderEngine;
 import net.jsmua.kinetic_planner.config.KpClientState;
 import net.jsmua.kinetic_planner.config.KpUIEventForwarder;
+import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayContextProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -15,12 +17,13 @@ import xaero.map.gui.GuiMap;
 import javax.annotation.Nullable;
 
 /**
- * 编辑模式 Screen 壳（spec §6.2）。
+ * 编辑模式 Screen 壳（spec §6.2 + §4.2）。
  *
  * <p>持有从观看模式传入的 {@link GuiMap} 实例，承载 {@link KpMapEditor}（LDLib2 Editor 子类）。
  * 三层渲染：① 地图层 → ② CAD 编辑层（Phase 6）→ ③ Editor UI 层。
  *
- * <p>事件路由：① forwarder 转发到 UI 树 → ② 未消费时按工具模式路由到 guiMap 或 CAD（Phase 5）。
+ * <p>事件路由（spec §4.2）：① forwarder 转发到 UI 树 → ② 未消费时按工具模式路由到
+ * {@link GuiMap}（{@link EditToolState.Tool#NAVIGATION}）或 {@link CADRenderEngine}（Phase 6）。
  *
  * <p>closeButton 链路：Editor.exit() → askToSaveProject() 跳过对话框（currentProject == null）
  * → ModularUI.getScreen().onClose() → 本类 onClose() → 切回 GuiMap。
@@ -82,7 +85,7 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
         // ① 地图层渲染（Phase 3 实现）
         renderMapLayer(gg, mouseX, mouseY, partialTicks);
         // ② CAD 编辑层渲染（Phase 6 实现）
-        // EditLayerRenderer.render(gg, guiMap, editToolState);
+        // EditLayerRenderer.render(gg, guiMap, EditToolState.getInstance());
         // ③ Editor UI 层渲染
         eventForwarder.render(gg, mouseX, mouseY, partialTicks);
     }
@@ -101,6 +104,121 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
      */
     private void renderMapLayer(GuiGraphics gg, int mouseX, int mouseY, float partialTicks) {
         guiMap.render(gg, mouseX, mouseY, partialTicks);
+    }
+
+    // === 事件路由（spec §4.2）===
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // ① Editor UI 优先
+        if (eventForwarder.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        // ② 未消费 -> 按工具模式路由
+        var tool = EditToolState.getInstance().getCurrentTool();
+        if (tool == EditToolState.Tool.NAVIGATION) {
+            return guiMap.mouseClicked(mouseX, mouseY, button);
+        }
+        // 其他工具 -> CADRenderEngine 命中检测（Phase 6）
+        return false;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (eventForwarder.mouseReleased(mouseX, mouseY, button)) {
+            return true;
+        }
+        var tool = EditToolState.getInstance().getCurrentTool();
+        if (tool == EditToolState.Tool.NAVIGATION) {
+            return guiMap.mouseReleased(mouseX, mouseY, button);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button,
+                                double dragX, double dragY) {
+        if (eventForwarder.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+            return true;
+        }
+        var tool = EditToolState.getInstance().getCurrentTool();
+        if (tool == EditToolState.Tool.NAVIGATION) {
+            return guiMap.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        }
+        // Draw 工具 -> CADRenderEngine.handleDrag (Phase 6)
+        return false;
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (eventForwarder.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
+            return true;
+        }
+        var tool = EditToolState.getInstance().getCurrentTool();
+        if (tool == EditToolState.Tool.NAVIGATION) {
+            return guiMap.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        }
+        return false;
+    }
+
+    @Override
+    public void mouseMoved(double mouseX, double mouseY) {
+        eventForwarder.mouseMoved(mouseX, mouseY);
+        var tool = EditToolState.getInstance().getCurrentTool();
+        if (tool == EditToolState.Tool.NAVIGATION) {
+            guiMap.mouseMoved(mouseX, mouseY);
+        }
+        // Draw/Snap -> CADRenderEngine.handleHover (Phase 6)
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (eventForwarder.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        // 工具快捷键（V=Select, L=Line, B=Bezier, P=Pan, S=Snap）
+        var state = EditToolState.getInstance();
+        switch (keyCode) {
+            case 259 -> { // ESC
+                onClose();
+                return true;
+            }
+            // MC key codes: V=86, L=76, B=66, P=80, S=83, N=78
+            case 86 -> { state.setCurrentTool(EditToolState.Tool.SELECT); return true; }
+            case 76 -> { state.setCurrentTool(EditToolState.Tool.DRAW_LINE); return true; }
+            case 66 -> { state.setCurrentTool(EditToolState.Tool.DRAW_BEZIER); return true; }
+            case 80 -> { state.setCurrentTool(EditToolState.Tool.NAVIGATION); return true; }
+            case 83 -> { state.setCurrentTool(EditToolState.Tool.SNAP); return true; }
+        }
+        var tool = state.getCurrentTool();
+        if (tool == EditToolState.Tool.NAVIGATION) {
+            return guiMap.keyPressed(keyCode, scanCode, modifiers);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        if (eventForwarder.keyReleased(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        var tool = EditToolState.getInstance().getCurrentTool();
+        if (tool == EditToolState.Tool.NAVIGATION) {
+            return guiMap.keyReleased(keyCode, scanCode, modifiers);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (eventForwarder.charTyped(codePoint, modifiers)) {
+            return true;
+        }
+        var tool = EditToolState.getInstance().getCurrentTool();
+        if (tool == EditToolState.Tool.NAVIGATION) {
+            return guiMap.charTyped(codePoint, modifiers);
+        }
+        return false;
     }
 
     @Override
