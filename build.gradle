@@ -246,6 +246,13 @@ dependencies {
     testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
     testImplementation 'org.joml:joml:1.10.5'
     testImplementation 'com.google.code.gson:gson:2.10.1'
+
+    // MapOverlayContextProvider 引用 xaero.map.gui.GuiMap（其父类 xaero.lib.client.gui.ScreenBase
+    // 来自 xaerolib），测试反射加载接口时需要这两个 jar 在 test 运行期可见。
+    // xaerolib 仅 compileOnly、xaeros-world-map 仅 localImplementation（未传递到 testRuntimeClasspath），
+    // 故显式声明 testRuntimeOnly。
+    testRuntimeOnly("xaero.lib:xaerolib-neoforge-1.21:1.0.42")
+    testRuntimeOnly("curse.maven:xaeros-world-map-317780:7401095")
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
