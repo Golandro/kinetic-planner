@@ -7,7 +7,7 @@ provider:
 ---
 # 包结构
 
-> 本文件由 AGENTS.md 拆分而来，提供完整的包结构参考。最后更新：2026-07-27。
+> 本文件由 AGENTS.md 拆分而来，提供完整的包结构参考。最后更新：2026-07-29。
 
 ## 三 sourceSet 架构
 
@@ -31,12 +31,16 @@ net.jsmua.kinetic_planner
 │   ├── RailwayDataAccess.java          生产实现（client）
 │   ├── EdgeGeometry.java               边几何描述符（common）
 │   ├── ProviderConfig.java             provider 配置 record（common）
-│   └── ProviderConfigRegistry.java     provider 默认配置注册表（common）
+│   ├── ProviderConfigBinding.java      provider 配置读写策略接口（common）
+│   └── ProviderConfigRegistry.java     provider 默认配置注册表（common，内部用 KPRegistry）
 ├── projection/                         投影变换层（common，纯数学）
 │   ├── Vec2d.java
 │   ├── CameraParams.java
 │   ├── WorldRect.java
 │   └── WorldScreenTransform.java
+├── registry/                           通用注册表框架（common，纯 JVM）
+│   ├── KPId.java                       模组内部标识符 record（namespace:path）
+│   └── KPRegistry.java                 带冻结生命周期的泛型注册表
 ├── cadengine/                          渲染引擎 + 主题
 │   ├── Theme.java                      主题数据 record（common）
 │   ├── ThemeSerializer.java            Gson JSON 序列化（common）
@@ -46,7 +50,8 @@ net.jsmua.kinetic_planner
 │   └── GLStateGuard.java               RenderSystem 状态管理（client）
 ├── config/                             配置中介层（main: IKPConfig + client: KPConfig/控制类）
 │   ├── IKPConfig.java                  配置中介接口（main，纯 Java 无 client 依赖）
-│   ├── KPConfig.java                   NeoForge ModConfigSpec TOML，implements IKPConfig
+│   ├── KPConfig.java                   NeoForge ModConfigSpec TOML，implements IKPConfig（内部用 BINDINGS map 替代 switch）
+│   ├── ModConfigSpecConfigBinding.java 通用 ProviderConfigBinding 实现（封装 ModConfigSpec value holder）
 │   ├── KpClientState.java              配置面板可见性 + 编辑模式全局状态
 │   ├── OverlayControl.java             叠加层状态管理（依赖 IKPConfig）
 │   ├── ProviderConfigControl.java      provider 配置 CRUD（依赖 IKPConfig）
@@ -79,7 +84,11 @@ net.jsmua.kinetic_planner
 ├── mapadapter/                         地图适配层（client）
 │   ├── MapOverlayProvider.java         接口（displayName/defaultConfig）
 │   ├── MapOverlayContext.java          上下文 record
-│   ├── MapOverlayDispatcher.java       分发 + 熔断 + priority 排序
+│   ├── MapOverlayDispatcher.java       分发 + 熔断 + priority 排序（initProviders 从工厂注册表懒初始化）
+│   ├── MapProviderFactory.java         provider 工厂接口（modId/displayName/defaultConfig/isAvailable/create）
+│   ├── MapProviderRegistry.java        客户端工厂注册表（基于 KPRegistry，client setup 冻结）
+│   ├── XaeroMapProviderFactory.java    Xaero 工厂实现
+│   ├── JourneyMapMapProviderFactory.java  JM 工厂实现
 │   ├── XaeroMapOverlayProvider.java    Xaero 实现
 │   ├── JourneyMapOverlayProvider.java  JM 实现（isMapOpen/captureContext）
 │   └── KineticPlannerJMPlugin.java     JM 客户端插件入口（@JourneyMapPlugin）
@@ -103,11 +112,11 @@ net.jsmua.kinetic_planner
 
 | sourceSet | Java 文件 | 说明 |
 |---|---|---|
-| main (common) | 17 | 纯 JVM，含 IKPConfig + 命令树定义 |
-| client | 36 | GUI/渲染/适配器/Mixin/命令处理器 |
+| main (common) | 20 | 纯 JVM，含 IKPConfig + 命令树定义 + registry 框架 |
+| client | 52 | GUI/渲染/适配器/Mixin/命令处理器 |
 | server | 0 | 占位（P1 编辑引擎填充） |
-| test | 16 | 60 个 @Test（2 个 @Disabled） |
-| **合计** | **69** | |
+| test | 27 | 134 个 @Test（15 个 @Disabled） |
+| **合计** | **99** | |
 
 ## Mixin 清单
 

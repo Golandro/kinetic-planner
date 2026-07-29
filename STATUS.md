@@ -1,8 +1,8 @@
 # Kinetic Planner 开发路线图与状态
 
-> **最后更新：** 2026-07-27
+> **最后更新：** 2026-07-29
 > **当前分支：** `1.21`
-> **当前状态：** Phase 0a + 0b + P0 重构 + P1.0（Phase A+B）+ P0.5 代码完成，60 个测试（2 个 @Disabled），待运行时验收（LDLib2 配置面板）
+> **当前状态：** Phase 0a + 0b + P0 重构 + P1.0（Phase A+B）+ P0.5 + Xaero 编辑器集成 + 注册表框架与 Provider 解耦 代码完成，134 个测试（15 个 @Disabled），待运行时验收（LDLib2 配置面板 + 编辑器）
 
 ---
 
@@ -169,7 +169,7 @@ Xaero 是当前唯一功能完整的地图适配器，其 Mixin 注入点（`Gui
 | `IRailwayDataAccess.snapshot()` | spec 备忘，接口待定义 | Phase 1/3（暂存树/版本控制） | 🟡 spec 4.2 已备忘 |
 | 主题命名空间 | 数据结构待改 `ns:name` | Phase 1（主题编辑器） | 🔲 待补 |
 | `EdgePointType` 渲染钩子 | 遍历 `TYPES.values()` 已保证兼容 | Phase 1（自定义图标） | ✅ spec 4.7 |
-| `MapOverlayProvider` 第二实现 | Dispatcher 已实现 priority 排序 + enabled 过滤 | Phase 0.5 | ✅ P1.0 已实现 |
+| `MapOverlayProvider` 第二实现 | Dispatcher 已实现 priority 排序 + enabled 过滤；工厂注册表（MapProviderRegistry）支持第三方扩展 | Phase 0.5 | ✅ P1.0 + 注册表框架已实现 |
 | 失败模式矩阵 | spec §8 已新增 | 全 Phase | ✅ spec §8 |
 | `IWorldEditAccess` 接口 | main 定义接口，client/server 实现 | Phase 1（编辑引擎） | 🔲 推迟到 P1 |
 | `dashed` 渲染 | ProviderConfig.dashed 字段已就位，CADRenderEngine 未应用 | Phase 1.1 | 🟡 字段就绪，渲染推迟 |
@@ -180,17 +180,45 @@ Xaero 是当前唯一功能完整的地图适配器，其 Mixin 注入点（`Gui
 
 | sourceSet | Java 文件 | 说明 |
 |---|---|---|
-| main (common) | 14 | 纯 JVM，不引用 client/blaze3d，可单测 |
-| client | 32 | GUI/渲染/适配器/Mixin/命令 |
+| main (common) | 20 | 纯 JVM，不引用 client/blaze3d，含 registry 框架，可单测 |
+| client | 52 | GUI/渲染/适配器/Mixin/命令处理器 |
 | server | 0 | 占位（P1 编辑引擎填充） |
-| test | 16 | 60 个 @Test（2 个 @Disabled） |
-| **合计** | **62** | |
+| test | 27 | 134 个 @Test（15 个 @Disabled） |
+| **合计** | **99** | |
 
 **Mixin（7 个）：** TrackGraphAccessor / XaeroMapAccessor / XaeroMapRenderHook / XaeroMapGearButtonMixin / CreateTrackVisualizerHiderMixin / CreateTrainMapMixin / CreateTrainMapOverlayMixin
 
 **命令节点（~22 个）：**
 - P0（14）：`/kp` + overlay{toggle,enable,disable,reload,status} + theme{list,set,reload,reset} + debug{stats,dump,layer-count,overlay-anchors}
 - P1.0（~8）：provider{list,enable,disable,set,get,get+param,reset} + overlay hide-create{toggle,set}
+
+### 2.7 注册表框架与 Provider 解耦
+
+> **Plan 文档：** `docs/superpowers/plans/2026-07-29-registry-framework-provider-decoupling.md`
+> **审计文档：** `docs/superpowers/specs/2026-07-29-registry-framework-provider-decoupling-audit.md`
+> **范围：** 通用注册表框架（KPRegistry/KPId）+ per-provider 配置策略接口（ProviderConfigBinding）+ 地图 provider 工厂注册表（MapProviderFactory/MapProviderRegistry）
+
+#### 交付物
+
+| 模块 | 内容 | sourceSet | 状态 |
+|---|---|---|---|
+| `registry/KPId` | 模组内部标识符 record（namespace:path） | main | ✅ 完成 |
+| `registry/KPRegistry` | 带冻结生命周期的泛型注册表 | main | ✅ 完成 |
+| `data/ProviderConfigBinding` | per-provider 配置读写策略接口 | main | ✅ 完成 |
+| `config/ModConfigSpecConfigBinding` | 通用 binding 实现（封装 ModConfigSpec value holder） | client | ✅ 完成 |
+| `KPConfig` 重构 | BINDINGS map 替代 4 处 switch + 3 个私有 helper（O1 优化） | client | ✅ 完成 |
+| `mapadapter/MapProviderFactory` | provider 工厂接口 | client | ✅ 完成 |
+| `mapadapter/MapProviderRegistry` | 客户端工厂注册表（基于 KPRegistry） | client | ✅ 完成 |
+| `XaeroMapProviderFactory` / `JourneyMapMapProviderFactory` | 内置工厂实现 | client | ✅ 完成 |
+| `MapOverlayDispatcher` 重构 | initProviders 懒初始化替代 static 块 + getRegisteredModIds（O3 优化） | client | ✅ 完成 |
+| `ProviderConfigRegistry` 迁移 | 内部存储迁移至 KPRegistry（O2 优化） | main | ✅ 完成 |
+
+**关键设计决策：**
+- **O1 优化**：`ModConfigSpecConfigBinding` 单类替代 per-provider binding 子类，消除代码重复
+- **O2 优化**：`ProviderConfigRegistry` 内部使用 `KPRegistry<ProviderConfig>`，统一注册表模式
+- **O3 优化**：`MapOverlayDispatcher.initProviders(List)` 包级私有测试接缝，无需 mock 静态注册表即可单测
+- 工厂注册表在 `FMLClientSetupEvent` 冻结；第三方模组在 client setup 阶段注册自己的工厂
+- `getRegisteredModIds()` 返回所有已注册工厂（含未安装模组），配置 UI 可配置未安装的 provider
 
 ---
 
@@ -206,8 +234,12 @@ Xaero 是当前唯一功能完整的地图适配器，其 Mixin 注入点（`Gui
 | P0 重构计划 | `docs/superpowers/plans/2026-07-23-kinetic-planner-p0-refactor-fix.md` | 5 个 Task：sourceSet 重构+命令迁移+OverlayControl/ThemeManager+14 命令 |
 | P1.0 实现计划 | `docs/superpowers/plans/2026-07-23-kinetic-planner-p1.0-provider-config.md` | per-provider 配置+hideCreateTrackMap+嵌入式 UI（Phase A/B） |
 | P0.5+PhaseB+P1.1 计划 | `docs/superpowers/plans/2026-07-25-kinetic-planner-p0.5-phaseb-p1.1.md` | JM 适配器+熔断器+嵌入式 UI（Xaero+JM 双路）+dashed 渲染（9 Task） |
+| Xaero 地图编辑器集成计划 | `docs/superpowers/plans/2026-07-28-xaero-map-editor-integration.md` | Xaero 全屏地图内编辑模式实现（Editor Screen/工具面板/Ribbon） |
+| 注册表框架与 Provider 解耦计划 | `docs/superpowers/plans/2026-07-29-registry-framework-provider-decoupling.md` | KPRegistry/KPId + ProviderConfigBinding + MapProviderFactory 工厂注册表（13 Task，含 O1-O3 优化） |
 | 配置面板扁平 GUI 设计 | `docs/superpowers/specs/2026-07-26-config-panel-flat-gui-design.md` | Phase B 实施规格：LDLib2 UI 树/控件/LSS 主题/事件转发/TDD 要求 |
 | LDLib2 API 审计 | `docs/superpowers/specs/2026-07-27-ldlib2-api-verification.md` | LDLib2 关键 API 签名验证（TabView/Toggle/Stylesheet/纹理类等） |
+| Xaero 地图编辑器集成设计 | `docs/superpowers/specs/2026-07-27-xaero-map-editor-integration-design.md` | Xaero 全屏地图内编辑模式设计（Screen 壳+工具面板+Ribbon 栏） |
+| 注册表框架与 Provider 解耦审计 | `docs/superpowers/specs/2026-07-29-registry-framework-provider-decoupling-audit.md` | KPRegistry/KPId/ProviderConfigBinding/MapProviderFactory 框架设计与 O1-O3 优化审计 |
 | 本路线图 | `STATUS.md` | 阶段规划、进度跟踪、兼容性、核实状态 |
 | 编码规范速查 | `docs/conventions.md` | MC 1.21.1 API 约定、Create 6.0.10 API 修正 |
 | JavaDoc 查询指南 | `docs/javadoc-guide.md` | 外部依赖 JavaDoc 查询方法 |
