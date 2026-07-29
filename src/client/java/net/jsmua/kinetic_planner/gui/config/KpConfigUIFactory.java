@@ -18,10 +18,7 @@ import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 import net.jsmua.kinetic_planner.data.ProviderConfig;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayDispatcher;
-import net.jsmua.kinetic_planner.mapadapter.MapOverlayProvider;
 import net.minecraft.network.chat.Component;
-
-import java.util.List;
 
 /**
  * KP 配置面板 UI 工厂 - 构建 LDLib2 {@code UIElement} 树、注册 LSS 样式表、
@@ -122,12 +119,11 @@ public final class KpConfigUIFactory {
             layout.flexGrow(1);
         }));
 
-        List<MapOverlayProvider> providers = MapOverlayDispatcher.registeredProviders();
-        for (MapOverlayProvider provider : providers) {
+        for (String modId : MapOverlayDispatcher.getRegisteredModIds()) {
             var tab = new Tab();
-            tab.setText(provider.modId());
+            tab.setText(modId);
             tab.addClass("kp-tab");
-            if (MapOverlayDispatcher.isCircuitBroken(provider.modId())) {
+            if (MapOverlayDispatcher.isCircuitBroken(modId)) {
                 tab.addClass("kp-tab-fused");
             }
             tab.layout(layout -> {
@@ -136,7 +132,7 @@ public final class KpConfigUIFactory {
                 layout.paddingVertical(2);
             });
 
-            UIElement content = buildProviderConfigRows(provider.modId());
+            UIElement content = buildProviderConfigRows(modId);
             tabView.addTab(tab, content);
         }
         return tabView;

@@ -3,7 +3,6 @@ package net.jsmua.kinetic_planner.config;
 import net.jsmua.kinetic_planner.data.ProviderConfig;
 import net.jsmua.kinetic_planner.data.ProviderConfigRegistry;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayDispatcher;
-import net.jsmua.kinetic_planner.mapadapter.MapOverlayProvider;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -40,13 +39,13 @@ public final class ProviderConfigControl {
         Optional<String> active = MapOverlayDispatcher.activeProviderModId();
         List<String> lines = new ArrayList<>();
         lines.add("[KP] Map Providers:");
-        for (MapOverlayProvider p : MapOverlayDispatcher.registeredProviders()) {
-            ProviderConfig pc = config.getProviderConfig(p.modId());
+        for (String modId : MapOverlayDispatcher.getRegisteredModIds()) {
+            ProviderConfig pc = config.getProviderConfig(modId);
             String status = pc != null && pc.enabled() ? "ON" : "OFF";
-            String activeMark = active.map(a -> a.equals(p.modId()) ? " *" : "  ").orElse("  ");
-            String fusedMark = MapOverlayDispatcher.isCircuitBroken(p.modId()) ? " [FUSED]" : "";
+            String activeMark = active.map(a -> a.equals(modId) ? " *" : "  ").orElse("  ");
+            String fusedMark = MapOverlayDispatcher.isCircuitBroken(modId) ? " [FUSED]" : "";
             lines.add(String.format("%s %-15s [%s] pri=%d lineWidth=%.2f alpha=%.2f dashed=%s%s",
-                activeMark, p.modId(), status,
+                activeMark, modId, status,
                 pc != null ? pc.priority() : 0,
                 pc != null ? pc.lineWidthScale() : 1.0f,
                 pc != null ? pc.alphaScale() : 1.0f,
@@ -167,7 +166,6 @@ public final class ProviderConfigControl {
      * 检查 modId 是否为已注册的 provider。
      */
     private static boolean isKnownModId(String modId) {
-        return MapOverlayDispatcher.registeredProviders().stream()
-            .anyMatch(p -> p.modId().equals(modId));
+        return MapOverlayDispatcher.getRegisteredModIds().contains(modId);
     }
 }
