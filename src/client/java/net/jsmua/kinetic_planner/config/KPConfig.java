@@ -2,6 +2,7 @@ package net.jsmua.kinetic_planner.config;
 
 import net.jsmua.kinetic_planner.cadengine.Theme;
 import net.jsmua.kinetic_planner.data.ProviderConfig;
+import net.jsmua.kinetic_planner.data.ProviderConfigBinding;
 import net.jsmua.kinetic_planner.data.ProviderConfigRegistry;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
@@ -16,6 +17,9 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public final class KPConfig implements IKPConfig {
 
     private static final KPConfig INSTANCE = new KPConfig();
+
+    /** 按 modId 索引的 per-provider 配置 binding。替代 switch 语句。 / Per-provider config bindings, keyed by modId. Replaces switch statements. */
+    private static final java.util.Map<String, ProviderConfigBinding> BINDINGS = new java.util.LinkedHashMap<>();
 
     public static final ModConfigSpec SPEC;
 
@@ -119,6 +123,22 @@ public final class KPConfig implements IKPConfig {
         DEBUG_SHOW_GEOMETRY_COUNT = builder.define("showGeometryCount", false);
         DEBUG_DISABLE_GL_STATE_GUARD = builder.define("disableGlStateGuard", false);
         builder.pop();
+
+        // 注册内置 provider 的配置 binding / Register config bindings for built-in providers
+        BINDINGS.put("xaeroworldmap", new ModConfigSpecConfigBinding(
+            "xaeroworldmap", "Xaero's World Map",
+            PROVIDER_XAERO_ENABLED,
+            PROVIDER_XAERO_PRIORITY,
+            PROVIDER_XAERO_LINE_WIDTH_SCALE,
+            PROVIDER_XAERO_ALPHA_SCALE,
+            PROVIDER_XAERO_DASHED));
+        BINDINGS.put("journeymap", new ModConfigSpecConfigBinding(
+            "journeymap", "JourneyMap",
+            PROVIDER_JM_ENABLED,
+            PROVIDER_JM_PRIORITY,
+            PROVIDER_JM_LINE_WIDTH_SCALE,
+            PROVIDER_JM_ALPHA_SCALE,
+            PROVIDER_JM_DASHED));
 
         SPEC = builder.build();
     }
@@ -235,48 +255,31 @@ public final class KPConfig implements IKPConfig {
 
     @Override
     public ProviderConfig getProviderConfig(String modId) {
-        ProviderConfig defaultConfig = ProviderConfigRegistry.getDefault(modId);
-        String displayName = defaultConfig != null ? defaultConfig.displayName() : modId;
-
-        return switch (modId) {
-            case "xaeroworldmap" -> new ProviderConfig(
-                modId, displayName,
-                PROVIDER_XAERO_ENABLED.get(),
-                PROVIDER_XAERO_PRIORITY.get(),
-                PROVIDER_XAERO_LINE_WIDTH_SCALE.get().floatValue(),
-                PROVIDER_XAERO_ALPHA_SCALE.get().floatValue(),
-                PROVIDER_XAERO_DASHED.get());
-            case "journeymap" -> new ProviderConfig(
-                modId, displayName,
-                PROVIDER_JM_ENABLED.get(),
-                PROVIDER_JM_PRIORITY.get(),
-                PROVIDER_JM_LINE_WIDTH_SCALE.get().floatValue(),
-                PROVIDER_JM_ALPHA_SCALE.get().floatValue(),
-                PROVIDER_JM_DASHED.get());
-            default -> defaultConfig;
-        };
+        ProviderConfigBinding binding = BINDINGS.get(modId);
+        if (binding != null) {
+            return binding.read();
+        }
+        // 没有 TOML 条目的 provider 回退到 registry 默认值
+        // Fallback to registry default for providers without TOML entries
+        return ProviderConfigRegistry.getDefault(modId);
     }
 
     @Override
     public boolean setProviderEnabled(String modId, boolean enabled) {
-        return switch (modId) {
-            case "xaeroworldmap" -> { PROVIDER_XAERO_ENABLED.set(enabled); yield true; }
-            case "journeymap" -> { PROVIDER_JM_ENABLED.set(enabled); yield true; }
-            default -> false;
-        };
+        ProviderConfigBinding binding = BINDINGS.get(modId);
+        if (binding != null) {
+            return binding.writeEnabled(enabled);
+        }
+        return false;
     }
 
     @Override
     public boolean setProviderParam(String modId, String param, String value) {
-        try {
-            return switch (modId) {
-                case "xaeroworldmap" -> setXaeroParam(param, value);
-                case "journeymap" -> setJmParam(param, value);
-                default -> false;
-            };
-        } catch (NumberFormatException e) {
-            return false;
+        ProviderConfigBinding binding = BINDINGS.get(modId);
+        if (binding != null) {
+            return binding.writeParam(param, value);
         }
+        return false;
     }
 
     // ===== IKPConfig: [theme conversion] =====
@@ -299,34 +302,4 @@ public final class KPConfig implements IKPConfig {
     }
 
     // ===== private helpers =====
-
-    private static boolean setXaeroParam(String param, String value) {
-        return switch (param) {
-            case "lineWidthScale" -> { PROVIDER_XAERO_LINE_WIDTH_SCALE.set(Double.parseDouble(value)); yield true; }
-            case "alphaScale" -> { PROVIDER_XAERO_ALPHA_SCALE.set(Double.parseDouble(value)); yield true; }
-            case "dashed" -> {
-                if (!isStrictBool(value)) yield false;
-                PROVIDER_XAERO_DASHED.set(Boolean.parseBoolean(value)); yield true;
-            }
-            case "priority" -> { PROVIDER_XAERO_PRIORITY.set(Integer.parseInt(value)); yield true; }
-            default -> false;
-        };
-    }
-
-    private static boolean setJmParam(String param, String value) {
-        return switch (param) {
-            case "lineWidthScale" -> { PROVIDER_JM_LINE_WIDTH_SCALE.set(Double.parseDouble(value)); yield true; }
-            case "alphaScale" -> { PROVIDER_JM_ALPHA_SCALE.set(Double.parseDouble(value)); yield true; }
-            case "dashed" -> {
-                if (!isStrictBool(value)) yield false;
-                PROVIDER_JM_DASHED.set(Boolean.parseBoolean(value)); yield true;
-            }
-            case "priority" -> { PROVIDER_JM_PRIORITY.set(Integer.parseInt(value)); yield true; }
-            default -> false;
-        };
-    }
-
-    private static boolean isStrictBool(String value) {
-        return "true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value);
-    }
 }
