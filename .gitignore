@@ -39,6 +39,9 @@ run/
 repo/
 !**/src/**/repo/
 
+logs/
+!**/src/**/logs/
+
 ## Agent-specific Config ##
 
 # Commit without status. so memories must be local.

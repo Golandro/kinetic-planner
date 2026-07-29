@@ -28,12 +28,28 @@ public interface XaeroMapAccessor {
     double kp$cameraX();
 
     /**
+     * 写入 {@code GuiMap.cameraX} 字段 - 编辑模式自定义地图导航使用。
+     *
+     * @param cameraX 相机 X 坐标（方块）
+     */
+    @Accessor("cameraX")
+    void kp$setCameraX(double cameraX);
+
+    /**
      * 读取 {@code GuiMap.cameraZ} 字段 - 地图相机的世界 Z 坐标。
      *
      * @return 相机 Z 坐标（方块）
      */
     @Accessor("cameraZ")
     double kp$cameraZ();
+
+    /**
+     * 写入 {@code GuiMap.cameraZ} 字段 - 编辑模式自定义地图导航使用。
+     *
+     * @param cameraZ 相机 Z 坐标（方块）
+     */
+    @Accessor("cameraZ")
+    void kp$setCameraZ(double cameraZ);
 
     /**
      * 读取 {@code GuiMap.scale} 字段 - 地图缩放值。
@@ -44,4 +60,12 @@ public interface XaeroMapAccessor {
      */
     @Accessor("scale")
     double kp$scale();
+
+    /**
+     * 写入 {@code GuiMap.scale} 字段 - 编辑模式自定义滚轮缩放使用。
+     *
+     * @param scale 地图缩放值
+     */
+    @Accessor("scale")
+    void kp$setScale(double scale);
 }

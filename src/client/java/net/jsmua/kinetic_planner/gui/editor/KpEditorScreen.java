@@ -8,6 +8,7 @@ import net.jsmua.kinetic_planner.config.KpClientState;
 import net.jsmua.kinetic_planner.gui.event.KpUIEventForwarder;
 import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayContextProvider;
+import net.jsmua.kinetic_planner.mixin.XaeroMapAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -20,8 +21,9 @@ import xaero.map.gui.GuiMap;
  * <p>持有从观看模式传入的 {@link GuiMap} 实例，承载 {@link KpMapEditor}（LDLib2 Editor 子类）。
  * 三层渲染：① 地图层 → ② CAD 编辑层（Phase 6）→ ③ Editor UI 层。
  *
- * <p>事件路由（spec §4.2）：① forwarder 转发到 UI 树 → ② 未消费时按工具模式路由到
- * {@link GuiMap}（{@link EditToolState.Tool#NAVIGATION}）或 {@link CADRenderEngine}（Phase 6）。
+ * <p>事件路由：① forwarder 转发到 UI 树 → ② 未消费时按工具模式路由。
+ * {@link EditToolState.Tool#NAVIGATION} 不再调用 {@link GuiMap#mouseClicked(double, double, int)} 等，
+ * 改为直接操作 Xaero 相机字段平移/缩放，避免触发被 {@code XaeroUiSuppressMixin} 隐藏的原生 UI 按钮。
  *
  * <p>closeButton 链路：Editor.exit() → askToSaveProject() 跳过对话框（currentProject == null）
  * → ModularUI.getScreen().onClose() → 本类 onClose() → 切回 GuiMap。
@@ -32,6 +34,12 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
     private final KpMapEditor editor;
     private final ModularUI modularUI;
     private final KpUIEventForwarder eventForwarder;
+
+    // 编辑模式自定义地图导航状态（替代直接转发给 GuiMap.mouseXXX，避免触发 Xaero 原生 UI 输入）
+    private static final double MIN_SCALE = 0.5;
+    private static final double MAX_SCALE = 64.0;
+    private static final double SCALE_STEP = 0.5;
+    private boolean isDraggingMap;
 
     /**
      * 静态工厂：从观看模式进入编辑模式。
@@ -78,6 +86,23 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
         return editor;
     }
 
+    /**
+     * 访问 Xaero GuiMap 的私有字段（cameraX/cameraZ/scale）。
+     */
+    private XaeroMapAccessor kp$accessor() {
+        return (XaeroMapAccessor) guiMap;
+    }
+
+    /**
+     * 判断鼠标是否落在中心主视口占位 View 的内容区域内。
+     *
+     * <p>用于限制地图导航/滚轮缩放只在主视口内生效，避免拖拽 Ribbon、工具栏等区域时误移相机。
+     */
+    private boolean isMouseOverMapViewport(double mouseX, double mouseY) {
+        var viewport = editor.getMapViewport();
+        return viewport != null && viewport.isMouseOver((float) mouseX, (float) mouseY);
+    }
+
     @Override
     public void render(GuiGraphics gg, int mouseX, int mouseY, float partialTicks) {
         // ① 地图层渲染（Phase 3 实现）
@@ -114,8 +139,10 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
         }
         // ② 未消费 -> 按工具模式路由
         var tool = EditToolState.getInstance().getCurrentTool();
-        if (tool == EditToolState.Tool.NAVIGATION) {
-            return guiMap.mouseClicked(mouseX, mouseY, button);
+        if (tool == EditToolState.Tool.NAVIGATION && button == 0 && isMouseOverMapViewport(mouseX, mouseY)) {
+            // 自定义导航：仅在主视口内、左键按下时开始拖拽，不透传给 GuiMap，避免触发 Xaero 原生 UI 按钮。
+            isDraggingMap = true;
+            return true;
         }
         // 其他工具 -> CADRenderEngine 命中检测
         var transform = WorldTreeReadOverlay.getTransform();
@@ -132,8 +159,9 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
             return true;
         }
         var tool = EditToolState.getInstance().getCurrentTool();
-        if (tool == EditToolState.Tool.NAVIGATION) {
-            return guiMap.mouseReleased(mouseX, mouseY, button);
+        if (tool == EditToolState.Tool.NAVIGATION && isDraggingMap) {
+            isDraggingMap = false;
+            return true;
         }
         return false;
     }
@@ -144,9 +172,14 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
         if (eventForwarder.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
             return true;
         }
-        var tool = EditToolState.getInstance().getCurrentTool();
-        if (tool == EditToolState.Tool.NAVIGATION) {
-            return guiMap.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        // 自定义拖拽平移：保持拖拽状态即可（鼠标已移出主视口也继续，符合标准地图交互）。
+        if (isDraggingMap) {
+            var accessor = kp$accessor();
+            // scale 表示 pixels per block，因此世界坐标 delta = 屏幕像素 delta / scale。
+            double blocksPerPixel = 1.0 / accessor.kp$scale();
+            accessor.kp$setCameraX(accessor.kp$cameraX() - dragX * blocksPerPixel);
+            accessor.kp$setCameraZ(accessor.kp$cameraZ() - dragY * blocksPerPixel);
+            return true;
         }
         // Draw 工具 -> CADRenderEngine.handleDrag (Phase 6)
         return false;
@@ -158,8 +191,12 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
             return true;
         }
         var tool = EditToolState.getInstance().getCurrentTool();
-        if (tool == EditToolState.Tool.NAVIGATION) {
-            return guiMap.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        if (tool == EditToolState.Tool.NAVIGATION && isMouseOverMapViewport(mouseX, mouseY)) {
+            // 自定义滚轮缩放：只在主视口内生效，直接改写 GuiMap.scale 并限制范围。
+            var accessor = kp$accessor();
+            double newScale = accessor.kp$scale() + scrollY * SCALE_STEP;
+            accessor.kp$setScale(Math.clamp(newScale, MIN_SCALE, MAX_SCALE));
+            return true;
         }
         return false;
     }
@@ -167,10 +204,7 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
         eventForwarder.mouseMoved(mouseX, mouseY);
-        var tool = EditToolState.getInstance().getCurrentTool();
-        if (tool == EditToolState.Tool.NAVIGATION) {
-            guiMap.mouseMoved(mouseX, mouseY);
-        }
+        // NAVIGATION 工具不再转发 mouseMoved 给 GuiMap，避免触发 Xaero 悬停 UI。
         // Draw/Snap -> CADRenderEngine.handleHover (Phase 6)
     }
 
