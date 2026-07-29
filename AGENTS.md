@@ -12,6 +12,7 @@
 | `.agents/rules/package-structure.md` | 是         | 完整包结构树、代码统计、Mixin 清单                       |
 | `.agents/rules/build-and-test.md`    | 否         | 构建环境详情、sourceSet 规则细节、测试策略、测试文件清单 |
 | `.agents/rules/documents.md`         | 是         | 完整文档索引（设计规格、实现计划、开发参考）             |
+| `.agents/rules/registry-framework.md`| 否         | 注册表框架（KPRegistry/KPId）、ProviderConfigBinding、MapProviderFactory 工厂注册表的设计约束与使用规则 |
 
 
 **重要：品牌工具目录修复**：若使用特定 AI 编码工具，在上下文**未**包含*始终包含*（`alwaysApply: True`）的规则时：
@@ -32,7 +33,7 @@ Kinetic Planner 是 Minecraft 1.21.1 NeoForge 模组，在全屏地图（Xaero's
 
 ```bash
 gradlew compileJava compileClientJava compileServerJava   # 编译
-gradlew test                                               # 测试（42 @Test，2 @Disabled）
+gradlew test                                               # 测试（134 @Test，15 @Disabled）
 gradlew build                                              # 完整构建
 gradlew runClient                                          # 启动游戏
 ```
