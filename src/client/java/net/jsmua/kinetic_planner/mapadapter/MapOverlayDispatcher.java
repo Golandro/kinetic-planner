@@ -33,8 +33,8 @@ import javax.annotation.Nullable;
  */
 public class MapOverlayDispatcher {
 
-    /** 已注册的地图 provider 列表，按优先级排序。 */
-    private static final List<MapOverlayProvider> PROVIDERS = new ArrayList<>();
+    /** 已注册的地图 provider 列表，按优先级排序。 / Cached provider instances, created from registered factories. Null until initialized. */
+    private static List<MapOverlayProvider> providers = null;
 
     /** 已熔断的 provider modId -> 熔断时的游戏时间（tick）。 */
     private static final Map<String, Long> FAILED = new HashMap<>();
@@ -48,19 +48,75 @@ public class MapOverlayDispatcher {
     /** 当前帧激活的 provider modId，null 表示无地图打开。 */
     private static String activeProviderModId;
 
-    static {
-        // 按优先级注册：Xaero 优先于 JourneyMap
-        PROVIDERS.add(new XaeroMapOverlayProvider());
-        PROVIDERS.add(new JourneyMapOverlayProvider());
+    /**
+     * 从工厂注册表初始化 provider 实例。
+     *
+     * <p>在 {@link net.jsmua.kinetic_planner.KineticPlannerClient#onClientSetup} 期间调用一次。
+     * 调用后 {@link #registeredProviders()} 返回缓存的列表。
+     *
+     * <p>Initialize provider instances from the factory registry.
+     *
+     * <p>Called once during {@link net.jsmua.kinetic_planner.KineticPlannerClient#onClientSetup}.
+     * After this call, {@link #registeredProviders()} returns the cached list.
+     */
+    public static void initProviders() {
+        if (providers != null) return; // 已初始化 / already initialized
+        List<MapOverlayProvider> created = new ArrayList<>();
+        for (MapProviderFactory factory : MapProviderRegistry.available()) {
+            MapOverlayProvider provider = factory.create();
+            if (provider != null) {
+                created.add(provider);
+            }
+        }
+        providers = List.copyOf(created);
     }
 
     /**
-     * 返回所有已注册 provider 的不可变快照。
+     * 测试接缝：直接注入 provider 实例，绕过工厂创建。
      *
-     * @return provider 列表（快照）
+     * <p>包级私有——用于在不依赖真实工厂/模组的情况下单测
+     * {@link #tick()} 的排序与熔断逻辑。
+     *
+     * <p>Test seam: inject provider instances directly, bypassing factory creation.
+     *
+     * <p>Package-private - for unit testing {@link #tick()} sorting and
+     * circuit-breaker logic without requiring real factory/mod dependencies.
+     *
+     * @param injected 使用的 provider 实例 / provider instances to use
+     */
+    static void initProviders(List<MapOverlayProvider> injected) {
+        providers = List.copyOf(injected);
+    }
+
+    /**
+     * 返回所有已初始化 provider 实例（不可变快照）。
+     *
+     * <p>仅返回当前已安装模组的 provider（由
+     * {@link MapProviderFactory#isAvailable} 过滤）。
+     * 如需所有已注册工厂的 modId（包括未安装的模组），
+     * 使用 {@link #getRegisteredModIds()}。
+     *
+     * @return provider 列表；未初始化时返回空列表
+     *         / provider list; empty list if not yet initialized
      */
     public static List<MapOverlayProvider> registeredProviders() {
-        return List.copyOf(PROVIDERS);
+        return providers != null ? providers : List.of();
+    }
+
+    /**
+     * 返回所有已注册工厂的 modId，包括当前未安装的模组。
+     *
+     * <p>用于配置 UI 和 CLI 列表，这些场景下未安装的模组
+     * 仍应可配置。对于渲染/tick，使用
+     * {@link #registeredProviders()}（仅返回可用 provider）。
+     *
+     * @return 所有已注册 modId 的不可变集合
+     *         / unmodifiable set of all registered modIds
+     */
+    public static java.util.Set<String> getRegisteredModIds() {
+        return MapProviderRegistry.all().stream()
+            .map(MapProviderFactory::modId)
+            .collect(java.util.stream.Collectors.toUnmodifiableSet());
     }
 
     /**
@@ -82,7 +138,12 @@ public class MapOverlayDispatcher {
             ? Minecraft.getInstance().level.getGameTime()
             : 0;
         // 按 priority 排序（数字越小越优先），provider 仅 2 个，排序开销可忽略
-        List<MapOverlayProvider> sorted = PROVIDERS.stream()
+        if (providers == null || providers.isEmpty()) {
+            currentContext = null;
+            activeProviderModId = null;
+            return;
+        }
+        List<MapOverlayProvider> sorted = providers.stream()
             .sorted(Comparator.comparingInt(p -> {
                 var config = KPConfig.getInstance().getProviderConfig(p.modId());
                 return config != null ? config.priority() : Integer.MAX_VALUE;
