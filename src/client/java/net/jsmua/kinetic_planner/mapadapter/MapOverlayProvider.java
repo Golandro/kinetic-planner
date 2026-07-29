@@ -17,8 +17,18 @@ import javax.annotation.Nullable;
  * <p>新增地图模组支持时：
  * <ol>
  *   <li>实现本接口</li>
- *   <li>在 {@link MapOverlayDispatcher} 的 static 块中注册</li>
+ *   <li>实现 {@link MapProviderFactory} 接口，在工厂中创建 provider 实例</li>
+ *   <li>在 client setup 阶段调用 {@link MapProviderRegistry#register} 注册工厂</li>
  *   <li>如有 Mixin 需求，在 {@code kinetic_planner.mixins.json} 的 {@code client} 数组中添加</li>
+ * </ol>
+ *
+ * <h2>Extension Guide</h2>
+ * <p>To add support for a new map mod:
+ * <ol>
+ *   <li>Implement this interface</li>
+ *   <li>Implement {@link MapProviderFactory} to create provider instances in the factory</li>
+ *   <li>Register the factory via {@link MapProviderRegistry#register} during client setup</li>
+ *   <li>If Mixin is required, add entries to the {@code client} array in {@code kinetic_planner.mixins.json}</li>
  * </ol>
  */
 public interface MapOverlayProvider {
