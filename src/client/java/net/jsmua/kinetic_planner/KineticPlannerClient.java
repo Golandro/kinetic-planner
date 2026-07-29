@@ -7,7 +7,9 @@ import net.jsmua.kinetic_planner.gui.config.KPClothConfigScreen;
 import net.jsmua.kinetic_planner.data.ProviderConfigRegistry;
 import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayDispatcher;
-import net.jsmua.kinetic_planner.mapadapter.MapOverlayProvider;
+import net.jsmua.kinetic_planner.mapadapter.MapProviderRegistry;
+import net.jsmua.kinetic_planner.mapadapter.XaeroMapProviderFactory;
+import net.jsmua.kinetic_planner.mapadapter.JourneyMapMapProviderFactory;
 import net.jsmua.kinetic_planner.compat.create.KPIntegration;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -46,9 +48,23 @@ public class KineticPlannerClient {
     static void onClientSetup(FMLClientSetupEvent event) {
         KineticPlannerMod.LOGGER.info("Kinetic Planner client setup");
 
-        // 注册各 provider 的默认配置
-        for (MapOverlayProvider p : MapOverlayDispatcher.registeredProviders()) {
-            ProviderConfigRegistry.register(p.modId(), p.defaultConfig());
+        // 注册内置地图 provider 工厂 / Register built-in map provider factories
+        MapProviderRegistry.register(new XaeroMapProviderFactory());
+        MapProviderRegistry.register(new JourneyMapMapProviderFactory());
+
+        // 冻结工厂注册表——不允许后续注册 / Freeze factory registry — no more registrations allowed
+        MapProviderRegistry.freeze();
+
+        // 从已注册工厂初始化 provider 实例（仅针对已安装的模组）
+        // Initialize provider instances from registered factories (only for installed mods)
+        MapOverlayDispatcher.initProviders();
+
+        // 为所有工厂（包括未安装的模组）注册默认配置，
+        // 以便 ProviderConfigControl 可以列出/配置它们
+        // Register default config for ALL factories (including uninstalled mods)
+        // so that ProviderConfigControl can list/configure them
+        for (var factory : MapProviderRegistry.all()) {
+            ProviderConfigRegistry.register(factory.modId(), factory.defaultConfig());
         }
 
         // 一次性打通 Create 列车地图管线：此后叠加层仅由 KP "Show Create Track Map" 开关把守
