@@ -2,7 +2,6 @@ package net.jsmua.kinetic_planner.cadengine;
 
 import net.jsmua.kinetic_planner.KineticPlannerMod;
 import net.jsmua.kinetic_planner.gui.editor.EditToolState;
-import net.jsmua.kinetic_planner.gui.editor.KpEditorScreen;
 import net.jsmua.kinetic_planner.instrument.GeometryCache;
 import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import net.jsmua.kinetic_planner.projection.WorldScreenTransform;
@@ -27,12 +26,10 @@ import java.util.UUID;
  */
 public final class EditLayerRenderer {
 
-    private static final CADRenderEngine engine = new CADRenderEngine();
-
     /**
      * 渲染编辑图形层。
      *
-     * <p>由 {@link KpEditorScreen#render} 在地图层之后、UI 层之前调用。
+     * <p>由 KpEditorScreen.render() 在地图层之后、UI 层之前调用。
      *
      * @param gg           外部 GuiGraphics
      * @param editToolState 编辑会话状态
@@ -42,15 +39,13 @@ public final class EditLayerRenderer {
         GeometryCache cache = WorldTreeReadOverlay.getGeometryCache();
         if (transform == null || cache == null) return;
 
+        CADRenderEngine engine = WorldTreeReadOverlay.getEngine();
         try {
             engine.beginFrame(transform.cam().screenCenterX() * 2, transform.cam().screenCenterY() * 2, 1.0f);
             engine.applyWorldTransform(transform);
 
-            // 1. 轨道拓扑（与观看模式相同数据源，但走 EditLayerRenderer 而非 Mixin hook）
-            //    实现略，参考 WorldTreeReadOverlay.onMapRender 的渲染循环
-            //    本 P2 阶段先复用 WorldTreeReadOverlay.onMapRender 逻辑（若可行）
-            //    或直接调用 WorldTreeReadOverlay.onMapRender(null, gg, 0, 0, 0f)
-            //    完整实现需将 onMapRender 的渲染循环抽取为可复用方法
+            // 1. 轨道拓扑（复用 WorldTreeReadOverlay 的渲染逻辑，审计 R3 修复）
+            WorldTreeReadOverlay.renderTracks(engine, transform, cache);
 
             // 2. 编辑图形（selection / snap / preview / tool cursor）—— P2 后续实现
             renderEditGraphics(transform, cache, editToolState);

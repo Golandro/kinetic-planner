@@ -177,57 +177,7 @@ public final class WorldTreeReadOverlay {
             engine.beginFrame(lastContext.screenWidth(), lastContext.screenHeight(), lastContext.dpr());
             engine.applyWorldTransform(lastTransform);
 
-            for (GeometryCache.GraphGeometry geom : geometryCache.geometries()) {
-
-                // 1. 轨道层
-                if (theme.layers().tracks()) {
-                    float widthPx = (theme.global().constantScreenLineWidth()
-                        ? theme.global().fixedScreenLineWidthPx()
-                        : theme.track().width() / (float) lastTransform.cam().blocksPerPixel())
-                        * activeLineWidthScale;
-                    // 仅对原始颜色应用一次主题 alpha 与 provider alphaScale（避免重复叠加）
-                    int trackColorScaled = applyAlpha(geom.graphColor(),
-                        theme.track().alpha() * activeAlphaScale);
-                    for (EdgeGeometry edge : geom.edges()) {
-                        try {
-                            if (edge.type() == EdgeGeometry.Type.BEZIER && edge.bezier() != null) {
-                                var b = edge.bezier();
-                                engine.drawBezier(
-                                    (float) b.start().x, (float) b.start().z,
-                                    (float) b.control1().x, (float) b.control1().z,
-                                    (float) b.control2().x, (float) b.control2().z,
-                                    (float) b.end().x, (float) b.end().z,
-                                    widthPx, trackColorScaled, 32, activeDashed);
-                            } else {
-                                engine.drawLine(
-                                    (float) edge.p1().x, (float) edge.p1().z,
-                                    (float) edge.p2().x, (float) edge.p2().z,
-                                    widthPx, trackColorScaled, activeDashed);
-                            }
-                        } catch (Throwable ignored) {}
-                    }
-                }
-
-                // 2. 节点层
-                if (theme.layers().nodes()) {
-                    int nodeColor = applyAlpha(0xFFFFFFFF, theme.node().alpha() * activeAlphaScale);
-                    float nodeRadius = theme.node().width() / 2;
-                    for (Vec3 node : geom.nodes()) {
-                        engine.drawFilledCircle((float) node.x, (float) node.z, nodeRadius, nodeColor);
-                    }
-                }
-
-                // 3. 边点层
-                if (theme.layers().edgePoints()) {
-                    float epRadius = theme.edgePoint().width() / 2;
-                    for (GeometryCache.EdgePointData ep : geom.edgePoints()) {
-                        int epColor = applyAlpha(ep.color(), theme.edgePoint().alpha() * activeAlphaScale);
-                        engine.drawFilledCircle(
-                            (float) ep.worldPos().x, (float) ep.worldPos().z,
-                            epRadius, epColor);
-                    }
-                }
-            }
+            renderTracks(engine, lastTransform, geometryCache);
 
             engine.restoreWorldTransform();
             engine.endFrame();
@@ -383,6 +333,86 @@ public final class WorldTreeReadOverlay {
      */
     public static GeometryCache getGeometryCache() {
         return geometryCache;
+    }
+
+    /**
+     * 返回全局 {@link CADRenderEngine} 实例（供 {@link EditLayerRenderer} 复用）。
+     *
+     * <p>审计 R5 修复：消除 EditLayerRenderer 与 WorldTreeReadOverlay 各自持有独立实例的
+     * GL 状态冲突风险。编辑模式下两者使用同一引擎实例。
+     *
+     * @return 全局 CADRenderEngine 实例
+     */
+    public static CADRenderEngine getEngine() {
+        return engine;
+    }
+
+    /**
+     * 渲染轨道拓扑（tracks + nodes + edgePoints）。
+     *
+     * <p>提取自 {@link #onMapRender} 的渲染循环，供 {@link EditLayerRenderer} 复用，
+     * 消除渲染逻辑重复（审计 R3）。
+     *
+     * <p>调用前必须已执行 {@link CADRenderEngine#beginFrame} + {@link CADRenderEngine#applyWorldTransform}。
+     * 调用后需执行 {@link CADRenderEngine#restoreWorldTransform} + {@link CADRenderEngine#endFrame}。
+     *
+     * @param engine    已初始化的 CADRenderEngine（已 beginFrame + applyWorldTransform）
+     * @param transform 当前世界-屏幕变换
+     * @param cache     几何缓存
+     */
+    public static void renderTracks(CADRenderEngine engine,
+                                     WorldScreenTransform transform,
+                                     GeometryCache cache) {
+        for (GeometryCache.GraphGeometry geom : cache.geometries()) {
+
+            // 1. 轨道层
+            if (theme.layers().tracks()) {
+                float widthPx = (theme.global().constantScreenLineWidth()
+                    ? theme.global().fixedScreenLineWidthPx()
+                    : theme.track().width() / (float) transform.cam().blocksPerPixel())
+                    * activeLineWidthScale;
+                int trackColorScaled = applyAlpha(geom.graphColor(),
+                    theme.track().alpha() * activeAlphaScale);
+                for (EdgeGeometry edge : geom.edges()) {
+                    try {
+                        if (edge.type() == EdgeGeometry.Type.BEZIER && edge.bezier() != null) {
+                            var b = edge.bezier();
+                            engine.drawBezier(
+                                (float) b.start().x, (float) b.start().z,
+                                (float) b.control1().x, (float) b.control1().z,
+                                (float) b.control2().x, (float) b.control2().z,
+                                (float) b.end().x, (float) b.end().z,
+                                widthPx, trackColorScaled, 32, activeDashed);
+                        } else {
+                            engine.drawLine(
+                                (float) edge.p1().x, (float) edge.p1().z,
+                                (float) edge.p2().x, (float) edge.p2().z,
+                                widthPx, trackColorScaled, activeDashed);
+                        }
+                    } catch (Throwable ignored) {}
+                }
+            }
+
+            // 2. 节点层
+            if (theme.layers().nodes()) {
+                int nodeColor = applyAlpha(0xFFFFFFFF, theme.node().alpha() * activeAlphaScale);
+                float nodeRadius = theme.node().width() / 2;
+                for (Vec3 node : geom.nodes()) {
+                    engine.drawFilledCircle((float) node.x, (float) node.z, nodeRadius, nodeColor);
+                }
+            }
+
+            // 3. 边点层
+            if (theme.layers().edgePoints()) {
+                float epRadius = theme.edgePoint().width() / 2;
+                for (GeometryCache.EdgePointData ep : geom.edgePoints()) {
+                    int epColor = applyAlpha(ep.color(), theme.edgePoint().alpha() * activeAlphaScale);
+                    engine.drawFilledCircle(
+                        (float) ep.worldPos().x, (float) ep.worldPos().z,
+                        epRadius, epColor);
+                }
+            }
+        }
     }
 
     /**
