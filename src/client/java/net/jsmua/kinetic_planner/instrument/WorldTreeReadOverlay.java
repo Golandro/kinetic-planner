@@ -348,6 +348,26 @@ public final class WorldTreeReadOverlay {
     }
 
     /**
+     * 返回一个 {@link OverlayDataProvider} 视图，委托到本类的静态方法。
+     *
+     * <p>供 {@link KpEditorScreen} 构造时注入，测试可传入 mock provider。
+     *
+     * @return 委托到静态方法的 provider 实例
+     */
+    public static OverlayDataProvider asProvider() {
+        return new OverlayDataProvider() {
+            @Override
+            public WorldScreenTransform getTransform() {
+                return WorldTreeReadOverlay.lastTransform;
+            }
+            @Override
+            public GeometryCache getGeometryCache() {
+                return WorldTreeReadOverlay.geometryCache;
+            }
+        };
+    }
+
+    /**
      * 渲染轨道拓扑（tracks + nodes + edgePoints）。
      *
      * <p>提取自 {@link #onMapRender} 的渲染循环，供 {@link EditLayerRenderer} 复用，

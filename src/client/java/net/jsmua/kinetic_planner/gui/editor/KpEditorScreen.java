@@ -7,6 +7,7 @@ import net.jsmua.kinetic_planner.cadengine.CADRenderEngine;
 import net.jsmua.kinetic_planner.cadengine.EditLayerRenderer;
 import net.jsmua.kinetic_planner.config.KpClientState;
 import net.jsmua.kinetic_planner.gui.event.KpUIEventForwarder;
+import net.jsmua.kinetic_planner.instrument.OverlayDataProvider;
 import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayContextProvider;
 import net.jsmua.kinetic_planner.mixin.XaeroMapAccessor;
@@ -36,6 +37,7 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
     private final KpMapEditor editor;
     private final ModularUI modularUI;
     private final KpUIEventForwarder eventForwarder;
+    private final OverlayDataProvider overlayProvider;
 
     // 编辑模式自定义地图导航状态（替代直接转发给 GuiMap.mouseXXX，避免触发 Xaero 原生 UI 输入）
     private boolean isDraggingMap;
@@ -64,6 +66,8 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
         this.modularUI.setScreen(this);
         // forwarder 复用：编辑模式与观看模式共用同一事件转发逻辑（spec §6.9）
         this.eventForwarder = new KpUIEventForwarder(this.modularUI);
+        // 测试缝：默认使用 WorldTreeReadOverlay 静态委托（审计 R5）
+        this.overlayProvider = WorldTreeReadOverlay.asProvider();
     }
 
     @Override
@@ -144,8 +148,8 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
             return true;
         }
         // 其他工具 -> CADRenderEngine 命中检测
-        var transform = WorldTreeReadOverlay.getTransform();
-        var cache = WorldTreeReadOverlay.getGeometryCache();
+        var transform = overlayProvider.getTransform();
+        var cache = overlayProvider.getGeometryCache();
         if (transform == null || cache == null) return false;
         // CADRenderEngine 实例由 EditLayerRenderer 持有，此处通过 EditLayerRenderer 转发
         // 或直接持有 CADRenderEngine 实例（简化）

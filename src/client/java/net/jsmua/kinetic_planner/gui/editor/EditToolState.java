@@ -68,6 +68,16 @@ public final class EditToolState {
 
     private EditToolState() {}
 
+    /**
+     * 包级构造器，仅供测试创建独立实例（不污染单例）。
+     *
+     * <p>审计 R5 修复：测试可通过此构造器创建隔离的 EditToolState 实例，
+     * 验证工具切换/选择集行为而不影响全局单例状态。
+     */
+    EditToolState(boolean forTesting) {
+        // forTesting 参数仅用于区分签名，无实际逻辑
+    }
+
     public static EditToolState getInstance() {
         return INSTANCE;
     }
