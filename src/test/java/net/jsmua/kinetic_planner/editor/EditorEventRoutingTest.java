@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -78,5 +79,28 @@ class EditorEventRoutingTest {
         // 1. 记录鼠标指针下方的世界坐标
         // 2. 滚轮缩放
         // 3. 验证该世界坐标仍在指针下方
+    }
+
+    /**
+     * 验证 isMouseOverMapViewport 方法存在且为 private（spec §3.1 视口边界查询）。
+     */
+    @Test
+    void isMouseOverMapViewportMethodExists() throws NoSuchMethodException {
+        Method m = KpEditorScreen.class.getDeclaredMethod(
+            "isMouseOverMapViewport", double.class, double.class);
+        assertEquals(boolean.class, m.getReturnType());
+        assertTrue(Modifier.isPrivate(m.getModifiers()),
+            "isMouseOverMapViewport 应为 private");
+    }
+
+    /**
+     * 验证 overlayProvider 字段存在（审计 R5 测试缝）。
+     */
+    @Test
+    void overlayProviderFieldExists() throws NoSuchFieldException {
+        var field = KpEditorScreen.class.getDeclaredField("overlayProvider");
+        assertEquals("net.jsmua.kinetic_planner.instrument.OverlayDataProvider",
+            field.getType().getName());
+        assertTrue(Modifier.isPrivate(field.getModifiers()));
     }
 }
