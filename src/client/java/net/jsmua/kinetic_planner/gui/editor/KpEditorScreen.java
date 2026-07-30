@@ -2,6 +2,7 @@ package net.jsmua.kinetic_planner.gui.editor;
 
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
+import net.jsmua.kinetic_planner.KineticPlannerMod;
 import net.jsmua.kinetic_planner.cadengine.CADRenderEngine;
 import net.jsmua.kinetic_planner.cadengine.EditLayerRenderer;
 import net.jsmua.kinetic_planner.config.KpClientState;
@@ -36,9 +37,6 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
     private final KpUIEventForwarder eventForwarder;
 
     // 编辑模式自定义地图导航状态（替代直接转发给 GuiMap.mouseXXX，避免触发 Xaero 原生 UI 输入）
-    private static final double MIN_SCALE = 0.5;
-    private static final double MAX_SCALE = 64.0;
-    private static final double SCALE_STEP = 0.5;
     private boolean isDraggingMap;
 
     /**
@@ -172,6 +170,11 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
         if (eventForwarder.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
             return true;
         }
+        // 右键取消拖拽（spec §4.3.1：拖拽中按右键直接结束）
+        if (isDraggingMap && button == 1) {
+            isDraggingMap = false;
+            return true;
+        }
         // 自定义拖拽平移：保持拖拽状态即可（鼠标已移出主视口也继续，符合标准地图交互）。
         if (isDraggingMap) {
             var accessor = kp$accessor();
@@ -190,12 +193,23 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
         if (eventForwarder.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
             return true;
         }
-        var tool = EditToolState.getInstance().getCurrentTool();
-        if (tool == EditToolState.Tool.NAVIGATION && isMouseOverMapViewport(mouseX, mouseY)) {
-            // 自定义滚轮缩放：只在主视口内生效，直接改写 GuiMap.scale 并限制范围。
+        // 所有工具下滚轮均缩放（spec §4.3.2 CAD 标准行为）
+        if (isMouseOverMapViewport(mouseX, mouseY)) {
+            // 优先委托 guiMap.mouseScrolled()，复用 Xaero 原生缩放逻辑
+            // （中心点保持 + 瓦片降级），spec §4.3.2 + §5.3
+            try {
+                if (guiMap.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
+                    return true;
+                }
+            } catch (Exception e) {
+                // guiMap.mouseScrolled 可能因 mc.screen 检查失败，降级为 accessor 方案
+                KineticPlannerMod.LOGGER.debug("guiMap.mouseScrolled delegation failed, falling back to accessor", e);
+            }
+            // 降级方案：直接读写 scale 字段（无中心点保持，仅作为 fallback）
             var accessor = kp$accessor();
-            double newScale = accessor.kp$scale() + scrollY * SCALE_STEP;
-            accessor.kp$setScale(Math.clamp(newScale, MIN_SCALE, MAX_SCALE));
+            double currentScale = accessor.kp$scale();
+            double newScale = currentScale * (scrollY > 0 ? 1.2 : 1.0 / 1.2);
+            accessor.kp$setScale(newScale);
             return true;
         }
         return false;
