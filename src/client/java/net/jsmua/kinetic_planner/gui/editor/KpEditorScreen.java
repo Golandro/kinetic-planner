@@ -14,6 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.lwjgl.glfw.GLFW;
 import xaero.map.gui.GuiMap;
 
 /**
@@ -227,22 +228,20 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
         if (eventForwarder.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
-        // 工具快捷键（V=Select, L=Line, B=Bezier, P=Pan, S=Snap）
-        var state = EditToolState.getInstance();
-        switch (keyCode) {
-            case 259 -> { // ESC
-                onClose();
-                return true;
-            }
-            // MC key codes: V=86, L=76, B=66, P=80, S=83, N=78
-            case 86 -> { state.setCurrentTool(EditToolState.Tool.SELECT); return true; }
-            case 76 -> { state.setCurrentTool(EditToolState.Tool.DRAW_LINE); return true; }
-            case 66 -> { state.setCurrentTool(EditToolState.Tool.DRAW_BEZIER); return true; }
-            case 80 -> { state.setCurrentTool(EditToolState.Tool.NAVIGATION); return true; }
-            case 83 -> { state.setCurrentTool(EditToolState.Tool.SNAP); return true; }
+        // ESC 退出编辑模式（spec §4.4）
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            onClose();
+            return true;
         }
-        var tool = state.getCurrentTool();
-        if (tool == EditToolState.Tool.NAVIGATION) {
+        // 工具快捷键：从 Tool 枚举元数据匹配（审计 R2 修复，消除散弹式修改）
+        var state = EditToolState.getInstance();
+        EditToolState.Tool matchedTool = EditToolState.Tool.fromKeyCode(keyCode);
+        if (matchedTool != null) {
+            state.setCurrentTool(matchedTool);
+            return true;
+        }
+        // NAVIGATION 工具下，未消费的键盘事件委托 guiMap
+        if (state.getCurrentTool() == EditToolState.Tool.NAVIGATION) {
             return guiMap.keyPressed(keyCode, scanCode, modifiers);
         }
         return false;

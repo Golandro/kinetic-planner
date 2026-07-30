@@ -5,7 +5,6 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import net.jsmua.kinetic_planner.gui.editor.EditToolState;
-import net.jsmua.kinetic_planner.gui.editor.EditToolState.Tool;
 import net.minecraft.network.chat.Component;
 
 /**
@@ -44,12 +43,12 @@ public class KpRibbonBar extends UIElement {
         addButton("Open", () -> {});
         addButton("Save", () -> {});
 
-        // Tools 组
+        // Tools 组（从 Tool 枚举遍历生成，审计 R2 修复）
         addGroupLabel("Tools");
-        addButton("Select", () -> EditToolState.getInstance().setCurrentTool(Tool.SELECT));
-        addButton("Line", () -> EditToolState.getInstance().setCurrentTool(Tool.DRAW_LINE));
-        addButton("Bezier", () -> EditToolState.getInstance().setCurrentTool(Tool.DRAW_BEZIER));
-        addButton("Pan", () -> EditToolState.getInstance().setCurrentTool(Tool.NAVIGATION));
+        for (var tool : EditToolState.Tool.values()) {
+            addButton(tool.getDisplayName(), () ->
+                EditToolState.getInstance().setCurrentTool(tool));
+        }
 
         // View 组
         addGroupLabel("View");

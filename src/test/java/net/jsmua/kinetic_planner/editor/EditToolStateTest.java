@@ -4,6 +4,7 @@ import net.jsmua.kinetic_planner.gui.editor.EditToolState;
 import net.jsmua.kinetic_planner.gui.editor.EditToolState.Tool;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.UUID;
 
@@ -60,5 +61,20 @@ class EditToolStateTest {
         EditToolState.getInstance().addSelectedNode(UUID.randomUUID());
         EditToolState.getInstance().clearSelection();
         assertTrue(EditToolState.getInstance().getSelectedNodes().isEmpty());
+    }
+
+    @Test
+    void toolFromKeyCodeReturnsCorrectTool() {
+        assertEquals(Tool.NAVIGATION, Tool.fromKeyCode(GLFW.GLFW_KEY_P));
+        assertEquals(Tool.SELECT, Tool.fromKeyCode(GLFW.GLFW_KEY_V));
+        assertEquals(Tool.DRAW_LINE, Tool.fromKeyCode(GLFW.GLFW_KEY_L));
+        assertEquals(Tool.DRAW_BEZIER, Tool.fromKeyCode(GLFW.GLFW_KEY_B));
+        assertEquals(Tool.SNAP, Tool.fromKeyCode(GLFW.GLFW_KEY_S));
+    }
+
+    @Test
+    void toolFromKeyCodeReturnsNullForUnmapped() {
+        assertNull(Tool.fromKeyCode(GLFW.GLFW_KEY_A));
+        assertNull(Tool.fromKeyCode(0));
     }
 }

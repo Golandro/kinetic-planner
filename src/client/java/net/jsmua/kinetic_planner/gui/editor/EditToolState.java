@@ -3,6 +3,7 @@ package net.jsmua.kinetic_planner.gui.editor;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * 编辑会话状态（spec §4.3 + §6.8）。
@@ -16,18 +17,48 @@ public final class EditToolState {
 
     /**
      * 编辑工具枚举（spec §4.3 表格）。
+     *
+     * <p>每个工具携带 displayName/keyBinding/keyLabel 元数据，消除散弹式修改（审计 R2）：
+     * 添加新工具只需在此枚举追加一行，KpEditorScreen/KpRibbonBar/ToolPanelView 自动遍历。
      */
     public enum Tool {
         /** 地图导航（平移/缩放），事件转发给 guiMap */
-        NAVIGATION,
+        NAVIGATION("Pan", GLFW.GLFW_KEY_P, "P"),
         /** 选择节点/边，CADRenderEngine 命中检测 */
-        SELECT,
+        SELECT("Select", GLFW.GLFW_KEY_V, "V"),
         /** 绘制直线 */
-        DRAW_LINE,
+        DRAW_LINE("Line", GLFW.GLFW_KEY_L, "L"),
         /** 绘制三次贝塞尔 */
-        DRAW_BEZIER,
+        DRAW_BEZIER("Bezier", GLFW.GLFW_KEY_B, "B"),
         /** 捕捉模式，鼠标移动高亮可捕捉点 */
-        SNAP
+        SNAP("Snap", GLFW.GLFW_KEY_S, "S");
+
+        private final String displayName;
+        private final int keyBinding;
+        private final String keyLabel;
+
+        Tool(String displayName, int keyBinding, String keyLabel) {
+            this.displayName = displayName;
+            this.keyBinding = keyBinding;
+            this.keyLabel = keyLabel;
+        }
+
+        public String getDisplayName() { return displayName; }
+        public int getKeyBinding() { return keyBinding; }
+        public String getKeyLabel() { return keyLabel; }
+
+        /**
+         * 按 GLFW 键码查找工具。
+         *
+         * @param keyCode GLFW 键码
+         * @return 匹配的工具；无匹配返回 null
+         */
+        public static Tool fromKeyCode(int keyCode) {
+            for (Tool tool : values()) {
+                if (tool.keyBinding == keyCode) return tool;
+            }
+            return null;
+        }
     }
 
     private static final EditToolState INSTANCE = new EditToolState();
