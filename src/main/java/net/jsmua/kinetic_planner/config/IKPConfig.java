@@ -88,6 +88,26 @@ public interface IKPConfig {
      */
     boolean setProviderParam(String modId, String param, String value);
 
+    // ===== [ribbon] =====
+
+    /** 获取指定 tab 的显示模式字符串 (PINNED/FLOATING/HIDDEN/CONTEXTUAL), 未配置返回 null。 */
+    String getRibbonTabDisplayMode(String tabId);
+
+    /** 设置指定 tab 的显示模式字符串。 */
+    void setRibbonTabDisplayMode(String tabId, String mode);
+
+    /** 获取 QAT 工具 ID 字符串列表 (如 ["kp:tool_pan", "kp:tool_select"])。 */
+    java.util.List<String> getRibbonQatToolIds();
+
+    /** 设置 QAT 工具 ID 字符串列表。 */
+    void setRibbonQatToolIds(java.util.List<String> ids);
+
+    /** 获取上次选中的 tab ID 字符串 (如 "kp:tools"), 未配置返回 null。 */
+    String getRibbonSelectedTab();
+
+    /** 设置上次选中的 tab ID 字符串。 */
+    void setRibbonSelectedTab(String tabId);
+
     // ===== [theme conversion] =====
 
     /**

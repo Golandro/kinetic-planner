@@ -301,5 +301,41 @@ public final class KPConfig implements IKPConfig {
         );
     }
 
+    // ===== IKPConfig: [ribbon] (Phase 1: in-memory 缓存, Phase 2 接入 TOML) =====
+
+    private final java.util.Map<String, String> ribbonTabModes = new java.util.concurrent.ConcurrentHashMap<>();
+    private volatile java.util.List<String> ribbonQatIds = new java.util.ArrayList<>();
+    private volatile String ribbonSelectedTab = null;
+
+    @Override
+    public String getRibbonTabDisplayMode(String tabId) {
+        return ribbonTabModes.get(tabId);
+    }
+
+    @Override
+    public void setRibbonTabDisplayMode(String tabId, String mode) {
+        ribbonTabModes.put(tabId, mode);
+    }
+
+    @Override
+    public java.util.List<String> getRibbonQatToolIds() {
+        return new java.util.ArrayList<>(ribbonQatIds);
+    }
+
+    @Override
+    public void setRibbonQatToolIds(java.util.List<String> ids) {
+        this.ribbonQatIds = new java.util.ArrayList<>(ids);
+    }
+
+    @Override
+    public String getRibbonSelectedTab() {
+        return ribbonSelectedTab;
+    }
+
+    @Override
+    public void setRibbonSelectedTab(String tabId) {
+        this.ribbonSelectedTab = tabId;
+    }
+
     // ===== private helpers =====
 }
