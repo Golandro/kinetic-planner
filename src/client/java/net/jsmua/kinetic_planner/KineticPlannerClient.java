@@ -2,6 +2,7 @@ package net.jsmua.kinetic_planner;
 
 import net.jsmua.kinetic_planner.command.KPClientCommands;
 import net.jsmua.kinetic_planner.command.KPCommandTree;
+import net.jsmua.kinetic_planner.config.IKPConfig;
 import net.jsmua.kinetic_planner.config.KPConfig;
 import net.jsmua.kinetic_planner.gui.config.KPClothConfigScreen;
 import net.jsmua.kinetic_planner.gui.editor.EditToolState;
@@ -41,8 +42,17 @@ import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 @EventBusSubscriber(modid = KineticPlannerMod.MODID, value = Dist.CLIENT)
 public class KineticPlannerClient {
 
+    /**
+     * 全局 IKPConfig 引用, 供 KpMapEditor 等运行时组件获取配置 (非 getInstance() 反模式,
+     * 与 EditToolState.getInstance() 同性质: 运行时入口点)。
+     *
+     * <p>volatile: 构造函数赋值后只读, 但跨线程可见性需要 volatile。
+     */
+    public static volatile IKPConfig CONFIG;
+
     public KineticPlannerClient(ModContainer container) {
         container.registerConfig(net.neoforged.fml.config.ModConfig.Type.CLIENT, KPConfig.SPEC);
+        KineticPlannerClient.CONFIG = KPConfig.getInstance();
         // TODO: Config screen registration API needs NeoForge 1.21.1 verification at runtime
         // container.registerConfigScreen(...) - exact API to be verified
     }
