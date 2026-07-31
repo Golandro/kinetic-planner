@@ -44,34 +44,3 @@ public interface RibbonToolDefinition {
     /** 溢出权重: 数值越大越先被缩窄/隐藏。 */
     default int getOverflowWeight() { return RibbonConstants.DEFAULT_OVERFLOW_WEIGHT; }
 }
-
-/**
- * SimpleRibbonToolDefinition - RibbonToolDefinition 的简单 record 实现。
- *
- * <p>Mod 可直接使用此 record, 也可实现 RibbonToolDefinition 接口自定义。
- *
- * @param id            唯一标识
- * @param displayName   显示名称
- * @param icon          图标 (可选)
- * @param tooltip       Tooltip (可选)
- * @param shortcutLabel 快捷键标签 (可选)
- * @param size          工具尺寸
- * @param action        工具动作
- */
-record SimpleRibbonToolDefinition(
-    ResourceLocation id,
-    Component displayName,
-    Optional<IGuiTexture> icon,
-    Optional<TooltipContent> tooltip,
-    Optional<String> shortcutLabel,
-    ToolSize size,
-    ToolAction action
-) implements RibbonToolDefinition {
-    @Override public ResourceLocation getId() { return id; }
-    @Override public Component getDisplayName() { return displayName; }
-    @Override public Optional<IGuiTexture> getIcon() { return icon; }
-    @Override public Optional<TooltipContent> getTooltip() { return tooltip; }
-    @Override public Optional<String> getShortcutLabel() { return shortcutLabel; }
-    @Override public ToolSize getSize() { return size; }
-    @Override public ToolAction getAction() { return action; }
-}

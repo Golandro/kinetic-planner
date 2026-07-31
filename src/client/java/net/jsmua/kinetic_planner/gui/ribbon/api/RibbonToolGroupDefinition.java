@@ -29,13 +29,3 @@ public interface RibbonToolGroupDefinition {
      */
     default Optional<RibbonCommand> getDialogLauncher() { return Optional.empty(); }
 }
-
-record SimpleRibbonToolGroupDefinition(
-    ResourceLocation id,
-    Optional<Component> displayName,
-    List<RibbonToolDefinition> tools
-) implements RibbonToolGroupDefinition {
-    @Override public ResourceLocation getId() { return id; }
-    @Override public Optional<Component> getDisplayName() { return displayName; }
-    @Override public List<RibbonToolDefinition> getTools() { return tools; }
-}

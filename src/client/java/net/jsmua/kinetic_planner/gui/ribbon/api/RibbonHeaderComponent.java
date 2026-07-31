@@ -25,15 +25,3 @@ public interface RibbonHeaderComponent {
 
     enum Placement { LEADING, TRAILING }
 }
-
-record SimpleRibbonHeaderComponent(
-    ResourceLocation id,
-    Placement placement,
-    int priority,
-    Supplier<UIElement> elementSupplier
-) implements RibbonHeaderComponent {
-    @Override public ResourceLocation getId() { return id; }
-    @Override public Placement getPlacement() { return placement; }
-    @Override public int getPriority() { return priority; }
-    @Override public UIElement createElement() { return elementSupplier.get(); }
-}
