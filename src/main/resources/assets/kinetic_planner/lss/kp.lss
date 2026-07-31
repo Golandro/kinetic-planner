@@ -92,3 +92,20 @@
     background: rect(#ff4b5563);
     margin-horizontal: 2;
 }
+
+// ===== Layout helpers (Task 5: 可选复用类, 供未来响应式布局使用) =====
+// LSS 语法已验证: flex-grow (FloatOptional), width/height 百分比 (DimensionValue),
+//   rect(#AARRGGBB) 纹理 (TextureValue). 见 LDLib2 gui/ui/style.
+.kp-fill-width {
+    width: 100%;
+    flex-grow: 1;
+}
+
+.kp-fill-height {
+    height: 100%;
+    flex-grow: 1;
+}
+
+.kp-transparent-bg {
+    background: rect(#00000000);
+}
