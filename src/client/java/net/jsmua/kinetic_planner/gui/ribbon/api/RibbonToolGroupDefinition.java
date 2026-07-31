@@ -20,6 +20,14 @@ public interface RibbonToolGroupDefinition {
     /** 工具列表。 */
     List<RibbonToolDefinition> getTools();
 
+    /**
+     * 互斥组 ID。同一 tab 内相同 ID 的工具组共享一个互斥 toggle 组。
+     * <p>返回 Optional.empty() 表示该组工具不互斥（默认）。
+     *
+     * @return 互斥组 ID, 或 empty 表示不互斥
+     */
+    default Optional<ResourceLocation> getMutualExclusionGroupId() { return Optional.empty(); }
+
     /** 溢出权重: 数值越大越先被缩窄。 */
     default int getOverflowWeight() { return RibbonConstants.DEFAULT_OVERFLOW_WEIGHT; }
 

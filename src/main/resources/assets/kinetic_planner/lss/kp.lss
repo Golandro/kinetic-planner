@@ -1,0 +1,94 @@
+// KP Ribbon dark theme (spec §3.2 + 2026-07-31-ribbon-ldlib2-repair-plan Task 1)
+// 颜色 token:
+//   背景紫黑:  #ff2c2c34
+//   KP accent: #FF7C57D4
+//   组标签灰:  #ff9ca3af
+//   分隔符灰:  #ff4b5563
+// LSS 不支持 CSS 变量 / border-* 简写 / padding 简写; 颜色用 #AARRGGBB.
+
+// ===== Ribbon 根容器 =====
+.kp-ribbon-bar {
+    background: rect(#ff2c2c34);
+    padding-all: 2;
+    gap-all: 2;
+}
+
+// ===== Tab 头 (TabView 内部 __tab-view_tab_header_container__ 已由 LDLib2 提供, 这里只调 KP 样式) =====
+.kp-ribbon-tab {
+    base-background: rect(#00000000);
+    hover-background: rect(#14555560);
+    pressed-background: rect(#FF7C57D4);
+    color: #ff9ca3af;
+    padding-horizontal: 6;
+    padding-vertical: 2;
+}
+.kp-ribbon-tab.__selected__ {
+    base-background: rect(#FF7C57D4);
+    color: #fff3efe0;
+}
+.kp-ribbon-tab.__hovered__ {
+    color: #fff3efe0;
+}
+
+// ===== 工具组面板 (GroupPanel: COLUMN 外壳 + 底部标签) =====
+.kp-ribbon-content {
+    flex-direction: row;
+    align-items: center;
+    height: 44;
+    gap-all: 4;
+    overflow-x: scroll;
+}
+.kp-ribbon-group {
+    flex-direction: column;
+    align-items: center;
+    padding-all: 4;
+    gap-all: 2;
+    min-width: 48;
+}
+.kp-ribbon-group-label {
+    color: #ff9ca3af;
+    margin-top: 2;
+    height: 9;
+}
+.kp-ribbon-tool-row {
+    flex-direction: row;
+    align-items: center;
+    gap-all: 2;
+}
+
+// ===== 工具按钮 (Button / RibbonToggleButton 公共) =====
+.kp-ribbon-tool {
+    base-background: rect(#803d3d42);
+    hover-background: rect(#b04a4a52);
+    pressed-background: rect(#807c57d4);
+    color: #fff3efe0;
+    padding-horizontal: 4;
+    padding-vertical: 2;
+}
+.kp-ribbon-tool.__on__ {
+    base-background: rect(#FF7C57D4);
+    color: #fff3efe0;
+}
+.kp-ribbon-tool-label {
+    color: #fff3efe0;
+    height: 9;
+}
+
+// ===== QAT =====
+.kp-ribbon-qat {
+    flex-direction: row;
+    align-items: center;
+    gap-all: 2;
+    padding-horizontal: 2;
+}
+.kp-ribbon-qat-empty {
+    color: #ff4b5563;
+}
+
+// ===== 分隔符 =====
+.kp-ribbon-separator {
+    width: 1;
+    height: 16;
+    background: rect(#ff4b5563);
+    margin-horizontal: 2;
+}

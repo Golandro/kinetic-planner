@@ -20,6 +20,10 @@ import java.util.Optional;
  */
 public final class KpToolDefinitions {
 
+    /** Tools tab 工具互斥组 ID：Pan/Select/Line/Bezier/Snap 五选一。 */
+    public static final ResourceLocation TOOLS_MUTEX_ID =
+        ResourceLocation.fromNamespaceAndPath("kp", "mutex_tools");
+
     private final EditToolState toolState;
 
     public KpToolDefinitions(EditToolState toolState) {

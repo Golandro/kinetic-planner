@@ -245,4 +245,4 @@ Xaero 是当前唯一功能完整的地图适配器，其 Mixin 注入点（`Gui
 | JavaDoc 查询指南 | `docs/javadoc-guide.md` | 外部依赖 JavaDoc 查询方法 |
 | 文档审查报告 | `docs/chat_history/KineticPlanner-文档计划完整审查.md` | 完整审查意见与修订记录 |
 | 文档审查与建议 | `docs/chat_history/KineticPlanner-文档审查与建议.md` | README/许可证/文档结构建议 |
-| LLM 项目规则 | `AGENTS.md` | AI 编码助手项目上下文（包结构、API 约定、构建命令） |
+| LLM 项目规则 | `AGENTS.md` | AI 编码助手自包含项目上下文（§1-§7：项目/环境/规则/关联/记忆/探索/维护） |

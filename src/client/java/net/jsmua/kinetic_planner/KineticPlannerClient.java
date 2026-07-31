@@ -70,7 +70,7 @@ public class KineticPlannerClient {
 
         // 注册 KP Ribbon tab/group/component, 然后冻结 Ribbon 注册表
         // Register KP Ribbon tab/group/component, then freeze Ribbon registry
-        KpRibbonRegistration.register(EditToolState.getInstance());
+        KpRibbonRegistration.register(EditToolState.getInstance(), KineticPlannerClient.CONFIG);
         RibbonRegistry.freeze();
 
         // 从已注册工厂初始化 provider 实例（仅针对已安装的模组）
