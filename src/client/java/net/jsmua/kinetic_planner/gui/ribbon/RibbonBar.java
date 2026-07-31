@@ -83,6 +83,7 @@ public final class RibbonBar extends UIElement {
         layout(layout -> {
             layout.flexDirection(FlexDirection.COLUMN);
             layout.widthPercent(100);
+            layout.flexGrow(1);
         });
 
         // 一次性构建 (委托 RibbonBuilder)

@@ -2,6 +2,7 @@ package net.jsmua.kinetic_planner.gui.editor;
 
 import com.lowdragmc.lowdraglib2.editor.ui.Editor;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import net.jsmua.kinetic_planner.KineticPlannerClient;
 import net.jsmua.kinetic_planner.config.IKPConfig;
 import net.jsmua.kinetic_planner.gui.MapPlaceholderView;
@@ -104,6 +105,11 @@ public class KpMapEditor extends Editor {
         var preferenceStore = new KPConfigRibbonPreferenceStore(getKpConfig());
 
         RibbonBar ribbonBar = new RibbonBar(kpViewContextProvider, preferenceStore);
+        menuContainer.layout(layout -> {
+            layout.heightPercent(100);
+            layout.flexGrow(1);
+            layout.flexDirection(FlexDirection.ROW);
+        });
         menuContainer.addChild(ribbonBar);
         top.getLayout().height(60);  // 60px (header 20 + content 40)
     }
