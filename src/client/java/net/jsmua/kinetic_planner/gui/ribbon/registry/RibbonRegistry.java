@@ -1,5 +1,6 @@
 package net.jsmua.kinetic_planner.gui.ribbon.registry;
 
+import net.jsmua.kinetic_planner.gui.ribbon.api.ContextualTabGroup;
 import net.jsmua.kinetic_planner.gui.ribbon.api.RibbonHeaderComponent;
 import net.jsmua.kinetic_planner.gui.ribbon.api.RibbonTabDefinition;
 import net.minecraft.resources.ResourceLocation;
@@ -18,6 +19,7 @@ public final class RibbonRegistry {
 
     private static final Map<ResourceLocation, RibbonTabDefinition> TABS = new LinkedHashMap<>();
     private static final Map<ResourceLocation, RibbonHeaderComponent> HEADER_COMPONENTS = new LinkedHashMap<>();
+    private static final Map<ResourceLocation, ContextualTabGroup> CONTEXT_GROUPS = new LinkedHashMap<>();
     private static boolean frozen = false;
 
     private RibbonRegistry() {}
@@ -42,6 +44,24 @@ public final class RibbonRegistry {
             throw new IllegalStateException("Header component already registered: " + id);
         }
         HEADER_COMPONENTS.put(id, comp);
+    }
+
+    /** 注册上下文选项卡组。冻结后或重复 ID 抛 IllegalStateException。 */
+    public static void registerContextualGroup(ResourceLocation id, ContextualTabGroup group) {
+        Objects.requireNonNull(id, "id");
+        Objects.requireNonNull(group, "group");
+        ensureNotFrozen();
+        if (CONTEXT_GROUPS.containsKey(id)) {
+            throw new IllegalStateException("Contextual group already registered: " + id);
+        }
+        CONTEXT_GROUPS.put(id, group);
+    }
+
+    /** 返回按 priority 升序的上下文选项卡组列表。 */
+    public static List<ContextualTabGroup> getContextualGroups() {
+        var all = new ArrayList<>(CONTEXT_GROUPS.values());
+        all.sort(Comparator.comparingInt(ContextualTabGroup::getPriority));
+        return Collections.unmodifiableList(all);
     }
 
     /** ClientSetup 调用, 冻结后不可再注册。 */
@@ -82,6 +102,7 @@ public final class RibbonRegistry {
     static void resetForTest() {
         TABS.clear();
         HEADER_COMPONENTS.clear();
+        CONTEXT_GROUPS.clear();
         frozen = false;
     }
 }

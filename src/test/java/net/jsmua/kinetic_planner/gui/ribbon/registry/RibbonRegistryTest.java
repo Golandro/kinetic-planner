@@ -113,4 +113,47 @@ class RibbonRegistryTest {
         assertEquals("l2", leading.get(0).getId().getPath(), "priority=50 应排在 priority=100 前");
         assertEquals("l1", leading.get(1).getId().getPath());
     }
+
+    @Test
+    void contextualGroupRegisteredAndSorted() {
+        var group1 = new net.jsmua.kinetic_planner.gui.ribbon.api.SimpleContextualTabGroup(
+            ResourceLocation.fromNamespaceAndPath("kp", "map_editor"),
+            Component.literal("Map Editor"),
+            Optional.empty(),
+            200,
+            Optional.empty(),
+            List.of(),
+            net.jsmua.kinetic_planner.gui.ribbon.api.TabDisplayMode.PINNED);
+        var group2 = new net.jsmua.kinetic_planner.gui.ribbon.api.SimpleContextualTabGroup(
+            ResourceLocation.fromNamespaceAndPath("kp", "track_graph"),
+            Component.literal("Track Graph"),
+            Optional.empty(),
+            100,
+            Optional.empty(),
+            List.of(),
+            net.jsmua.kinetic_planner.gui.ribbon.api.TabDisplayMode.PINNED);
+
+        RibbonRegistry.registerContextualGroup(group2.getId(), group2);
+        RibbonRegistry.registerContextualGroup(group1.getId(), group1);
+
+        var groups = RibbonRegistry.getContextualGroups();
+        assertEquals(2, groups.size());
+        assertEquals("track_graph", groups.get(0).getId().getPath(), "priority=100 排前");
+        assertEquals("map_editor", groups.get(1).getId().getPath());
+    }
+
+    @Test
+    void registerContextualGroupAfterFreezeThrows() {
+        RibbonRegistry.freeze();
+        var group = new net.jsmua.kinetic_planner.gui.ribbon.api.SimpleContextualTabGroup(
+            ResourceLocation.fromNamespaceAndPath("kp", "g"),
+            Component.literal("G"),
+            Optional.empty(),
+            100,
+            Optional.empty(),
+            List.of(),
+            net.jsmua.kinetic_planner.gui.ribbon.api.TabDisplayMode.PINNED);
+        assertThrows(IllegalStateException.class,
+            () -> RibbonRegistry.registerContextualGroup(group.getId(), group));
+    }
 }
