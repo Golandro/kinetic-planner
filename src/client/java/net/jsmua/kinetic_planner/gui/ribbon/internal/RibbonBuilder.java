@@ -31,7 +31,8 @@ import java.util.Optional;
  *   <li>核心 tab + 上下文 tab 都通过 {@link TabView#addTab(Tab, UIElement)} 加入</li>
  *   <li>contextual tab 的可见性由 {@link Tab#setDisplay(boolean)} 控制, 不需要从 TabView 移除</li>
  *   <li>首次 addTab 会触发 selectTab 回调, 在回调中通过 bar.onTabSelected 持久化选中 ID</li>
- *   <li>QAT 与 header components 放入 {@link TabView#tabHeaderContainer} (tab 头容器)</li>
+ *   <li>header 组装 (LEADING + QAT + TRAILING) 委托 {@link RibbonTabViewAdapter},
+ *       产出顺序 [LEADING..., tabScroller(flex:1), QAT, TRAILING...] (QAT 右对齐)</li>
  * </ul>
  */
 public final class RibbonBuilder {
@@ -39,7 +40,7 @@ public final class RibbonBuilder {
     private RibbonBuilder() {}
 
     /**
-     * 首次构建: 创建 TabView, 加入 QAT/header/tabs, 设置给 RibbonBar。
+     * 首次构建: 委托 {@link RibbonTabViewAdapter} 创建 TabView + 组装 header, 再加入 tabs, 设置给 RibbonBar。
      *
      * @param bar              目标 RibbonBar
      * @param tabStates        所有 tab 的状态 (核心 + 上下文)
@@ -50,27 +51,15 @@ public final class RibbonBuilder {
                              Map<ResourceLocation, RibbonTabState> tabStates,
                              DefaultQuickAccessToolbar qat,
                              Optional<ResourceLocation> preferredTabId) {
-        var tabView = new TabView();
+        // === 1. 委托 RibbonTabViewAdapter 构建 TabView + 组装 header ===
+        // header 顺序: [LEADING..., tabScroller(flex:1), QAT, TRAILING...] (QAT 右对齐, Task 1)
+        var adapter = new RibbonTabViewAdapter(
+            tabStates, qat,
+            RibbonRegistry.getHeaderComponents(RibbonHeaderComponent.Placement.LEADING),
+            RibbonRegistry.getHeaderComponents(RibbonHeaderComponent.Placement.TRAILING),
+            preferredTabId);
+        var tabView = adapter.buildTabView(bar);
         bar.setTabView(tabView);
-
-        // === 1. 组装 header: QAT + LEADING components + TabView 内置 tabScroller + TRAILING components ===
-        // tabHeaderContainer 默认已包含 tabScroller, 我们在它前面插入 QAT/LEADING, 在后面追加 TRAILING
-        var header = tabView.tabHeaderContainer;
-
-        // 在 tabScroller 前面插入 QAT + LEADING components (insert at 0..n-1, tabScroller 已存在)
-        var leadingElems = new ArrayList<UIElement>();
-        leadingElems.add(qat.createElement());
-        for (var comp : RibbonRegistry.getHeaderComponents(RibbonHeaderComponent.Placement.LEADING)) {
-            leadingElems.add(comp.createElement());
-        }
-        // tabHeaderContainer 当前结构: [tabScroller]; 我们改成: [QAT, LEADING..., tabScroller, TRAILING...]
-        // 用 addChildAt 在 tabScroller 前逐个插入
-        for (int i = 0; i < leadingElems.size(); i++) {
-            header.addChildAt(leadingElems.get(i), i);
-        }
-        for (var comp : RibbonRegistry.getHeaderComponents(RibbonHeaderComponent.Placement.TRAILING)) {
-            header.addChild(comp.createElement());
-        }
 
         // === 2. 收集所有要显示的 tab (核心 + 上下文 active 的) ===
         // 注意: 上下文 tab 即使未 active, 也加入 TabView 但 setDisplay(false), 方便切换时显示

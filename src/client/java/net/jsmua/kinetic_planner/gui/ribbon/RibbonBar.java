@@ -29,7 +29,7 @@ import java.util.Set;
  * <p>结构:
  * <pre>
  * RibbonBar (UIElement, COLUMN, kp-ribbon-bar)
- * └── TabView (内置 tabHeaderContainer: QAT + LEADING + tabScroller + TRAILING; tabContentContainer)
+ * └── TabView (内置 tabHeaderContainer: LEADING + tabScroller + QAT + TRAILING; tabContentContainer)
  * </pre>
  */
 public final class RibbonBar extends UIElement {
