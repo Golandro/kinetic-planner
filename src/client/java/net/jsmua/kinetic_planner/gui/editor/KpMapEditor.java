@@ -1,7 +1,6 @@
 package net.jsmua.kinetic_planner.gui.editor;
 
 import com.lowdragmc.lowdraglib2.editor.ui.Editor;
-import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import net.jsmua.kinetic_planner.KineticPlannerClient;
 import net.jsmua.kinetic_planner.config.IKPConfig;
@@ -146,7 +145,7 @@ public class KpMapEditor extends Editor {
         placeView(new ToolPanelView(), () -> leftWindow.getRightTop());
         this.mapViewport = new MapPlaceholderView();
         placeView(this.mapViewport, () -> centerWindow.getRightTop());
-        centerWindow.getViewContainer().getStyle().backgroundTexture(IGuiTexture.EMPTY);
+        MapPlaceholderView.prepareTransparentChain(centerWindow.getViewContainer());
     }
 
     /**

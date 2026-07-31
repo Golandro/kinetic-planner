@@ -1,6 +1,7 @@
 package net.jsmua.kinetic_planner.gui;
 
 import com.lowdragmc.lowdraglib2.editor.ui.View;
+import com.lowdragmc.lowdraglib2.editor.ui.ViewContainer;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 
 /**
@@ -25,5 +26,21 @@ public class MapPlaceholderView extends View {
     public MapPlaceholderView(String name) {
         super(name);
         getStyle().backgroundTexture(IGuiTexture.EMPTY);
+    }
+
+    /**
+     * 清空 ViewContainer -> TabView -> tabContentContainer -> tabHeaderContainer
+     * 背景链, 确保地图占位区域全透明 (spec §6.6, Task 4)。
+     *
+     * <p>仅作用于传入的 {@code container}, 不影响其他 window (如左侧工具面板),
+     * 因此 tab 头部 (leftWindow) 仍保持不透明, 仅 centerWindow 的链路被清空。
+     *
+     * @param container 中心 window 的 ViewContainer (运行时由 KpMapEditor.placeCustomViews 传入)
+     */
+    public static void prepareTransparentChain(ViewContainer container) {
+        container.getStyle().backgroundTexture(IGuiTexture.EMPTY);
+        container.tabView.getStyle().backgroundTexture(IGuiTexture.EMPTY);
+        container.tabView.tabContentContainer.getStyle().backgroundTexture(IGuiTexture.EMPTY);
+        container.tabView.tabHeaderContainer.getStyle().backgroundTexture(IGuiTexture.EMPTY);
     }
 }
