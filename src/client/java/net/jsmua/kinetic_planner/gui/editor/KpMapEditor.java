@@ -141,9 +141,47 @@ public class KpMapEditor extends Editor {
      * {@code centerWindow}/{@code rightWindow} 已初始化）后调用。
      */
     public void placeCustomViews() {
+        // 先扁平化默认窗格树 (移除 rightWindow/bottomWindow), 再放置 View。
+        flattenMainAreaLayout();
         placeView(new ToolPanelView(), () -> leftWindow.getRightTop());
         this.mapViewport = new MapPlaceholderView();
         placeView(this.mapViewport, () -> centerWindow.getRightTop());
         centerWindow.getViewContainer().getStyle().backgroundTexture(IGuiTexture.EMPTY);
+    }
+
+    /**
+     * 将 LDLib2 Editor 默认四窗格树扁平为仅 leftWindow + centerWindow, 降低 UIElement DOM 深度。
+     *
+     * <p>Editor 构造器构建的默认树:
+     * <pre>
+     * rootWindow (水平 80%)
+     * ├── split1.first (垂直 75%)
+     * │   ├── split2.first (水平 28%)
+     * │   │   ├── leftWindow
+     * │   │   └── centerWindow
+     * │   └── bottomWindow
+     * └── rightWindow
+     * </pre>
+     *
+     * <p>{@code setImmortal}/{@code setAnchorId} 为 protected (跨包不可调), 故无法重建树。
+     * 改用公共 {@code SplittableWindow.removeSplitWindow} 逐个移除 rightWindow / bottomWindow:
+     * 因 rootWindow 为 immortal + anchored, 移除触发 {@code replaceContentWith}, 将幸存兄弟节点
+     * 的 split 提升到 rootWindow。两次移除后 rootWindow 直接承载 leftWindow/centerWindow
+     * 水平分割 (~28/72)。
+     *
+     * <p>rightWindow/bottomWindow 字段引用保持不变 (仍指向已脱离树的窗口对象);
+     * {@link Editor#captureLayout()}/{@link Editor#applyLayout} 仅遍历 rootWindow 活子树
+     * 并通过 anchor 注册表重绑, 可容忍此状态。inspectorView (默认置于 rightWindow) 随之隐藏,
+     * 符合"仅左+中可见"目标。运行时行为靠 {@code gradlew runClient} 验收 (clinit 限制无法单测)。
+     */
+    private void flattenMainAreaLayout() {
+        // 1. 移除 rightWindow: rootWindow 水平分割坍缩为垂直分割 (split1.first),
+        //    bottomWindow 提升为 rootWindow.second。
+        rootWindow.removeSplitWindow(rightWindow);
+        // 2. 移除 bottomWindow: rootWindow 垂直分割坍缩为水平分割 (split2.first),
+        //    leftWindow/centerWindow 直接挂到 rootWindow 下。
+        rootWindow.removeSplitWindow(bottomWindow);
+        // 3. 同步 split style: leftWindow ~28% / centerWindow ~72%。
+        rootWindow.splitStyle(style -> style.percentage(28).minPercentage(5).maxPercentage(95));
     }
 }
