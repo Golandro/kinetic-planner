@@ -4,6 +4,9 @@ import net.jsmua.kinetic_planner.command.KPClientCommands;
 import net.jsmua.kinetic_planner.command.KPCommandTree;
 import net.jsmua.kinetic_planner.config.KPConfig;
 import net.jsmua.kinetic_planner.gui.config.KPClothConfigScreen;
+import net.jsmua.kinetic_planner.gui.editor.EditToolState;
+import net.jsmua.kinetic_planner.gui.editor.ribbon.KpRibbonRegistration;
+import net.jsmua.kinetic_planner.gui.ribbon.registry.RibbonRegistry;
 import net.jsmua.kinetic_planner.data.ProviderConfigRegistry;
 import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayDispatcher;
@@ -54,6 +57,11 @@ public class KineticPlannerClient {
 
         // 冻结工厂注册表——不允许后续注册 / Freeze factory registry — no more registrations allowed
         MapProviderRegistry.freeze();
+
+        // 注册 KP Ribbon tab/group/component, 然后冻结 Ribbon 注册表
+        // Register KP Ribbon tab/group/component, then freeze Ribbon registry
+        KpRibbonRegistration.register(EditToolState.getInstance());
+        RibbonRegistry.freeze();
 
         // 从已注册工厂初始化 provider 实例（仅针对已安装的模组）
         // Initialize provider instances from registered factories (only for installed mods)
