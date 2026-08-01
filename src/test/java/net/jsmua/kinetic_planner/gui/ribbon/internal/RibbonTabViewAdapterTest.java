@@ -1,5 +1,6 @@
 package net.jsmua.kinetic_planner.gui.ribbon.internal;
 
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TabView;
 import net.jsmua.kinetic_planner.gui.ribbon.RibbonBar;
 import net.jsmua.kinetic_planner.gui.ribbon.api.QuickAccessToolbar;
@@ -58,12 +59,12 @@ class RibbonTabViewAdapterTest {
     }
 
     /**
-     * 验证 buildTabView(RibbonBar) 方法存在且返回 TabView。
+     * 验证 buildTabView(RibbonBar, List&lt;UIElement&gt;) 方法存在且返回 TabView。
      */
     @Test
     void buildTabViewMethodSignatureMatchesSpec() throws Exception {
         var cls = Class.forName(ADAPTER_CLASS_NAME);
-        var m = cls.getMethod("buildTabView", RibbonBar.class);
+        var m = cls.getMethod("buildTabView", RibbonBar.class, java.util.List.class);
         assertEquals(TabView.class, m.getReturnType(),
             "buildTabView 必须返回 TabView");
     }

@@ -1,5 +1,6 @@
 package net.jsmua.kinetic_planner.gui.ribbon.internal;
 
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TabView;
 import net.jsmua.kinetic_planner.gui.ribbon.RibbonBar;
 import net.jsmua.kinetic_planner.gui.ribbon.api.RibbonPreferenceStore;
@@ -90,7 +91,8 @@ class RibbonBuilderTest {
             RibbonBar.class,
             java.util.Map.class,
             DefaultQuickAccessToolbar.class,
-            java.util.Optional.class);
+            java.util.Optional.class,
+            java.util.List.class);
         assertEquals(void.class, m.getReturnType(),
             "build 必须返回 void");
     }
