@@ -5,7 +5,6 @@ import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Toggle;
-import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import net.jsmua.kinetic_planner.gui.ribbon.api.ToolSize;
 import net.minecraft.network.chat.Component;
@@ -51,6 +50,7 @@ public final class RibbonToggleButton {
         button.setText(text);
         icon.ifPresent(button::addPreIcon);
         button.addClass("kp-ribbon-tool");
+        toggle.addClass("kp-ribbon-tool-toggle");
 
         configureLayout(text);
 
@@ -99,10 +99,8 @@ public final class RibbonToggleButton {
             // 2 列宽，垂直：图标按钮在上，文字标签在下
             toggle.layout(layout -> {
                 layout.flexDirection(FlexDirection.COLUMN);
-                layout.alignItems(AlignItems.CENTER);
                 layout.width(40);
                 layout.height(38);
-                layout.paddingAll(1);
             });
             button.layout(layout -> {
                 layout.width(32);
@@ -121,15 +119,9 @@ public final class RibbonToggleButton {
             // SMALL：水平排列，图标左文字右
             toggle.layout(layout -> {
                 layout.flexDirection(FlexDirection.ROW);
-                layout.alignItems(AlignItems.CENTER);
                 layout.height(22);
-                layout.paddingAll(1);
             });
-            button.layout(layout -> {
-                layout.height(18);
-                layout.paddingHorizontal(4);
-                layout.paddingVertical(1);
-            });
+            button.layout(layout -> layout.height(18));
         }
     }
 

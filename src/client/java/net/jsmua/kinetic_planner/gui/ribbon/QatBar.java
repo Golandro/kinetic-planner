@@ -2,7 +2,6 @@ package net.jsmua.kinetic_planner.gui.ribbon;
 
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
-import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import net.jsmua.kinetic_planner.gui.ribbon.api.ButtonAction;
 import net.jsmua.kinetic_planner.gui.ribbon.api.RibbonToolDefinition;
@@ -26,10 +25,7 @@ public final class QatBar extends UIElement {
     public QatBar() {
         super();
         addClass("kp-ribbon-qat");
-        layout(layout -> {
-            layout.flexDirection(FlexDirection.ROW);
-            layout.alignItems(AlignItems.CENTER);
-        });
+        layout(layout -> layout.flexDirection(FlexDirection.ROW));
     }
 
     /**

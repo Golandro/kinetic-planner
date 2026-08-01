@@ -55,3 +55,9 @@
     height: 16;
     margin-horizontal: 2;
 }
+
+// ===== Toggle 容器（RibbonToggleButton 内部 Toggle） =====
+.kp-ribbon-tool-toggle {
+    align-items: center;
+    padding-all: 1;
+}

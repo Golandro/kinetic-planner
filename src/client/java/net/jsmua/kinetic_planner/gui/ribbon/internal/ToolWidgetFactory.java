@@ -92,10 +92,7 @@ public final class ToolWidgetFactory {
                 layout.height(32);
             });
         } else {
-            button.layout(layout -> {
-                layout.height(18);
-                layout.paddingHorizontal(4);
-            });
+            button.layout(layout -> layout.height(18));
         }
     }
 }

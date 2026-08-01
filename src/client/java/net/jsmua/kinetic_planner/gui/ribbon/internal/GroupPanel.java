@@ -2,7 +2,6 @@ package net.jsmua.kinetic_planner.gui.ribbon.internal;
 
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
-import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import net.jsmua.kinetic_planner.gui.ribbon.api.RibbonToolGroupDefinition;
 import net.jsmua.kinetic_planner.gui.ribbon.internal.toggle.RibbonToggleGroup;
@@ -23,10 +22,7 @@ public final class GroupPanel extends UIElement {
     private GroupPanel() {
         super();
         addClass("kp-ribbon-group");
-        layout(layout -> {
-            layout.flexDirection(FlexDirection.COLUMN);
-            layout.alignItems(AlignItems.CENTER);
-        });
+        layout(layout -> layout.flexDirection(FlexDirection.COLUMN));
     }
 
     /**
@@ -42,10 +38,7 @@ public final class GroupPanel extends UIElement {
 
         var toolRow = new UIElement();
         toolRow.addClass("kp-ribbon-tool-row");
-        toolRow.layout(layout -> {
-            layout.flexDirection(FlexDirection.ROW);
-            layout.alignItems(AlignItems.CENTER);
-        });
+        toolRow.layout(layout -> layout.flexDirection(FlexDirection.ROW));
         for (var tool : group.getTools()) {
             toolRow.addChild(ToolWidgetFactory.create(tool, toggleGroup));
         }
