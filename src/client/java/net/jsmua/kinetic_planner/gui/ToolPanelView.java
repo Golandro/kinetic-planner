@@ -17,6 +17,7 @@ public class ToolPanelView extends View {
 
     public ToolPanelView() {
         super();
+        addClass("kp-tool-panel");
         layout(layout -> {
             layout.flexDirection(FlexDirection.COLUMN);
             layout.paddingAll(4);
@@ -31,6 +32,7 @@ public class ToolPanelView extends View {
 
     private void addToolButton(String label, EditToolState.Tool tool) {
         Button btn = new Button();
+        btn.addClass("kp-tool-button");
         btn.setText(label);
         btn.setOnClick(event -> EditToolState.getInstance().setCurrentTool(tool));
         addChild(btn);

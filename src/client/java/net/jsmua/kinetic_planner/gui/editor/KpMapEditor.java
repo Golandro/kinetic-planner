@@ -1,6 +1,7 @@
 package net.jsmua.kinetic_planner.gui.editor;
 
 import com.lowdragmc.lowdraglib2.editor.ui.Editor;
+import com.lowdragmc.lowdraglib2.editor.ui.EditorLayoutStore;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import net.jsmua.kinetic_planner.KineticPlannerClient;
 import net.jsmua.kinetic_planner.config.IKPConfig;
@@ -31,6 +32,9 @@ public class KpMapEditor extends Editor {
     /** 演示上下文 ID (与 KpRibbonRegistration 中注册的 contextual group ID 对应)。 */
     public static final ResourceLocation DEMO_CONTEXT_ID =
         ResourceLocation.fromNamespaceAndPath("kp", "demo_context_group");
+
+    /** 固定 project type 名称, 用于 EditorLayoutStore 保存/恢复编辑器窗格布局。 */
+    private static final String PROJECT_TYPE_NAME = "kinetic_planner_editor";
 
     @Nullable
     private MapPlaceholderView mapViewport;
@@ -134,18 +138,61 @@ public class KpMapEditor extends Editor {
     }
 
     /**
-     * 放置自定义 View 到各 window。
+     * 放置自定义 View 到各 window, 并恢复上次保存的窗格布局。
      *
      * <p>必须在 {@link Editor} 构造完成（{@code rootWindow}/{@code leftWindow}/
      * {@code centerWindow}/{@code rightWindow} 已初始化）后调用。
+     *
+     * <p>流程:
+     * <ol>
+     *   <li>先创建默认 View 并放置到默认位置, 使 {@link Editor#applyLayout} 能收集到它们。</li>
+     *   <li>尝试从 {@link EditorLayoutStore} 加载上次保存的布局; 存在则调用 {@code applyLayout}
+     *       恢复窗格树与 View 位置, <b>不再压平</b> 布局。</li>
+     *   <li>无保存布局时, 按默认行为压平为 left+center 两栏。</li>
+     *   <li>隐藏主/侧面板的 collapse 按钮, 清空 center 背景链。</li>
+     * </ol>
      */
     public void placeCustomViews() {
-        // 先扁平化默认窗格树 (移除 rightWindow/bottomWindow), 再放置 View。
-        flattenMainAreaLayout();
-        placeView(new ToolPanelView(), () -> leftWindow.getRightTop());
-        this.mapViewport = new MapPlaceholderView();
-        placeView(this.mapViewport, () -> centerWindow.getRightTop());
+        // 1. 创建默认 View 并先放到默认位置, 确保 applyLayout 能收集到 live views。
+        var toolPanel = new ToolPanelView();
+        var mapViewport = new MapPlaceholderView();
+        this.mapViewport = mapViewport;
+        placeView(toolPanel, () -> leftWindow.getRightTop());
+        placeView(mapViewport, () -> centerWindow.getRightTop());
+
+        // 2. 若存在保存的布局则恢复, 否则保持默认四栏树等待下一步压平。
+        var savedLayout = EditorLayoutStore.load(PROJECT_TYPE_NAME);
+        savedLayout.ifPresent(this::applyLayout);
+
+        // 3. 首次打开 (无保存布局) 时压平为 left+center。
+        if (savedLayout.isEmpty()) {
+            flattenMainAreaLayout();
+        }
+
+        // 4. 隐藏 collapse 按钮; 清空 center 背景链。
+        hideCollapseButtons();
         MapPlaceholderView.prepareTransparentChain(centerWindow.getViewContainer());
+    }
+
+    /**
+     * 隐藏左/中面板的 collapse 按钮, 防止用户误收缩主工作区。
+     */
+    private void hideCollapseButtons() {
+        if (leftWindow != null && leftWindow.getViewContainer() != null) {
+            leftWindow.getViewContainer().collapseButton.setDisplay(false);
+        }
+        if (centerWindow != null && centerWindow.getViewContainer() != null) {
+            centerWindow.getViewContainer().collapseButton.setDisplay(false);
+        }
+    }
+
+    /**
+     * 保存当前编辑器窗格布局到 {@link EditorLayoutStore}。
+     *
+     * <p>由 {@link KpEditorScreen#onClose()} 调用, 在退出编辑模式时持久化用户拖拽后的布局。
+     */
+    public void saveEditorLayout() {
+        EditorLayoutStore.save(PROJECT_TYPE_NAME, captureLayout());
     }
 
     /**

@@ -277,6 +277,8 @@ public class KpEditorScreen extends Screen implements MapOverlayContextProvider 
 
     @Override
     public void onClose() {
+        // 保存用户拖拽后的窗格布局, 下次进入编辑模式时恢复。
+        editor.saveEditorLayout();
         KpClientState.setEditMode(false);
         Minecraft.getInstance().setScreen(guiMap);
     }

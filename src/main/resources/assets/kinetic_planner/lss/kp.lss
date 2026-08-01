@@ -93,6 +93,23 @@
     margin-horizontal: 2;
 }
 
+// ===== 工具面板 (ToolPanelView) =====
+// 拖拽到 centerWindow 后, center 容器背景已被清空, 工具面板必须自带背景与按钮样式。
+.kp-tool-panel {
+    background: rect(#ff2c2c34);
+    padding-all: 4;
+    gap-all: 2;
+}
+
+.kp-tool-button {
+    base-background: rect(#803d3d42);
+    hover-background: rect(#b04a4a52);
+    pressed-background: rect(#807c57d4);
+    color: #fff3efe0;
+    padding-horizontal: 4;
+    padding-vertical: 2;
+}
+
 // ===== Layout helpers (Task 5: 可选复用类, 供未来响应式布局使用) =====
 // LSS 语法已验证: flex-grow (FloatOptional), width/height 百分比 (DimensionValue),
 //   rect(#AARRGGBB) 纹理 (TextureValue). 见 LDLib2 gui/ui/style.
