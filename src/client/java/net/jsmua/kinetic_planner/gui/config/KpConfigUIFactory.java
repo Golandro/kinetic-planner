@@ -16,6 +16,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.TabView;
 import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.TaffyPosition;
+import dev.vfyjxf.taffy.style.TaffyDisplay;
 import net.jsmua.kinetic_planner.data.ProviderConfig;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayDispatcher;
 import net.minecraft.network.chat.Component;
@@ -54,7 +55,7 @@ public final class KpConfigUIFactory {
             layout.top(PANEL_TOP);
             layout.width(PANEL_WIDTH);
             layout.heightAuto();
-            layout.display(dev.vfyjxf.taffy.style.TaffyDisplay.FLEX);
+            layout.display(TaffyDisplay.FLEX);
             layout.flexDirection(FlexDirection.COLUMN);
             layout.paddingAll(8);
             layout.gapAll(4);

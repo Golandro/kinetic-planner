@@ -73,9 +73,7 @@ public final class RibbonBar extends UIElement {
         if (this.selectedTabId == null) {
             var first = net.jsmua.kinetic_planner.gui.ribbon.registry.RibbonRegistry
                 .getTabsSortedByPriority().stream().findFirst();
-            if (first.isPresent()) {
-                this.selectedTabId = first.get().getId();
-            }
+            first.ifPresent(ribbonTabDefinition -> this.selectedTabId = ribbonTabDefinition.getId());
         }
 
         // 布局

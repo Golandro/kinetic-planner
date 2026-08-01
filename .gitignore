@@ -50,6 +50,7 @@ logs/
 .codebuddy
 .trae
 .roo
+.qoder
 
 # Why you want to use a vendor-specific configuration?
 CLAUDE.md
