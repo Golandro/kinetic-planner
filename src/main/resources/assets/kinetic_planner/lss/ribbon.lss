@@ -3,8 +3,32 @@
 
 // ===== Ribbon 根容器 =====
 .kp-ribbon-bar {
-    padding-all: 2;
-    gap-all: 2;
+    flex-direction: column;
+    width: 100%;
+    flex-grow: 1;
+    background: #00000000;
+}
+
+.kp-ribbon-header-button {
+    width: 16;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    padding-horizontal: 2;
+    background: #20FFFFFF;
+}
+.kp-ribbon-header-button:hover {
+    background: #40FFFFFF;
+}
+
+// ===== TabView header / content 背景覆盖 =====
+.__tab-view_tab_header_container__ {
+    background: #00000000;
+    border: 0;
+}
+.__tab-view_tab_content_container__ {
+    background: #00000000;
+    border: 0;
 }
 
 // ===== 工具组面板 =====

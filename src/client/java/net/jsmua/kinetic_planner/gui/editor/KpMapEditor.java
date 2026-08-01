@@ -2,6 +2,11 @@ package net.jsmua.kinetic_planner.gui.editor;
 
 import com.lowdragmc.lowdraglib2.editor.ui.Editor;
 import com.lowdragmc.lowdraglib2.editor.ui.EditorLayoutStore;
+import com.lowdragmc.lowdraglib2.gui.texture.Icons;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.util.TreeBuilder;
+import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import net.jsmua.kinetic_planner.KineticPlannerClient;
 import net.jsmua.kinetic_planner.config.IKPConfig;
@@ -10,10 +15,13 @@ import net.jsmua.kinetic_planner.gui.ToolPanelView;
 import net.jsmua.kinetic_planner.gui.editor.ribbon.KPConfigRibbonPreferenceStore;
 import net.jsmua.kinetic_planner.gui.editor.ribbon.KpViewContextProvider;
 import net.jsmua.kinetic_planner.gui.ribbon.RibbonBar;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -99,23 +107,76 @@ public class KpMapEditor extends Editor {
     @Override
     protected void initMenus() {
         // 不调用 super.initMenus() -- 不添加 FileMenu/ViewMenu
-        menuContainer.clearAllChildren();
 
         // 构造 KP 适配层的 ViewContextProvider + PreferenceStore
-        // ViewContextProvider 通过 supplier 读取本实例的 activeContexts (无静态状态)
-        // PreferenceStore 通过 KineticPlannerClient.CONFIG 获取真实 IKPConfig
         this.kpViewContextProvider = new KpViewContextProvider(this::getActiveContexts);
         var preferenceStore = new KPConfigRibbonPreferenceStore(getKpConfig());
 
-        RibbonBar ribbonBar = new RibbonBar(kpViewContextProvider, preferenceStore);
-        menuContainer.layout(layout -> {
-            layout.heightPercent(100);
-            layout.flexGrow(1);
-            layout.flexDirection(FlexDirection.ROW);
-        });
-        menuContainer.addChild(ribbonBar);
-        // top 区域高度由内部 flex 子元素自适应，不硬编码高度
+        // Ribbon 栏独占整个 Editor top 区域，替代默认标题栏。
+        // 默认 top 包含 icon/menuContainer/topPlaceholder/buttonContainer，这里全部清除。
+        top.clearAllChildren();
         top.getLayout().flexDirection(FlexDirection.COLUMN);
+        top.getLayout().widthPercent(100);
+        top.getLayout().heightAuto();
+
+        RibbonBar ribbonBar = new RibbonBar(kpViewContextProvider, preferenceStore, createRightHeaderWidgets());
+        top.addChild(ribbonBar);
+    }
+
+    /**
+     * 创建 Ribbon header 右侧控件：从右到左依次为关闭、帮助、下拉菜单、快速工具栏。
+     * 在 header 中按传入顺序追加，因此最终视觉顺序（从左到右）为 QAT -> 下拉 -> 帮助 -> 关闭。
+     */
+    private List<UIElement> createRightHeaderWidgets() {
+        var rightWidgets = new ArrayList<UIElement>();
+
+        // 1) 快速工具配置菜单（下拉入口，包含多余快速工具 + Ribbon 显示控制）
+        var overflowButton = new Button();
+        overflowButton.setText("▼");
+        overflowButton.addClass("kp-ribbon-header-button");
+        overflowButton.layout(layout -> layout.heightPercent(100));
+        overflowButton.setOnClick(event -> {
+            var menu = TreeBuilder.Menu.start()
+                .leaf("Quick Access Tools", () -> {
+                    // TODO: 打开 QAT 配置面板
+                })
+                .crossLine()
+                .leaf("Ribbon Display Options", () -> {
+                    // TODO: 打开 Ribbon 显示控制面板
+                })
+                .crossLine()
+                .leaf("Toggle Demo Context", () -> setDemoContextActive(!isDemoContextActive()));
+            openMenu(event.currentElement.getPositionX(),
+                     event.currentElement.getPositionY() + event.currentElement.getSizeHeight(),
+                     menu);
+        });
+        rightWidgets.add(overflowButton);
+
+        // 2) 帮助按钮
+        var helpButton = new Button();
+        helpButton.setText("?");
+        helpButton.addClass("kp-ribbon-header-button");
+        helpButton.layout(layout -> layout.heightPercent(100));
+        helpButton.setOnClick(event -> {
+            // TODO: 打开帮助文档/对话框
+        });
+        rightWidgets.add(helpButton);
+
+        // 3) 关闭按钮（替代 Editor 默认 closeButton，直接关闭编辑器）
+        var closeButton = new Button();
+        closeButton.noText();
+        closeButton.addPreIcon(Icons.WINDOW_CLOSE);
+        closeButton.addClass("kp-ribbon-header-button");
+        closeButton.addClass("__white_icon__");
+        closeButton.layout(layout -> layout.heightPercent(100));
+        closeButton.setOnClick(event -> close());
+        rightWidgets.add(closeButton);
+
+        // 统一让右侧按钮垂直居中
+        for (var widget : rightWidgets) {
+            widget.layout(layout -> layout.alignItems(AlignItems.CENTER));
+        }
+        return rightWidgets;
     }
 
     /**

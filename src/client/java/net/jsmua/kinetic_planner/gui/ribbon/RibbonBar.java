@@ -15,6 +15,7 @@ import net.jsmua.kinetic_planner.gui.ribbon.internal.RibbonPreferences;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -40,14 +41,22 @@ public final class RibbonBar extends UIElement {
     private final DefaultQuickAccessToolbar qat;
     private final Map<ResourceLocation, RibbonTabState> tabStates = new HashMap<>();
     private final Map<ResourceLocation, Tab> tabById = new HashMap<>();
+    private final List<UIElement> rightHeaderWidgets;
     private TabView tabView;
     private ResourceLocation selectedTabId;
 
     public RibbonBar(ViewContextProvider contextProvider,
                      RibbonPreferenceStore preferenceStore) {
+        this(contextProvider, preferenceStore, List.of());
+    }
+
+    public RibbonBar(ViewContextProvider contextProvider,
+                     RibbonPreferenceStore preferenceStore,
+                     List<UIElement> rightHeaderWidgets) {
         super();
         this.contextProvider = contextProvider;
         this.preferenceStore = preferenceStore;
+        this.rightHeaderWidgets = rightHeaderWidgets;
         this.preferences = RibbonPreferences.load(preferenceStore);
         this.qat = new DefaultQuickAccessToolbar(preferences);
 
@@ -85,7 +94,7 @@ public final class RibbonBar extends UIElement {
         });
 
         // 一次性构建 (委托 RibbonBuilder)
-        RibbonBuilder.build(this, tabStates, qat, Optional.ofNullable(selectedTabId));
+        RibbonBuilder.build(this, tabStates, qat, Optional.ofNullable(selectedTabId), rightHeaderWidgets);
     }
 
     /** RibbonBuilder 回调: 设置 TabView 引用并加入 RibbonBar 子树。 */

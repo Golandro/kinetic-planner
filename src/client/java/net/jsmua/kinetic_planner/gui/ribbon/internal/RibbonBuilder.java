@@ -16,6 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -49,15 +50,16 @@ public final class RibbonBuilder {
     public static void build(RibbonBar bar,
                              Map<ResourceLocation, RibbonTabState> tabStates,
                              DefaultQuickAccessToolbar qat,
-                             Optional<ResourceLocation> preferredTabId) {
+                             Optional<ResourceLocation> preferredTabId,
+                             List<UIElement> rightHeaderWidgets) {
         // === 1. 委托 RibbonTabViewAdapter 构建 TabView + 组装 header ===
-        // header 顺序: [LEADING..., tabScroller(flex:1), QAT, TRAILING...] (QAT 右对齐, Task 1)
+        // header 顺序: [LEADING..., tabScroller(flex:1), QAT, rightHeaderWidgets..., TRAILING...] (右侧组件右对齐, Task 2)
         var adapter = new RibbonTabViewAdapter(
             tabStates, qat,
             RibbonRegistry.getHeaderComponents(RibbonHeaderComponent.Placement.LEADING),
             RibbonRegistry.getHeaderComponents(RibbonHeaderComponent.Placement.TRAILING),
             preferredTabId);
-        var tabView = adapter.buildTabView(bar);
+        var tabView = adapter.buildTabView(bar, rightHeaderWidgets);
         bar.setTabView(tabView);
 
         // === 2. 收集所有要显示的 tab (核心 + 上下文 active 的) ===

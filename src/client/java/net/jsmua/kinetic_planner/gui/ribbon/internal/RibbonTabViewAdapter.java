@@ -1,5 +1,6 @@
 package net.jsmua.kinetic_planner.gui.ribbon.internal;
 
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TabView;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
@@ -61,7 +62,7 @@ public final class RibbonTabViewAdapter {
 
     /**
      * 构建并配置 TabView, 组装 header 顺序:
-     * {@code [LEADING..., tabScroller(flex:1), QAT, TRAILING...]}。
+     * {@code [LEADING..., tabScroller(flex:1), QAT, rightHeaderWidgets..., TRAILING...]}。
      *
      * <p>步骤:
      * <ol>
@@ -70,14 +71,16 @@ public final class RibbonTabViewAdapter {
      *   <li>配置 tabScroller (flexGrow:1, flexShrink:1) 占据中间剩余空间</li>
      *   <li>用 addChildAt 把 LEADING 组件插入 tabScroller 之前 (索引 0..n-1)</li>
      *   <li>用 addChild 把 QAT 追加到 tabScroller 之后</li>
-     *   <li>用 addChild 把 TRAILING 组件追加到 QAT 之后</li>
+     *   <li>用 addChild 把 rightHeaderWidgets 追加到 QAT 之后 (关闭/帮助/下拉菜单等)</li>
+     *   <li>用 addChild 把 TRAILING 组件追加到 rightHeaderWidgets 之后</li>
      *   <li>配置 tabContentContainer (flexGrow:1) 占据下方剩余空间</li>
      * </ol>
      *
-     * @param owner 目标 RibbonBar (保留以匹配 spec 接口, 当前未使用)
+     * @param owner            目标 RibbonBar (保留以匹配 spec 接口, 当前未使用)
+     * @param rightHeaderWidgets 编辑器传入的右侧控件 (可为空)
      * @return 配置好的 TabView (header 已组装, content 容器已布局; tabs 尚未填充)
      */
-    public TabView buildTabView(RibbonBar owner) {
+    public TabView buildTabView(RibbonBar owner, List<UIElement> rightHeaderWidgets) {
         var tabView = new TabView();
 
         // TabView 自身: 撑满父容器
@@ -97,20 +100,24 @@ public final class RibbonTabViewAdapter {
         });
 
         // tabScroller: 占据中间剩余空间 (TabView 构造器已设 widthPercent:100 + marginBottom:-2,
-        //  这里改为 flexGrow:1 让它与 QAT/TRAILING 共享横向空间)
+        //  这里改为 flexGrow:1 让它与 QAT/右侧组件共享横向空间)
         tabView.tabScroller.layout(layout -> {
             layout.flexGrow(1);
             layout.flexShrink(1);
         });
 
-        // === 组装 header: [LEADING..., tabScroller, QAT, TRAILING...] ===
+        // === 组装 header: [LEADING..., tabScroller, QAT, rightHeaderWidgets..., TRAILING...] ===
         // tabHeaderContainer 当前结构: [tabScroller]; LEADING 用 addChildAt 插到 tabScroller 前
         for (int i = 0; i < leadingComponents.size(); i++) {
             header.addChildAt(leadingComponents.get(i).createElement(), i);
         }
         // QAT 追加到 tabScroller 之后 (Task 1: QAT 右对齐)
         header.addChild(qat.createElement());
-        // TRAILING 追加到 QAT 之后
+        // 编辑器传入的右侧控件追加到 QAT 之后
+        for (var widget : rightHeaderWidgets) {
+            header.addChild(widget);
+        }
+        // TRAILING 追加到最右侧
         for (var comp : trailingComponents) {
             header.addChild(comp.createElement());
         }
