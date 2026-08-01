@@ -18,11 +18,7 @@ public class ToolPanelView extends View {
     public ToolPanelView() {
         super();
         addClass("kp-tool-panel");
-        layout(layout -> {
-            layout.flexDirection(FlexDirection.COLUMN);
-            layout.paddingAll(4);
-            layout.gapAll(2);
-        });
+        layout(layout -> layout.flexDirection(FlexDirection.COLUMN));
         // 从 Tool 枚举遍历生成按钮（审计 R2 修复，消除散弹式修改 + 标签-按键不一致 bug）
         for (var tool : EditToolState.Tool.values()) {
             String label = tool.getDisplayName() + " (" + tool.getKeyLabel() + ")";
