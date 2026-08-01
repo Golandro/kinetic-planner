@@ -8,6 +8,7 @@ import net.jsmua.kinetic_planner.gui.config.KPClothConfigScreen;
 import net.jsmua.kinetic_planner.gui.editor.EditToolState;
 import net.jsmua.kinetic_planner.gui.editor.ribbon.KpRibbonRegistration;
 import net.jsmua.kinetic_planner.gui.ribbon.registry.RibbonRegistry;
+import net.jsmua.kinetic_planner.gui.theme.KpThemeStylesheet;
 import net.jsmua.kinetic_planner.data.ProviderConfigRegistry;
 import net.jsmua.kinetic_planner.instrument.WorldTreeReadOverlay;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayDispatcher;
@@ -91,6 +92,9 @@ public class KineticPlannerClient {
                 KPIntegration.forceCreateOverlayPipeline();
             }
         });
+
+        // 注册程序化主题样式表（含 token 插值的颜色规则）
+        KpThemeStylesheet.register();
     }
 
     @SubscribeEvent
