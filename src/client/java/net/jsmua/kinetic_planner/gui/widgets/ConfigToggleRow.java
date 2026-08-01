@@ -3,7 +3,6 @@ package net.jsmua.kinetic_planner.gui.widgets;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Toggle;
-import dev.vfyjxf.taffy.style.FlexDirection;
 import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
@@ -32,12 +31,7 @@ public final class ConfigToggleRow {
                                     Consumer<Boolean> callback) {
         var row = new UIElement();
         row.addClass("kp-config-row");
-        row.layout(layout -> {
-            layout.flexDirection(FlexDirection.ROW);
-            layout.alignItems(dev.vfyjxf.taffy.style.AlignItems.CENTER);
-            layout.justifyContent(dev.vfyjxf.taffy.style.AlignContent.SPACE_BETWEEN);
-            layout.widthPercent(100);
-        });
+        // row 布局由 config.lss .kp-config-row 覆盖
 
         var labelEl = createRowLabel(label);
 
@@ -49,7 +43,6 @@ public final class ConfigToggleRow {
         toggle.layout(layout -> {
             layout.width(TOGGLE_WIDTH);
             layout.height(14);
-            layout.paddingAll(1);
         });
         if (disabled) {
             toggle.setActive(false);

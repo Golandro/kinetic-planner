@@ -4,7 +4,6 @@ import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEventListener;
-import dev.vfyjxf.taffy.style.FlexDirection;
 import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
@@ -103,12 +102,7 @@ public final class ConfigStepperRow {
     private static UIElement createRowSkeleton(String labelText) {
         var row = new UIElement();
         row.addClass("kp-config-row");
-        row.layout(layout -> {
-            layout.flexDirection(FlexDirection.ROW);
-            layout.alignItems(dev.vfyjxf.taffy.style.AlignItems.CENTER);
-            layout.justifyContent(dev.vfyjxf.taffy.style.AlignContent.SPACE_BETWEEN);
-            layout.widthPercent(100);
-        });
+        // row 布局由 config.lss .kp-config-row 覆盖
         row.addChild(ConfigToggleRow.createRowLabel(labelText));
         return row;
     }
@@ -116,13 +110,7 @@ public final class ConfigStepperRow {
     private static UIElement createStepperContainer() {
         var stepper = new UIElement();
         stepper.addClass("kp-stepper");
-        stepper.layout(layout -> {
-            layout.flexDirection(FlexDirection.ROW);
-            layout.alignItems(dev.vfyjxf.taffy.style.AlignItems.CENTER);
-            layout.justifyContent(dev.vfyjxf.taffy.style.AlignContent.FLEX_END);
-            layout.width(STEPPER_WIDTH);
-            layout.gapAll(2);
-        });
+        stepper.layout(layout -> layout.width(STEPPER_WIDTH));
         return stepper;
     }
 
@@ -145,7 +133,6 @@ public final class ConfigStepperRow {
         button.layout(layout -> {
             layout.width(14);
             layout.height(14);
-            layout.paddingAll(0);
         });
         if (disabled) {
             button.setActive(false);

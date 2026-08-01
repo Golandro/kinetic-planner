@@ -18,6 +18,7 @@ import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 import dev.vfyjxf.taffy.style.TaffyDisplay;
 import net.jsmua.kinetic_planner.data.ProviderConfig;
+import net.jsmua.kinetic_planner.gui.theme.KpTheme;
 import net.jsmua.kinetic_planner.mapadapter.MapOverlayDispatcher;
 import net.minecraft.network.chat.Component;
 
@@ -41,8 +42,7 @@ public final class KpConfigUIFactory {
      */
     public static ModularUI create() {
         UIElement root = buildPanelRoot();
-        var stylesheet = KpStylesheet.create();
-        var ui = UI.of(root, stylesheet);
+        var ui = UI.of(root);
         return ModularUI.of(ui);
     }
 
@@ -57,8 +57,6 @@ public final class KpConfigUIFactory {
             layout.heightAuto();
             layout.display(TaffyDisplay.FLEX);
             layout.flexDirection(FlexDirection.COLUMN);
-            layout.paddingAll(8);
-            layout.gapAll(4);
         });
 
         root.addChild(buildTitleBar());
@@ -70,12 +68,6 @@ public final class KpConfigUIFactory {
     private static UIElement buildTitleBar() {
         var titleBar = new UIElement();
         titleBar.addClass("kp-title-row");
-        titleBar.layout(layout -> {
-            layout.flexDirection(FlexDirection.ROW);
-            layout.alignItems(dev.vfyjxf.taffy.style.AlignItems.CENTER);
-            layout.justifyContent(dev.vfyjxf.taffy.style.AlignContent.SPACE_BETWEEN);
-            layout.widthPercent(100);
-        });
 
         var title = new Label();
         title.setValue(Component.literal("Kinetic Planner"));
@@ -91,7 +83,6 @@ public final class KpConfigUIFactory {
         closeButton.layout(layout -> {
             layout.width(18);
             layout.height(14);
-            layout.paddingAll(0);
         });
 
         titleBar.addChild(title);
@@ -107,14 +98,14 @@ public final class KpConfigUIFactory {
         });
 
         tabView.tabHeaderContainer(container -> container.style(style ->
-            style.backgroundTexture(new ColorRectTexture(KpStylesheet.PANEL_BG))
+            style.backgroundTexture(new ColorRectTexture(KpTheme.PANEL_BG_TRANS))
         ).layout(layout -> {
             layout.paddingHorizontal(3);
             layout.paddingVertical(2);
         }));
 
         tabView.tabContentContainer(container -> container.style(style ->
-            style.backgroundTexture(new ColorRectTexture(KpStylesheet.PANEL_BG))
+            style.backgroundTexture(new ColorRectTexture(KpTheme.PANEL_BG_TRANS))
         ).layout(layout -> {
             layout.paddingAll(4);
             layout.flexGrow(1);

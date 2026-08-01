@@ -13,14 +13,23 @@
     margin-bottom: 2;
 }
 .kp-config-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
     padding-horizontal: 4;
     padding-vertical: 2;
 }
 .kp-stepper {
+    flex-direction: row;
     align-items: center;
     justify-content: flex-end;
+    gap-all: 2;
 }
 .kp-panel button {
     padding-horizontal: 0;
     padding-vertical: 0;
+}
+.kp-toggle {
+    padding-all: 1;
 }
