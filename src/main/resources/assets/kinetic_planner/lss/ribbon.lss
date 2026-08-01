@@ -1,0 +1,57 @@
+// KP Ribbon 结构规则（颜色由 KpThemeStylesheet 程序化生成）
+// LSS 不支持 CSS 变量 / border-* 简写 / padding 简写; 颜色用 #AARRGGBB.
+
+// ===== Ribbon 根容器 =====
+.kp-ribbon-bar {
+    padding-all: 2;
+    gap-all: 2;
+}
+
+// ===== 工具组面板 =====
+.kp-ribbon-content {
+    flex-direction: row;
+    align-items: center;
+    height: 44;
+    gap-all: 4;
+    overflow-x: scroll;
+}
+.kp-ribbon-group {
+    flex-direction: column;
+    align-items: center;
+    padding-all: 4;
+    gap-all: 2;
+    min-width: 48;
+}
+.kp-ribbon-group-label {
+    margin-top: 2;
+    height: 9;
+}
+.kp-ribbon-tool-row {
+    flex-direction: row;
+    align-items: center;
+    gap-all: 2;
+}
+
+// ===== 工具按钮 =====
+.kp-ribbon-tool {
+    padding-horizontal: 4;
+    padding-vertical: 2;
+}
+.kp-ribbon-tool-label {
+    height: 9;
+}
+
+// ===== QAT =====
+.kp-ribbon-qat {
+    flex-direction: row;
+    align-items: center;
+    gap-all: 2;
+    padding-horizontal: 2;
+}
+
+// ===== 分隔符 =====
+.kp-ribbon-separator {
+    width: 1;
+    height: 16;
+    margin-horizontal: 2;
+}

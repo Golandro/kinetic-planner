@@ -1,0 +1,26 @@
+// KP 配置面板结构规则（颜色由 KpThemeStylesheet 程序化生成）
+
+.kp-panel {
+    padding-all: 8;
+    gap-all: 4;
+}
+.kp-title-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding-bottom: 4;
+    margin-bottom: 2;
+}
+.kp-config-row {
+    padding-horizontal: 4;
+    padding-vertical: 2;
+}
+.kp-stepper {
+    align-items: center;
+    justify-content: flex-end;
+}
+.kp-panel button {
+    padding-horizontal: 0;
+    padding-vertical: 0;
+}

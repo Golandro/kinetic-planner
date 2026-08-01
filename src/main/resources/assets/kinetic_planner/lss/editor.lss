@@ -1,0 +1,24 @@
+// KP Editor 结构规则（颜色由 KpThemeStylesheet 程序化生成）
+
+// ===== 工具面板 =====
+.kp-tool-panel {
+    padding-all: 4;
+    gap-all: 2;
+}
+.kp-tool-button {
+    padding-horizontal: 4;
+    padding-vertical: 2;
+}
+
+// ===== Layout helpers =====
+.kp-fill-width {
+    width: 100%;
+    flex-grow: 1;
+}
+.kp-fill-height {
+    height: 100%;
+    flex-grow: 1;
+}
+.kp-transparent-bg {
+    background: rect(#00000000);
+}
