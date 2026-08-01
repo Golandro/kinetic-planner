@@ -7,7 +7,7 @@ provider:
 ---
 # 包结构
 
-> 本文件由 AGENTS.md 拆分而来，提供完整的包结构参考。最后更新：2026-07-29。
+> 本文件由 AGENTS.md 拆分而来，提供完整的包结构参考。最后更新：2026-08-01。
 
 ## 三 sourceSet 架构
 
@@ -63,7 +63,6 @@ net.jsmua.kinetic_planner
 ├── gui/                                GUI 层（client）
 │   ├── config/                         配置面板 UI
 │   │   ├── KpConfigUIFactory.java      LDLib2 面板组装（行构建委托 widgets）
-│   │   ├── KpStylesheet.java           KP 紫 accent LSS 主题
 │   │   ├── KpGearButton.java           自绘齿轮按钮（extends KpIconButton）
 │   │   └── KPClothConfigScreen.java    Cloth Config GUI
 │   ├── editor/                         编辑模式
@@ -74,6 +73,9 @@ net.jsmua.kinetic_planner
 │   │   └── EditorCommands.java         /kp edit /exit 命令处理器（GUI 依赖）
 │   ├── event/                          事件基础设施
 │   │   └── KpUIEventForwarder.java     ModularUIWidget 事件转发封装
+│   ├── theme/                        主题 token + LSS 工厂（client）
+│   │   ├── KpTheme.java              颜色/间距 token 常量
+│   │   └── KpThemeStylesheet.java    程序化 LSS 生成 + 注册
 │   ├── widgets/                        可复用 UI 组件
 │   │   ├── KpIconButton.java           自绘图标按钮抽象基类
 │   │   ├── ConfigToggleRow.java        配置面板 Toggle 行构建器
@@ -113,10 +115,10 @@ net.jsmua.kinetic_planner
 | sourceSet | Java 文件 | 说明 |
 |---|---|---|
 | main (common) | 20 | 纯 JVM，含 IKPConfig + 命令树定义 + registry 框架 |
-| client | 52 | GUI/渲染/适配器/Mixin/命令处理器 |
+| client | 53 | GUI/渲染/适配器/Mixin/命令处理器 |
 | server | 0 | 占位（P1 编辑引擎填充） |
 | test | 27 | 134 个 @Test（15 个 @Disabled） |
-| **合计** | **99** | |
+| **合计** | **100** | |
 
 ## Mixin 清单
 

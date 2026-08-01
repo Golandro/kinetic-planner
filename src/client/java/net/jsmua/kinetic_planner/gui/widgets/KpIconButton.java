@@ -1,5 +1,6 @@
 package net.jsmua.kinetic_planner.gui.widgets;
 
+import net.jsmua.kinetic_planner.gui.theme.KpTheme;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -16,10 +17,10 @@ import net.minecraft.network.chat.Component;
 public abstract class KpIconButton {
 
     protected static final int SIZE = 16;
-    protected static final int BG_COLOR = 0x80000000;
-    protected static final int BG_HOVER_COLOR = 0xB0404040;
-    protected static final int ICON_COLOR = 0xFFFFFFFF;
-    protected static final int ACCENT_COLOR = 0xFF7C57D4;
+    protected static final int BG_COLOR = KpTheme.ICON_BUTTON_BG;
+    protected static final int BG_HOVER_COLOR = KpTheme.ICON_BUTTON_HOVER;
+    protected static final int ICON_COLOR = KpTheme.ICON_COLOR;
+    protected static final int ACCENT_COLOR = KpTheme.ACCENT;
 
     protected final int x;
     protected final int y;
