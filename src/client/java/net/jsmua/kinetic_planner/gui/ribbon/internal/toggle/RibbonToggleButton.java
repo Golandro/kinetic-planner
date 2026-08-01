@@ -5,6 +5,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Toggle;
+import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import net.jsmua.kinetic_planner.gui.ribbon.api.ToolSize;
 import net.minecraft.network.chat.Component;
@@ -100,11 +101,13 @@ public final class RibbonToggleButton {
             toggle.layout(layout -> {
                 layout.flexDirection(FlexDirection.COLUMN);
                 layout.width(40);
-                layout.height(38);
+                layout.flexGrow(1);
+                layout.alignItems(AlignItems.CENTER);
             });
             button.layout(layout -> {
                 layout.width(32);
-                layout.height(24);
+                layout.flexGrow(1);
+                layout.widthPercent(100);
             });
             // 大号工具的文本以独立 Label 放在 button 下方
             button.noText();
@@ -112,16 +115,17 @@ public final class RibbonToggleButton {
             label.setText(text);
             label.addClass("kp-ribbon-tool-label");
             label.layout(layout -> {
-                layout.height(10);
+                layout.flexShrink(0);
             });
             toggle.addChild(label);
         } else {
             // SMALL：水平排列，图标左文字右
             toggle.layout(layout -> {
                 layout.flexDirection(FlexDirection.ROW);
-                layout.height(22);
+                layout.flexGrow(1);
+                layout.alignItems(AlignItems.CENTER);
             });
-            button.layout(layout -> layout.height(18));
+            button.layout(layout -> layout.flexGrow(1));
         }
     }
 

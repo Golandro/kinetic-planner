@@ -81,12 +81,13 @@ public final class RibbonBuilder {
             tab.addClass("kp-ribbon-tab");
             tab.setId(tabDef.getId().toString());
 
-            // content: ROW 排列所有 groups
+            // content: ROW 排列所有 groups, 高度由 flex 填充父容器
             var content = new UIElement();
             content.addClass("kp-ribbon-content");
             content.layout(layout -> {
                 layout.flexDirection(FlexDirection.ROW);
-                layout.height(40);
+                layout.flexGrow(1);
+                layout.widthPercent(100);
             });
 
             // per-tab mutex 组映射：同 tab 内相同 mutex id 的 group 共享一个 RibbonToggleGroup，跨 tab 隔离

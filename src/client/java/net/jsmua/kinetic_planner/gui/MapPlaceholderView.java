@@ -3,6 +3,7 @@ package net.jsmua.kinetic_planner.gui;
 import com.lowdragmc.lowdraglib2.editor.ui.View;
 import com.lowdragmc.lowdraglib2.editor.ui.ViewContainer;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * 中心透明占位 View（spec §6.6）。
@@ -35,12 +36,21 @@ public class MapPlaceholderView extends View {
      * <p>仅作用于传入的 {@code container}, 不影响其他 window (如左侧工具面板),
      * 因此 tab 头部 (leftWindow) 仍保持不透明, 仅 centerWindow 的链路被清空。
      *
-     * @param container 中心 window 的 ViewContainer (运行时由 KpMapEditor.placeCustomViews 传入)
+     * <p><b>null 安全:</b> {@code applyLayout} 恢复保存的布局后, {@code centerWindow}
+     * 的 ViewContainer 可能被解绑为 {@code null}。全链路 null 检查避免 NPE。
+     *
+     * @param container 中心 window 的 ViewContainer (运行时由 KpMapEditor.placeCustomViews 传入, 可为 null)
      */
-    public static void prepareTransparentChain(ViewContainer container) {
+    public static void prepareTransparentChain(@Nullable ViewContainer container) {
+        if (container == null) return;
         container.getStyle().backgroundTexture(IGuiTexture.EMPTY);
+        if (container.tabView == null) return;
         container.tabView.getStyle().backgroundTexture(IGuiTexture.EMPTY);
-        container.tabView.tabContentContainer.getStyle().backgroundTexture(IGuiTexture.EMPTY);
-        container.tabView.tabHeaderContainer.getStyle().backgroundTexture(IGuiTexture.EMPTY);
+        if (container.tabView.tabContentContainer != null) {
+            container.tabView.tabContentContainer.getStyle().backgroundTexture(IGuiTexture.EMPTY);
+        }
+        if (container.tabView.tabHeaderContainer != null) {
+            container.tabView.tabHeaderContainer.getStyle().backgroundTexture(IGuiTexture.EMPTY);
+        }
     }
 }

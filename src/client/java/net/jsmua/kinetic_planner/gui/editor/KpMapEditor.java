@@ -114,7 +114,8 @@ public class KpMapEditor extends Editor {
             layout.flexDirection(FlexDirection.ROW);
         });
         menuContainer.addChild(ribbonBar);
-        top.getLayout().height(60);  // 60px (header 20 + content 40)
+        // top 区域高度由内部 flex 子元素自适应，不硬编码高度
+        top.getLayout().flexDirection(FlexDirection.COLUMN);
     }
 
     /**

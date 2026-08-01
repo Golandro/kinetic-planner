@@ -11,7 +11,8 @@
 .kp-ribbon-content {
     flex-direction: row;
     align-items: center;
-    height: 44;
+    flex-grow: 1;
+    width: 100%;
     gap-all: 4;
     overflow-x: scroll;
 }
@@ -24,7 +25,7 @@
 }
 .kp-ribbon-group-label {
     margin-top: 2;
-    height: 9;
+    flex-shrink: 0;
 }
 .kp-ribbon-tool-row {
     flex-direction: row;
@@ -38,7 +39,7 @@
     padding-vertical: 2;
 }
 .kp-ribbon-tool-label {
-    height: 9;
+    flex-shrink: 0;
 }
 
 // ===== QAT =====

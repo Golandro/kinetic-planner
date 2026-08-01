@@ -89,10 +89,10 @@ public final class ToolWidgetFactory {
         if (size == ToolSize.LARGE) {
             button.layout(layout -> {
                 layout.width(32);
-                layout.height(32);
+                layout.flexGrow(1);
             });
         } else {
-            button.layout(layout -> layout.height(18));
+            button.layout(layout -> layout.flexGrow(1));
         }
     }
 }
